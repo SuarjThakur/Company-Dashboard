@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sales Flow</title>
+<style>
+  :root{
+    --ink:#0f1419; --surface:#171d26; --surface2:#1e2631; --line:#2a3340;
+    --text:#e7ebf0; --muted:#8b96a3;
+    --amber:#e8a33d; --amber-dim:#4a3a20;
+    --teal:#3fb8a6; --teal-dim:#1c3833;
+    --violet:#9d8ce8; --violet-dim:#332c4d;
+    --red:#e0625b; --red-dim:#3d2323;
+    --mono: 'IBM Plex Mono', ui-monospace, monospace;
+    --disp: 'Space Grotesk', sans-serif;
+    --body: 'Inter', sans-serif;
+  }
+  html[data-theme="light"]{
+    --ink:#f4f5f7; --surface:#ffffff; --surface2:#eef0f3; --line:#dde1e6;
+    --text:#1a1f27; --muted:#666e7a;
+    --amber-dim:#fbe9cc; --teal-dim:#d4f0ec; --violet-dim:#e8e3fb; --red-dim:#fbdcda;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; background:var(--ink); color:var(--text); font-family:var(--body); -webkit-font-smoothing:antialiased; transition:background .2s,color .2s; }
+  a{color:inherit;}
+  header{ padding:20px 28px 16px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+  .brand{display:flex; align-items:baseline; gap:10px;}
+  .brand h1{ font-family:var(--disp); font-size:21px; font-weight:600; margin:0; letter-spacing:.2px; }
+  .brand .tag{font-family:var(--mono); font-size:11px; color:var(--muted); letter-spacing:.5px; text-transform:uppercase;}
+  .headright{display:flex; align-items:center; gap:14px;}
+  .status{display:flex; align-items:center; gap:8px; font-family:var(--mono); font-size:11px; color:var(--muted);}
+  .dot{width:7px; height:7px; border-radius:50%; background:var(--teal); box-shadow:0 0 8px var(--teal);}
+  .dot.bad{background:var(--red); box-shadow:0 0 8px var(--red);}
+  .dot.load{background:var(--amber); box-shadow:0 0 8px var(--amber); animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+  .theme-toggle{
+    background:var(--surface2); border:1px solid var(--line); color:var(--text); border-radius:20px;
+    padding:6px 12px; font-family:var(--mono); font-size:11px; cursor:pointer; display:flex; align-items:center; gap:6px;
+  }
+  .theme-toggle:hover{border-color:var(--amber);}
+  #statusLine{cursor:pointer;}
+  #statusLine:hover span:last-child{text-decoration:underline dotted;}
+  header{position:relative;}
+
+  nav{ display:flex; gap:2px; padding:0 28px; border-bottom:1px solid var(--line); overflow-x:auto; }
+  nav button{ background:none; border:none; color:var(--muted); font-family:var(--disp); font-size:13.5px; padding:13px 16px; cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap; }
+  nav button.active{color:var(--text); border-bottom-color:var(--amber);}
+  nav button:hover{color:var(--text);}
+
+  main{padding:24px 28px 60px; max-width:1440px; margin:0 auto;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  .row-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; gap:10px; flex-wrap:wrap;}
+  .row-head h3{font-family:var(--disp); font-size:13px; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; margin:0;}
+  .gear{ background:var(--surface2); border:1px solid var(--line); color:var(--muted); border-radius:6px; padding:5px 10px; font-family:var(--mono); font-size:11px; cursor:pointer; }
+  .gear:hover{color:var(--text); border-color:var(--amber);}
+
+  .kpis{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:22px;}
+  .kpi{ background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:16px 18px; position:relative; }
+  .kpi .label{font-family:var(--mono); font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; margin-bottom:8px;}
+  .kpi .valrow{display:flex; align-items:center; justify-content:space-between; gap:6px;}
+  .kpi .value{font-family:var(--disp); font-size:23px; font-weight:600;}
+  .kpi .emoji{font-size:32px; line-height:1; animation:emojiPop 2.4s ease-in-out 2;}
+  @keyframes emojiPop{
+    0%{transform:scale(1) rotate(0deg);}
+    15%{transform:scale(1.35) rotate(-8deg);}
+    30%{transform:scale(1) rotate(6deg);}
+    45%{transform:scale(1.2) rotate(0deg);}
+    60%{transform:scale(1);}
+    100%{transform:scale(1);}
+  }
+  .kpi .sub{font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:4px;}
+  .kpi.order .value{color:var(--amber);}
+  .kpi.dispatch .value{color:var(--teal);}
+  .kpi.production .value{color:var(--violet);}
+  .kpi.returns .value{color:var(--red);}
+
+  .two-col{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  @media (max-width:900px){ .two-col{grid-template-columns:1fr;} }
+
+  .panel{ background:var(--surface); border:1px solid var(--line); border-radius:10px; margin-bottom:20px; overflow:hidden; }
+  .panel-head{ padding:14px 18px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+  .panel-head h2{font-family:var(--disp); font-size:15px; margin:0; font-weight:600;}
+  .panel-body{padding:16px 18px; position:relative;}
+
+  .chart-controls{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+  .seg{display:flex; border:1px solid var(--line); border-radius:6px; overflow:hidden;}
+  .seg button{ background:var(--surface2); border:none; color:var(--muted); font-family:var(--mono); font-size:11px; padding:6px 10px; cursor:pointer; }
+  .seg button.active{background:var(--amber-dim); color:var(--amber);}
+  select.yearfilter{ background:var(--surface2); border:1px solid var(--line); color:var(--text); border-radius:6px; padding:6px 10px; font-family:var(--mono); font-size:11px; }
+
+  table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  thead th{ text-align:left; font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.4px; color:var(--muted); padding:8px 10px; border-bottom:1px solid var(--line); white-space:nowrap; }
+  tbody td{padding:8px 10px; border-bottom:1px solid var(--line); white-space:nowrap;}
+  tbody tr:hover{background:var(--surface2);}
+  .num{font-family:var(--mono); text-align:right;}
+  .scroll-x{overflow-x:auto;}
+
+  .empty{padding:40px; text-align:center; color:var(--muted); font-family:var(--mono); font-size:12px;}
+
+  canvas.chart{width:100%; height:240px; display:block; cursor:crosshair;}
+  .legend{display:flex; gap:16px; font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:8px; flex-wrap:wrap;}
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .legend i{width:10px; height:10px; border-radius:2px; display:inline-block;}
+
+  .tooltip{
+    position:absolute; pointer-events:none; background:var(--surface2); border:1px solid var(--line);
+    border-radius:6px; padding:8px 10px; font-family:var(--mono); font-size:11px; color:var(--text);
+    white-space:nowrap; opacity:0; transition:opacity .1s; z-index:20; box-shadow:0 4px 12px rgba(0,0,0,.3);
+  }
+
+  .note{font-family:var(--mono); font-size:11px; color:var(--muted); padding:10px 18px; border-top:1px solid var(--line); background:var(--surface2);}
+
+  /* Settings modal */
+  .modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; z-index:100; }
+  .modal-backdrop.open{display:flex;}
+  .modal{ background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:22px; width:340px; max-width:90vw; }
+  .modal h3{font-family:var(--disp); font-size:15px; margin:0 0 4px;}
+  .modal p{font-family:var(--mono); font-size:11px; color:var(--muted); margin:0 0 16px;}
+  .modal label{display:block; font-family:var(--mono); font-size:11px; color:var(--muted); margin:12px 0 6px;}
+  .modal input{ width:100%; background:var(--surface2); border:1px solid var(--line); color:var(--text); border-radius:6px; padding:8px 10px; font-family:var(--body); font-size:13px; outline:none; }
+  .modal input:focus{border-color:var(--amber);}
+  .modal-actions{display:flex; gap:8px; margin-top:20px; justify-content:flex-end;}
+  .btn{ font-family:var(--disp); font-size:12.5px; padding:8px 16px; border-radius:6px; cursor:pointer; border:1px solid var(--line); background:var(--surface2); color:var(--text); }
+  .btn.primary{background:var(--amber); color:#1a1305; border-color:var(--amber); font-weight:600;}
+
+  #crackerCanvas{ position:fixed; inset:0; pointer-events:none; z-index:200; }
+
+  ::-webkit-scrollbar{height:8px; width:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--line); border-radius:4px;}
+</style>
+</head>
+<body>
+
+<canvas id="crackerCanvas"></canvas>
+
+<header>
+  <div class="brand">
+    <h1>Sales Flow</h1>
+    <span class="tag">Live · Orders/Dispatch from 01/01/2026 · Daily from 01/04/2026</span>
+  </div>
+  <div class="headright">
+    <div class="status" id="statusLine" title="Click for technical details"><span class="dot load" id="statusDot"></span><span id="statusText">Connecting to sheet…</span></div>
+    <div id="rawErrorBox" style="display:none; position:absolute; top:60px; right:28px; max-width:420px; background:var(--surface); border:1px solid var(--red); border-radius:8px; padding:12px 14px; font-family:var(--mono); font-size:11px; color:var(--text); z-index:50; box-shadow:0 8px 24px rgba(0,0,0,.4); white-space:pre-wrap;"></div>
+    <button class="theme-toggle" id="themeToggle">🌙 Night</button>
+  </div>
+</header>
+
+<nav>
+  <button class="tab-btn active" data-view="daily">Daily Performance</button>
+  <button class="tab-btn" data-view="overview">Overview</button>
+</nav>
+
+<main>
+
+  <!-- DAILY PERFORMANCE -->
+  <section class="view active" id="view-daily">
+
+    <div class="row-head">
+      <h3>Latest Day — <span id="latestDayDate">—</span></h3>
+      <button class="gear" id="openSettings">⚙ Set targets</button>
+    </div>
+    <div class="kpis" id="latestKpiRow"></div>
+
+    <div class="row-head"><h3>Totals Since April 2026</h3></div>
+    <div class="kpis" id="dailyKpiRow"></div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Order Wt vs Production Wt vs Dispatch Wt</h2>
+        <div class="chart-controls">
+          <select class="yearfilter" id="dailyYearFilter"></select>
+          <div class="seg" id="dailyPeriodSeg">
+            <button data-mode="week" class="active">Weekly</button>
+            <button data-mode="month">Monthly</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel-body">
+        <canvas id="dailyChart" class="chart"></canvas>
+        <div class="tooltip" id="dailyTooltip"></div>
+        <div class="legend">
+          <span><i style="background:var(--amber)"></i>Order Wt</span>
+          <span><i style="background:var(--violet)"></i>Production Wt</span>
+          <span><i style="background:var(--teal)"></i>Dispatch Wt</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- OVERVIEW -->
+  <section class="view" id="view-overview">
+    <div class="kpis" id="kpiRow"></div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Order Value vs Dispatch Value</h2>
+        <div class="chart-controls">
+          <select class="yearfilter" id="trendMetricFilter">
+            <option value="value">Value (₹)</option>
+            <option value="qty">Quantity (kg)</option>
+          </select>
+          <select class="yearfilter" id="trendYearFilter"></select>
+          <div class="seg" id="trendPeriodSeg">
+            <button data-mode="week">Weekly</button>
+            <button data-mode="month" class="active">Monthly</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel-body">
+        <canvas id="trendChart" class="chart"></canvas>
+        <div class="tooltip" id="trendTooltip"></div>
+        <div class="legend">
+          <span><i style="background:var(--amber)"></i>Order Value</span>
+          <span><i style="background:var(--teal)"></i>Dispatch Value</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="panel">
+        <div class="panel-head"><h2>Order Value by Party</h2></div>
+        <div class="panel-body">
+          <canvas id="orderPie" class="chart" style="height:220px;"></canvas>
+          <div class="tooltip" id="orderPieTooltip"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Dispatch Value by Party</h2></div>
+        <div class="panel-body">
+          <canvas id="dispatchPie" class="chart" style="height:220px;"></canvas>
+          <div class="tooltip" id="dispatchPieTooltip"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="panel">
+        <div class="panel-head"><h2>Top Parties</h2></div>
+        <div class="panel-body scroll-x" id="topPartyTable"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Top Items</h2></div>
+        <div class="panel-body scroll-x" id="topItemTable"></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-backdrop" id="settingsModal">
+  <div class="modal">
+    <h3>Daily Targets</h3>
+    <p>Set a target quantity (kg) for each. Above target shows 😊, below shows 😞.</p>
+    <label>Order Qty target (kg)</label>
+    <input type="number" id="thOrder" placeholder="e.g. 2000">
+    <label>Production Qty target (kg)</label>
+    <input type="number" id="thProduction" placeholder="e.g. 2000">
+    <label>Dispatch Qty target (kg)</label>
+    <input type="number" id="thDispatch" placeholder="e.g. 2000">
+    <div class="modal-actions">
+      <button class="btn" id="closeSettings">Cancel</button>
+      <button class="btn primary" id="saveSettings">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============ CONFIG ============ */
+const SHEET_ID = '1OJTFphXppCN1Qifv1xjbjHODZZ5v4HsO5mF5aPY4Dss';
+const ORDER_GID = '91585080';
+const DISPATCH_GID = '622240038';
+const DAILY_GID = '1523024656';
+
+/* ============ STATE ============ */
+let orderRows = [], dispatchRows = [], dailyRows = [];
+let dailyPeriodMode = 'week', trendPeriodMode = 'month';
+let dailyYear = 'All', trendYear = 'All';
+let trendMetric = 'value';
+
+/* ============ THEME ============ */
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('themeToggle').textContent = theme === 'light' ? '☀️ Day' : '🌙 Night';
+  localStorage.setItem('sf_theme', theme);
+}
+(function initTheme(){
+  const saved = localStorage.getItem('sf_theme') || 'dark';
+  applyTheme(saved);
+})();
+document.getElementById('themeToggle').addEventListener('click', () => {
+  const cur = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+  applyTheme(cur);
+  renderAllCharts();
+});
+
+/* ============ SETTINGS (thresholds) ============ */
+function getThresholds(){
+  return {
+    order: Number(localStorage.getItem('sf_th_order')) || 0,
+    production: Number(localStorage.getItem('sf_th_production')) || 0,
+    dispatch: Number(localStorage.getItem('sf_th_dispatch')) || 0,
+  };
+}
+document.getElementById('openSettings').addEventListener('click', () => {
+  const th = getThresholds();
+  document.getElementById('thOrder').value = th.order || '';
+  document.getElementById('thProduction').value = th.production || '';
+  document.getElementById('thDispatch').value = th.dispatch || '';
+  document.getElementById('settingsModal').classList.add('open');
+});
+document.getElementById('closeSettings').addEventListener('click', () => document.getElementById('settingsModal').classList.remove('open'));
+document.getElementById('saveSettings').addEventListener('click', () => {
+  localStorage.setItem('sf_th_order', document.getElementById('thOrder').value || 0);
+  localStorage.setItem('sf_th_production', document.getElementById('thProduction').value || 0);
+  localStorage.setItem('sf_th_dispatch', document.getElementById('thDispatch').value || 0);
+  document.getElementById('settingsModal').classList.remove('open');
+  renderLatestDay();
+});
+
+/* ============ CRACKER ANIMATION ============ */
+function playCrackers(){
+  const canvas = document.getElementById('crackerCanvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  const colors = ['#e8a33d','#3fb8a6','#9d8ce8','#e0625b','#f2d675'];
+  let particles = [];
+  for(let i=0;i<120;i++){
+    particles.push({
+      x: canvas.width/2 + (Math.random()-0.5)*100,
+      y: canvas.height/2,
+      vx: (Math.random()-0.5)*14,
+      vy: (Math.random()-1.6)*14,
+      color: colors[Math.floor(Math.random()*colors.length)],
+      life: 60+Math.random()*30,
+    });
+  }
+  let frame = 0;
+  function tick(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    particles.forEach(p => {
+      p.vy += 0.35; p.x += p.vx; p.y += p.vy; p.life -= 1;
+      ctx.globalAlpha = Math.max(0, p.life/90);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(p.x, p.y, 4, 4);
+    });
+    ctx.globalAlpha = 1;
+    particles = particles.filter(p => p.life > 0);
+    frame++;
+    if(frame < 100 && particles.length) requestAnimationFrame(tick);
+    else ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  tick();
+}
+
+/* ============ SHEET LOADING (gviz JSONP) ============ */
+function loadSheet(gid, handlerName, label){
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    window[handlerName] = function(json){
+      settled = true;
+      resolve(json);
+      delete window[handlerName];
+    };
+    const script = document.createElement('script');
+    script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${gid}&tqx=out:json;responseHandler:${handlerName}`;
+    script.onerror = () => {
+      if(settled) return;
+      reject(new Error(`[${label}] Script failed to load (network error or blocked request) — gid ${gid}`));
+    };
+    document.body.appendChild(script);
+    setTimeout(() => {
+      if(settled) return;
+      reject(new Error(`[${label}] Timed out after 15s waiting for sheet response — gid ${gid}. Likely cause: the spreadsheet is not shared as "Anyone with the link can view", so Google returned a sign-in page instead of data.`));
+    }, 15000);
+  });
+}
+function cellVal(cell){ if(!cell) return ''; if(cell.f !== undefined) return cell.f; if(cell.v !== undefined) return cell.v; return ''; }
+function cellNum(cell){ if(!cell || cell.v === undefined || cell.v === null) return 0; const n = Number(cell.v); return isNaN(n) ? 0 : n; }
+function gvizDateToJs(v){
+  if(typeof v === 'string' && v.indexOf('Date(') === 0){
+    const parts = v.substring(5, v.length-1).split(',').map(Number);
+    return new Date(parts[0], parts[1], parts[2]);
+  }
+  return null;
+}
+
+function parseOrderSheet(json){
+  const out = [];
+  (json.table.rows||[]).forEach(r => {
+    const c = r.c;
+    if(!c || !c[0] || c[0].v === null || c[0].v === undefined || c[0].v === '') return;
+    const recordNo = String(cellVal(c[0])).trim();
+    if(!recordNo || recordNo.toLowerCase() === 'record #') return;
+    out.push({
+      recordNo, orderNo: c[1] ? String(cellVal(c[1])) : '',
+      orderDate: c[2] ? gvizDateToJs(c[2].v) : null,
+      deliveryDate: c[3] ? gvizDateToJs(c[3].v) : null,
+      party: c[4] ? String(cellVal(c[4])).trim() : '',
+      itemName: c[8] ? String(cellVal(c[8])).trim() : '',
+      shade: c[11] ? String(cellVal(c[11])) : '',
+      totalWt: cellNum(c[26]), amount: cellNum(c[27]),
+    });
+  });
+  return out;
+}
+function parseDispatchSheet(json){
+  const out = [];
+  (json.table.rows||[]).forEach(r => {
+    const c = r.c;
+    if(!c || !c[5] || c[5].v === null || c[5].v === undefined || c[5].v === '') return;
+    const recordNo = String(cellVal(c[5])).trim();
+    if(!recordNo || recordNo.toLowerCase().indexOf('record') === 0) return;
+    out.push({
+      date: c[0] ? gvizDateToJs(c[0].v) : null,
+      party: c[1] ? String(cellVal(c[1])).trim() : '',
+      orderNo: c[2] ? String(cellVal(c[2])) : '',
+      recordNo, totalQty: cellNum(c[20]), totalAmount: cellNum(c[21]),
+    });
+  });
+  return out;
+}
+function parseDailySheet(json){
+  const out = [];
+  (json.table.rows||[]).forEach(r => {
+    const c = r.c;
+    if(!c || !c[0] || c[0].v === null || c[0].v === undefined || c[0].v === '') return;
+    const date = gvizDateToJs(c[0].v);
+    if(!date) return;
+    out.push({
+      date, orderWt: cellNum(c[1]), orderAmount: cellNum(c[2]),
+      productionWt: cellNum(c[3]), dispatchWt: cellNum(c[4]), dispatchAmount: cellNum(c[5]),
+      returnedQty: cellNum(c[6]),
+    });
+  });
+  return out;
+}
+
+/* ============ FORMATTERS ============ */
+const fmtNum = n => (n||0).toLocaleString('en-IN', {maximumFractionDigits:1});
+const fmtMoney = n => '₹' + Math.round(n||0).toLocaleString('en-IN');
+const fmtDate = d => d ? d.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'}) : '—';
+function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+/* ============ LATEST DAY ============ */
+function renderLatestDay(){
+  if(dailyRows.length === 0){
+    document.getElementById('latestKpiRow').innerHTML = '<div class="empty">No daily records yet.</div>';
+    return;
+  }
+  const yesterday = new Date();
+  yesterday.setHours(0,0,0,0);
+  yesterday.setDate(yesterday.getDate()-1);
+  const latest = dailyRows.find(r=>{
+    const d=new Date(r.date); d.setHours(0,0,0,0);
+    return d.getTime()===yesterday.getTime();
+  });
+  if(!latest){
+    document.getElementById('latestDayDate').textContent = yesterday.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+    document.getElementById('latestKpiRow').innerHTML='<div class="empty">Yesterday\'s data is not available.</div>';
+    return;
+  }
+  document.getElementById('latestDayDate').textContent = fmtDate(latest.date);
+  const th = getThresholds();
+  function emoji(val, threshold){
+    if(!threshold) return '';
+    return val >= threshold ? '😊' : '😞';
+  }
+  const eOrder = emoji(latest.orderWt, th.order);
+  const eProd = emoji(latest.productionWt, th.production);
+  const eDisp = emoji(latest.dispatchWt, th.dispatch);
+
+  const items = [
+    {label:'Order Qty / Value', value: fmtNum(latest.orderWt)+' kg', sub: fmtMoney(latest.orderAmount), cls:'order', emoji:eOrder},
+    {label:'Production Qty', value: fmtNum(latest.productionWt)+' kg', cls:'production', emoji:eProd},
+    {label:'Dispatch Qty / Value', value: fmtNum(latest.dispatchWt)+' kg', sub: fmtMoney(latest.dispatchAmount), cls:'dispatch', emoji:eDisp},
+    {label:'Returned Qty', value: fmtNum(latest.returnedQty)+' kg', cls:'returns', emoji:''},
+  ];
+  document.getElementById('latestKpiRow').innerHTML = items.map(i => `
+    <div class="kpi ${i.cls}">
+      <div class="label">${i.label}</div>
+      <div class="valrow"><div class="value">${i.value}</div>${i.emoji ? `<div class="emoji">${i.emoji}</div>` : ''}</div>
+      ${i.sub ? `<div class="sub">${i.sub}</div>` : ''}
+    </div>`).join('');
+
+  const hitCount = [th.order && latest.orderWt >= th.order, th.production && latest.productionWt >= th.production, th.dispatch && latest.dispatchWt >= th.dispatch].filter(Boolean).length;
+  if(hitCount >= 1){
+    if(!sessionStorage.getItem('sf_crackers_played')){
+      playCrackers();
+      sessionStorage.setItem('sf_crackers_played', '1');
+    }
+  }
+}
+
+/* ============ DAILY KPIs (all-time since Apr) ============ */
+function renderDailyKpis(){
+  const orderWt = dailyRows.reduce((s,r)=>s+r.orderWt,0);
+  const productionWt = dailyRows.reduce((s,r)=>s+r.productionWt,0);
+  const dispatchWt = dailyRows.reduce((s,r)=>s+r.dispatchWt,0);
+  const dispatchAmount = dailyRows.reduce((s,r)=>s+r.dispatchAmount,0);
+  const returnedQty = dailyRows.reduce((s,r)=>s+r.returnedQty,0);
+  const items = [
+    {label:'Order Wt (since Apr)', value: fmtNum(orderWt)+' kg', cls:'order'},
+    {label:'Production Wt', value: fmtNum(productionWt)+' kg', cls:'production'},
+    {label:'Dispatch Wt / Value', value: fmtNum(dispatchWt)+' kg', sub: fmtMoney(dispatchAmount), cls:'dispatch'},
+    {label:'Returned Qty', value: fmtNum(returnedQty)+' kg', cls:'returns'},
+  ];
+  document.getElementById('dailyKpiRow').innerHTML = items.map(i => `
+    <div class="kpi ${i.cls}">
+      <div class="label">${i.label}</div>
+      <div class="value">${i.value}</div>
+      ${i.sub ? `<div class="sub">${i.sub}</div>` : ''}
+    </div>`).join('');
+}
+
+/* ============ OVERVIEW KPIs ============ */
+function renderKpis(){
+  const uniqueParties = new Set([...orderRows.map(r=>r.party), ...dispatchRows.map(r=>r.party)]);
+  uniqueParties.delete('');
+  const orderQty = orderRows.reduce((s,r)=>s+r.totalWt,0);
+  const orderValue = orderRows.reduce((s,r)=>s+r.amount,0);
+  const dispQty = dispatchRows.reduce((s,r)=>s+r.totalQty,0);
+  const dispValue = dispatchRows.reduce((s,r)=>s+r.totalAmount,0);
+
+  const byDispParty = {};
+  dispatchRows.forEach(d => { if(d.party) byDispParty[d.party] = (byDispParty[d.party]||0) + d.totalAmount; });
+  let topBuyer = '—', topBuyerValue = 0;
+  Object.entries(byDispParty).forEach(([p,v]) => { if(v > topBuyerValue){ topBuyer = p; topBuyerValue = v; } });
+
+  const items = [
+    {label:'Order Qty / Value', value: fmtNum(orderQty)+' kg', sub: fmtMoney(orderValue), cls:'order'},
+    {label:'Dispatch Qty / Value', value: fmtNum(dispQty)+' kg', sub: fmtMoney(dispValue), cls:'dispatch'},
+    {label:'Top Buyer (Dispatch)', value: topBuyer, sub: fmtMoney(topBuyerValue), cls:'order'},
+    {label:'Total Parties', value: uniqueParties.size.toLocaleString('en-IN'), cls:'order'},
+  ];
+  document.getElementById('kpiRow').innerHTML = items.map(i => `
+    <div class="kpi ${i.cls}">
+      <div class="label">${i.label}</div>
+      <div class="value">${i.value}</div>
+      ${i.sub ? `<div class="sub">${i.sub}</div>` : ''}
+    </div>`).join('');
+}
+
+/* ============ PERIOD HELPERS ============ */
+function weekKey(d){
+  const onejan = new Date(d.getFullYear(),0,1);
+  const week = Math.ceil((((d-onejan)/86400000)+onejan.getDay()+1)/7);
+  return d.getFullYear()+'-W'+String(week).padStart(2,'0');
+}
+function monthKey(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+const MONTH_LABELS = {1:'Jan',2:'Feb',3:'Mar',4:'Apr',5:'May',6:'Jun',7:'Jul',8:'Aug',9:'Sep',10:'Oct',11:'Nov',12:'Dec'};
+function periodLabel(k){
+  if(k.indexOf('-W') !== -1){ const [y,w]=k.split('-W'); return 'W'+w+" '"+y.slice(2); }
+  const [y,m]=k.split('-'); return MONTH_LABELS[Number(m)]+" '"+y.slice(2);
+}
+function yearsFromRows(rowsList){
+  const years = new Set();
+  rowsList.forEach(rows => rows.forEach(r => { if(r.__date && r.__date instanceof Date) years.add(r.__date.getFullYear()); }));
+  return Array.from(years).sort();
+}
+function populateYearFilter(selectEl, years){
+  selectEl.innerHTML = '<option value="All">All Years</option>' + years.map(y=>`<option value="${y}">${y}</option>`).join('');
+}
+
+/* ============ GENERIC BAR CHART w/ tooltip ============ */
+function drawGroupedBarChart(canvasId, tooltipId, seriesList, colors){
+  // seriesList: [{data: {periodKey: value}}]
+  const canvas = document.getElementById(canvasId);
+  const tooltip = document.getElementById(tooltipId);
+  const cssW = canvas.clientWidth || canvas.parentElement.clientWidth;
+  if(!cssW || cssW < 10) return; // hidden/zero-width tab — skip, will render when tab becomes active
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const cssH = 240;
+  canvas.width = cssW*dpr; canvas.height = cssH*dpr; canvas.style.height = cssH+'px';
+  ctx.scale(dpr,dpr); ctx.clearRect(0,0,cssW,cssH);
+
+  const allKeys = new Set();
+  seriesList.forEach(s => Object.keys(s.data).forEach(k => allKeys.add(k)));
+  const keys = Array.from(allKeys).sort();
+  if(keys.length === 0){
+    ctx.fillStyle = cssVar('--muted'); ctx.font='12px monospace'; ctx.fillText('No dated records for this filter', 10, cssH/2);
+    canvas.onmousemove = null;
+    return;
+  }
+  const maxVal = Math.max(1, ...keys.map(k => Math.max(...seriesList.map(s => s.data[k]||0))));
+  const padL=74,padB=26,padT=10,padR=10;
+  const plotW=cssW-padL-padR, plotH=cssH-padT-padB;
+  const groupW = plotW/keys.length;
+  const line = cssVar('--line'), muted = cssVar('--muted');
+
+  ctx.strokeStyle=line; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const y = padT+plotH-(plotH*i/4);
+    ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(cssW-padR,y); ctx.stroke();
+    ctx.fillStyle=muted; ctx.font='10px monospace'; ctx.textAlign='right';
+    ctx.fillText(Math.round(maxVal*i/4).toLocaleString('en-IN'), padL-8, y+3);
+  }
+  const n = seriesList.length;
+  const barW = (groupW*0.8)/n;
+  const bars = []; // for hit-testing
+  keys.forEach((k,i) => {
+    const x = padL + i*groupW + groupW*0.1;
+    seriesList.forEach((s,si) => {
+      const v = s.data[k]||0;
+      const h = (v/maxVal)*plotH;
+      const bx = x+si*barW, by = padT+plotH-h;
+      ctx.fillStyle = colors[si];
+      ctx.fillRect(bx, by, barW*0.9, h);
+      bars.push({x:bx, y:by, w:barW*0.9, h:h, label:s.label, key:k, value:v, color:colors[si]});
+    });
+    ctx.fillStyle=muted; ctx.font='9.5px monospace'; ctx.textAlign='center';
+    ctx.fillText(periodLabel(k), padL+i*groupW+groupW/2, cssH-8);
+  });
+
+  canvas.onmousemove = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    const hit = bars.find(b => mx>=b.x && mx<=b.x+b.w && my>=b.y && my<=b.y+b.h+2);
+    if(hit){
+      tooltip.style.opacity = 1;
+      tooltip.style.left = (mx+14)+'px';
+      tooltip.style.top = (my-10)+'px';
+      tooltip.innerHTML = `<span style="color:${hit.color}">●</span> ${escapeHtml(hit.label)} — ${periodLabel(hit.key)}<br><b>${fmtNum(hit.value)}</b>`;
+    } else {
+      tooltip.style.opacity = 0;
+    }
+  };
+  canvas.onmouseleave = () => { tooltip.style.opacity = 0; };
+}
+
+/* ============ DAILY CHART ============ */
+function renderDailyChart(){
+  const yearFiltered = dailyYear === 'All' ? dailyRows : dailyRows.filter(r => r.date.getFullYear() === Number(dailyYear));
+  const keyFn = dailyPeriodMode === 'week' ? weekKey : monthKey;
+  const orderByP = {}, prodByP = {}, dispByP = {};
+  yearFiltered.forEach(r => {
+    const k = keyFn(r.date);
+    orderByP[k] = (orderByP[k]||0) + r.orderWt;
+    prodByP[k] = (prodByP[k]||0) + r.productionWt;
+    dispByP[k] = (dispByP[k]||0) + r.dispatchWt;
+  });
+  drawGroupedBarChart('dailyChart', 'dailyTooltip',
+    [{data:orderByP,label:'Order Wt'},{data:prodByP,label:'Production Wt'},{data:dispByP,label:'Dispatch Wt'}],
+    ['#e8a33d','#9d8ce8','#3fb8a6']);
+}
+
+/* ============ TREND CHART (Overview) ============ */
+function renderTrendChart(){
+  const orderF = trendYear === 'All' ? orderRows : orderRows.filter(r => r.orderDate && r.orderDate.getFullYear() === Number(trendYear));
+  const dispF = trendYear === 'All' ? dispatchRows : dispatchRows.filter(r => r.date && r.date.getFullYear() === Number(trendYear));
+  const keyFn = trendPeriodMode === 'week' ? weekKey : monthKey;
+  const orderByP = {}, dispByP = {};
+  if(trendMetric === 'qty'){
+    orderF.forEach(r => { if(r.orderDate){ const k=keyFn(r.orderDate); orderByP[k]=(orderByP[k]||0)+r.totalWt; } });
+    dispF.forEach(d => { if(d.date){ const k=keyFn(d.date); dispByP[k]=(dispByP[k]||0)+d.totalQty; } });
+  } else {
+    orderF.forEach(r => { if(r.orderDate){ const k=keyFn(r.orderDate); orderByP[k]=(orderByP[k]||0)+r.amount; } });
+    dispF.forEach(d => { if(d.date){ const k=keyFn(d.date); dispByP[k]=(dispByP[k]||0)+d.totalAmount; } });
+  }
+  const orderLabel = trendMetric === 'qty' ? 'Order Qty' : 'Order Value';
+  const dispLabel = trendMetric === 'qty' ? 'Dispatch Qty' : 'Dispatch Value';
+  drawGroupedBarChart('trendChart', 'trendTooltip',
+    [{data:orderByP,label:orderLabel},{data:dispByP,label:dispLabel}],
+    ['#e8a33d','#3fb8a6']);
+  document.querySelector('#view-overview .legend').innerHTML =
+    `<span><i style="background:var(--amber)"></i>${orderLabel}</span><span><i style="background:var(--teal)"></i>${dispLabel}</span>`;
+}
+
+/* ============ PIE CHART w/ tooltip ============ */
+function drawPieChart(canvasId, tooltipId, byLabel){
+  const canvas = document.getElementById(canvasId);
+  const tooltip = document.getElementById(tooltipId);
+  const cssW = canvas.clientWidth || canvas.parentElement.clientWidth;
+  if(!cssW || cssW < 10) return; // hidden/zero-width tab — skip, will render when tab becomes active
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const cssH = 220;
+  canvas.width = cssW*dpr; canvas.height = cssH*dpr; canvas.style.height = cssH+'px';
+  ctx.scale(dpr,dpr); ctx.clearRect(0,0,cssW,cssH);
+
+  let entries = Object.entries(byLabel).sort((a,b)=>b[1]-a[1]);
+  if(entries.length === 0){
+    ctx.fillStyle = cssVar('--muted'); ctx.font='12px monospace'; ctx.fillText('No data yet', 10, cssH/2);
+    return;
+  }
+  const top = entries.slice(0,8);
+  const rest = entries.slice(8);
+  const restSum = rest.reduce((s,[,v])=>s+v,0);
+  if(restSum > 0) top.push(['Others', restSum]);
+  const total = top.reduce((s,[,v])=>s+v,0);
+
+  const palette = ['#e8a33d','#3fb8a6','#9d8ce8','#e0625b','#f2d675','#6fb1e0','#e07fb0','#7fd67f','#8b96a3'];
+  const cx = cssW*0.32, cy = cssH/2, r = Math.min(cssH,cssW*0.6)/2 - 10;
+  let startAngle = -Math.PI/2;
+  const slices = [];
+  top.forEach(([label,v],i) => {
+    const angle = (v/total)*Math.PI*2;
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,startAngle,startAngle+angle);
+    ctx.closePath();
+    ctx.fillStyle = palette[i % palette.length];
+    ctx.fill();
+    slices.push({start:startAngle, end:startAngle+angle, label, value:v, pct: (v/total*100), color:palette[i%palette.length]});
+    startAngle += angle;
+  });
+
+  // legend to the right
+  const legX = cssW*0.62, legY0 = 14, lh = 20;
+  top.forEach(([label,v],i) => {
+    const y = legY0 + i*lh;
+    if(y > cssH-10) return;
+    ctx.fillStyle = palette[i%palette.length];
+    ctx.fillRect(legX, y, 9, 9);
+    ctx.fillStyle = cssVar('--text'); ctx.font='10.5px sans-serif'; ctx.textAlign='left';
+    const pct = (v/total*100).toFixed(0);
+    let lbl = label.length > 16 ? label.slice(0,15)+'…' : label;
+    ctx.fillText(`${lbl} (${pct}%)`, legX+14, y+8);
+  });
+
+  canvas.onmousemove = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    const dx = mx-cx, dy = my-cy;
+    const dist = Math.sqrt(dx*dx+dy*dy);
+    if(dist <= r){
+      let angle = Math.atan2(dy,dx);
+      if(angle < -Math.PI/2) angle += Math.PI*2;
+      const hit = slices.find(s => angle >= s.start && angle <= s.end);
+      if(hit){
+        tooltip.style.opacity = 1;
+        tooltip.style.left = (mx+14)+'px';
+        tooltip.style.top = (my-10)+'px';
+        tooltip.innerHTML = `<span style="color:${hit.color}">●</span> ${escapeHtml(hit.label)}<br><b>${fmtMoney(hit.value)}</b> (${hit.pct.toFixed(1)}%)`;
+        return;
+      }
+    }
+    tooltip.style.opacity = 0;
+  };
+  canvas.onmouseleave = () => { tooltip.style.opacity = 0; };
+}
+
+function renderPieCharts(){
+  const byOrderParty = {}, byDispParty = {};
+  orderRows.forEach(r => { if(r.party) byOrderParty[r.party] = (byOrderParty[r.party]||0) + r.amount; });
+  dispatchRows.forEach(d => { if(d.party) byDispParty[d.party] = (byDispParty[d.party]||0) + d.totalAmount; });
+  drawPieChart('orderPie', 'orderPieTooltip', byOrderParty);
+  drawPieChart('dispatchPie', 'dispatchPieTooltip', byDispParty);
+}
+
+/* ============ TOP PARTIES / TOP ITEMS TABLES ============ */
+function renderTopTables(){
+  const byOrderParty = {}, byDispParty = {};
+  orderRows.forEach(r => {
+    if(!r.party) return;
+    if(!byOrderParty[r.party]) byOrderParty[r.party] = {qty:0,value:0};
+    byOrderParty[r.party].qty += r.totalWt; byOrderParty[r.party].value += r.amount;
+  });
+  dispatchRows.forEach(d => {
+    if(!d.party) return;
+    if(!byDispParty[d.party]) byDispParty[d.party] = {qty:0,value:0};
+    byDispParty[d.party].qty += d.totalQty; byDispParty[d.party].value += d.totalAmount;
+  });
+  const parties = new Set([...Object.keys(byOrderParty), ...Object.keys(byDispParty)]);
+  let partyRows = Array.from(parties).map(p => ({
+    party:p, orderQty: byOrderParty[p]?.qty||0, orderValue: byOrderParty[p]?.value||0,
+    dispQty: byDispParty[p]?.qty||0, dispValue: byDispParty[p]?.value||0,
+  })).sort((a,b) => b.orderValue - a.orderValue).slice(0,15);
+
+  document.getElementById('topPartyTable').innerHTML = partyRows.length === 0 ? '<div class="empty">No data yet.</div>' : `
+    <table>
+      <thead><tr><th>Party</th><th class="num">Order Qty</th><th class="num">Order Value</th><th class="num">Dispatch Qty</th><th class="num">Dispatch Value</th></tr></thead>
+      <tbody>${partyRows.map(p => `
+        <tr><td>${escapeHtml(p.party)}</td><td class="num">${fmtNum(p.orderQty)}</td><td class="num">${fmtMoney(p.orderValue)}</td>
+        <td class="num">${fmtNum(p.dispQty)}</td><td class="num">${fmtMoney(p.dispValue)}</td></tr>`).join('')}</tbody>
+    </table>`;
+
+  const byItem = {};
+  orderRows.forEach(r => {
+    if(!r.itemName) return;
+    if(!byItem[r.itemName]) byItem[r.itemName] = {qty:0,value:0};
+    byItem[r.itemName].qty += r.totalWt; byItem[r.itemName].value += r.amount;
+  });
+  let itemRows = Object.entries(byItem).map(([item,v]) => ({item, ...v})).sort((a,b)=>b.value-a.value).slice(0,15);
+  document.getElementById('topItemTable').innerHTML = itemRows.length === 0 ? '<div class="empty">No data yet.</div>' : `
+    <table>
+      <thead><tr><th>Item</th><th class="num">Order Qty</th><th class="num">Order Value</th></tr></thead>
+      <tbody>${itemRows.map(r => `
+        <tr><td>${escapeHtml(r.item)}</td><td class="num">${fmtNum(r.qty)}</td><td class="num">${fmtMoney(r.value)}</td></tr>`).join('')}</tbody>
+    </table>`;
+}
+
+/* ============ CHART CONTROLS ============ */
+document.querySelectorAll('#dailyPeriodSeg button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#dailyPeriodSeg button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active'); dailyPeriodMode = btn.dataset.mode; renderDailyChart();
+  });
+});
+document.querySelectorAll('#trendPeriodSeg button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#trendPeriodSeg button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active'); trendPeriodMode = btn.dataset.mode; renderTrendChart();
+  });
+});
+document.getElementById('dailyYearFilter').addEventListener('change', (e) => { dailyYear = e.target.value; renderDailyChart(); });
+document.getElementById('trendYearFilter').addEventListener('change', (e) => { trendYear = e.target.value; renderTrendChart(); });
+document.getElementById('trendMetricFilter').addEventListener('change', (e) => { trendMetric = e.target.value; renderTrendChart(); });
+
+/* ============ TABS ============ */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('view-'+btn.dataset.view).classList.add('active');
+    renderAllCharts();
+  });
+});
+function renderAllCharts(){
+  if(dailyRows.length === 0 && orderRows.length === 0 && dispatchRows.length === 0) return;
+  if(document.getElementById('view-daily').classList.contains('active')) renderDailyChart();
+  if(document.getElementById('view-overview').classList.contains('active')){ renderTrendChart(); renderPieCharts(); }
+}
+window.addEventListener('resize', renderAllCharts);
+
+/* ============ INIT ============ */
+async function init(){
+  const statusDot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+  try{
+    const [orderJson, dispatchJson, dailyJson] = await Promise.all([
+      loadSheet(ORDER_GID, 'handleOrderData', 'Order sheet'),
+      loadSheet(DISPATCH_GID, 'handleDispatchData', 'Dispatch sheet'),
+      loadSheet(DAILY_GID, 'handleDailyData', 'Daily sheet'),
+    ]);
+    orderRows = parseOrderSheet(orderJson);
+    dispatchRows = parseDispatchSheet(dispatchJson);
+    dailyRows = parseDailySheet(dailyJson);
+
+    populateYearFilter(document.getElementById('dailyYearFilter'),
+      Array.from(new Set(dailyRows.map(r=>r.date.getFullYear()))).sort());
+    populateYearFilter(document.getElementById('trendYearFilter'),
+      Array.from(new Set([...orderRows.filter(r=>r.orderDate).map(r=>r.orderDate.getFullYear()),
+                           ...dispatchRows.filter(r=>r.date).map(r=>r.date.getFullYear())])).sort());
+
+    renderLatestDay();
+    renderDailyKpis();
+    renderDailyChart();
+    renderKpis();
+    renderTopTables();
+    renderAllCharts(); // renders whichever tab is currently active; others render lazily on click
+
+    statusDot.className = 'dot';
+    statusText.textContent = `Connected · ${orderRows.length.toLocaleString('en-IN')} orders · ${dispatchRows.length.toLocaleString('en-IN')} dispatches · ${dailyRows.length.toLocaleString('en-IN')} daily logs · updated ${new Date().toLocaleTimeString('en-IN')}`;
+  }catch(err){
+    console.error(err);
+    statusDot.className = 'dot bad';
+    const offline = (typeof navigator !== 'undefined' && navigator.onLine === false);
+    const msg = offline ? 'Check your internet connection' : 'An application error occurred. Please contact your Software Developer.';
+    statusText.textContent = msg;
+    document.getElementById('latestKpiRow').innerHTML = `<div class="empty" style="grid-column:1/-1;">${escapeHtml(msg)}</div>`;
+    window.__sfRawError = (err && err.message) ? err.message : String(err);
+  }
+}
+document.getElementById('statusLine').addEventListener('click', () => {
+  const box = document.getElementById('rawErrorBox');
+  if(box.style.display === 'block'){ box.style.display = 'none'; return; }
+  box.textContent = window.__sfRawError ? ('Technical detail:\n' + window.__sfRawError) : 'No error — connection is fine.';
+  box.style.display = 'block';
+});
+window.addEventListener('online', () => { if(document.getElementById('statusDot').classList.contains('bad')) init(); });
+init();
+</script>
+</body>
+</html>
