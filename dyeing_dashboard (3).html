@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dye House — Production Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+
+/* ============================================================
+   CONFIG NOTE FOR SURAJ:
+   All the column-mapping logic lives in the <script> block at the
+   bottom, inside the object called COLS. If tomorrow you add,
+   remove, or shift a column in the sheet, you only need to edit
+   the numbers in COLS — nothing else in this file needs to change.
+   ============================================================ */
+
+:root{
+  --paper:#eef1f0;
+  --panel:#ffffff;
+  --ink:#152436;
+  --ink-soft:#57677a;
+  --line:#dbe1e2;
+  --indigo:#1f3a5f;
+  --indigo-deep:#122642;
+  --vat:#3d6e8f;
+  --mustard:#d98e2b;
+  --brick:#c1442d;
+  --moss:#4c7a4f;
+  --mono:'JetBrains Mono',monospace;
+  --disp:'Space Grotesk',sans-serif;
+  --body:'Inter',sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--body);
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ---------- top bar ---------- */
+.topbar{
+  background:var(--indigo-deep);
+  color:#f3f1ea;
+  padding:22px 32px;
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:12px;
+  border-bottom:4px solid var(--mustard);
+}
+.brand{display:flex;align-items:baseline;gap:14px;}
+.brand .mark{
+  font-family:var(--disp);
+  font-weight:700;
+  font-size:22px;
+  letter-spacing:0.02em;
+}
+.brand .sub{
+  font-size:12.5px;
+  color:#b9c3d4;
+  font-family:var(--mono);
+  letter-spacing:0.03em;
+}
+.topbar .status{
+  font-family:var(--mono);
+  font-size:12px;
+  color:#b9c3d4;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--moss);display:inline-block;}
+.dot.bad{background:var(--brick);}
+.dot.loading{background:var(--mustard);}
+
+.gear-btn{
+  display:flex;align-items:center;gap:7px;
+  font-family:var(--mono);
+  font-size:12px;
+  color:#dfe4ea;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.16);
+  padding:8px 14px;
+  border-radius:6px;
+  cursor:pointer;
+  transition:all .12s;
+}
+.gear-btn:hover{background:rgba(255,255,255,0.13);border-color:var(--mustard);color:#fff;}
+
+/* ---------- settings modal ---------- */
+.modal-overlay{
+  display:none;
+  position:fixed; inset:0;
+  background:rgba(18,26,42,0.55);
+  z-index:100;
+  align-items:flex-start;
+  justify-content:center;
+  padding:40px 16px;
+  overflow-y:auto;
+}
+.modal-overlay.show{display:flex;}
+.modal-box{
+  background:var(--panel);
+  border-radius:10px;
+  width:100%;
+  max-width:640px;
+  box-shadow:0 20px 50px rgba(0,0,0,0.25);
+  overflow:hidden;
+}
+.modal-head{
+  background:var(--indigo-deep);
+  color:#fff;
+  padding:18px 22px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.modal-head h3{font-family:var(--disp);font-size:16px;margin:0;}
+.modal-close{
+  background:none;border:none;color:#c7cedb;cursor:pointer;
+  font-size:20px;line-height:1;padding:2px 6px;
+}
+.modal-close:hover{color:#fff;}
+.modal-tabs{
+  display:flex;
+  gap:2px;
+  background:#f4f6f5;
+  padding:8px 22px 0;
+  border-bottom:1px solid var(--line);
+}
+.modal-tab{
+  font-family:var(--mono);
+  font-size:11.5px;
+  padding:9px 14px;
+  cursor:pointer;
+  color:var(--ink-soft);
+  border-bottom:2px solid transparent;
+}
+.modal-tab.active{color:var(--indigo);border-bottom-color:var(--indigo);font-weight:600;}
+.modal-body{padding:16px 22px 6px;max-height:52vh;overflow-y:auto;}
+.modal-hint{font-size:11.5px;color:var(--ink-soft);margin-bottom:12px;font-family:var(--mono);}
+.col-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px 0;
+  border-bottom:1px solid #f0f2f1;
+}
+.col-row.hidden-col{opacity:0.45;}
+.col-row input[type="checkbox"]{width:16px;height:16px;cursor:pointer;flex-shrink:0;}
+.col-row input[type="text"]{
+  flex:1;
+  font-family:var(--body);
+  font-size:13px;
+  padding:6px 9px;
+  border:1px solid var(--line);
+  border-radius:5px;
+  min-width:0;
+}
+.col-row .col-key{
+  font-family:var(--mono);
+  font-size:10px;
+  color:#a3adb8;
+  width:78px;
+  flex-shrink:0;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.col-row .move-btns{display:flex;gap:2px;flex-shrink:0;}
+.move-btns button{
+  width:24px;height:24px;
+  border:1px solid var(--line);
+  background:#fff;
+  border-radius:4px;
+  cursor:pointer;
+  color:var(--ink-soft);
+  font-size:11px;
+  display:flex;align-items:center;justify-content:center;
+}
+.move-btns button:hover{border-color:var(--indigo);color:var(--indigo);}
+.move-btns button:disabled{opacity:0.3;cursor:default;}
+.move-btns button:disabled:hover{border-color:var(--line);color:var(--ink-soft);}
+.modal-foot{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:14px 22px 20px;
+  gap:10px;
+}
+.modal-foot .reset-link{
+  font-family:var(--mono);
+  font-size:11.5px;
+  color:var(--brick);
+  background:none;
+  border:none;
+  cursor:pointer;
+  text-decoration:underline;
+  padding:0;
+}
+.modal-foot .save-btn{
+  font-family:var(--mono);
+  font-size:12.5px;
+  padding:9px 20px;
+  background:var(--indigo);
+  color:#fff;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+.modal-foot .save-btn:hover{background:var(--indigo-deep);}
+
+/* ---------- layout ---------- */
+.wrap{max-width:1400px;margin:0 auto;padding:28px 24px 80px;}
+
+.msg-banner{
+  background:#fff4e2;
+  border:1px solid #ecd2a0;
+  color:#7a5310;
+  font-size:13px;
+  padding:12px 16px;
+  border-radius:6px;
+  margin-bottom:20px;
+  font-family:var(--mono);
+  display:none;
+}
+.msg-banner.show{display:block;}
+.msg-banner.err{
+  background:#fbe6e2; border-color:#eab8ac; color:#8a2c1a;
+}
+
+/* ---------- KPI row ---------- */
+.kpi-row{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:1px;
+  background:var(--line);
+  border:1px solid var(--line);
+  margin-bottom:26px;
+  border-radius:8px;
+  overflow:hidden;
+}
+.kpi{
+  background:var(--panel);
+  padding:16px 16px 14px;
+  min-width:0;
+}
+.kpi .label{
+  font-family:var(--mono);
+  font-size:10.5px;
+  text-transform:uppercase;
+  letter-spacing:0.06em;
+  color:var(--ink-soft);
+  margin-bottom:8px;
+}
+.kpi .value{
+  font-family:var(--disp);
+  font-size:26px;
+  font-weight:700;
+  line-height:1;
+}
+.kpi .value small{font-family:var(--body);font-size:13px;font-weight:500;color:var(--ink-soft);}
+.kpi.accent-dye .value{color:var(--vat);}
+.kpi.accent-fin .value{color:var(--indigo);}
+.kpi.accent-disp .value{color:var(--moss);}
+.kpi.accent-alert .value{color:var(--brick);}
+
+/* ---------- flow pipeline (signature element) ---------- */
+.flow-card{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:22px 24px 26px;
+  margin-bottom:26px;
+}
+.flow-card h2{
+  font-family:var(--disp);
+  font-size:15px;
+  margin:0 0 4px;
+  display:flex;align-items:center;gap:8px;
+}
+.flow-card .desc{font-size:12.5px;color:var(--ink-soft);margin-bottom:18px;}
+.pipeline{
+  display:flex;
+  align-items:stretch;
+  gap:0;
+  overflow-x:auto;
+  padding-bottom:6px;
+}
+.stage{
+  flex:1 1 0;
+  min-width:150px;
+  position:relative;
+  padding:14px 18px 14px 22px;
+  color:#fff;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  clip-path:polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%, 14px 50%);
+  margin-right:-14px;
+}
+.stage:first-child{clip-path:polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%);}
+.stage:last-child{margin-right:0;}
+.stage .s-label{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.05em;opacity:.85;}
+.stage .s-value{font-family:var(--disp);font-size:20px;font-weight:700;margin-top:4px;}
+.stage .s-count{font-size:11px;opacity:.85;margin-top:1px;}
+.stage.s1{background:#274a72;}
+.stage.s2{background:var(--vat);}
+.stage.s3{background:#5c8ba3;}
+.stage.s4{background:var(--indigo);}
+.stage.s5{background:#2f5a3f;}
+.stage.s6{background:var(--moss);}
+
+/* ---------- panels / tabs ---------- */
+.tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;}
+.tab-btn{
+  font-family:var(--mono);
+  font-size:12px;
+  padding:9px 16px;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:6px;
+  cursor:pointer;
+  color:var(--ink-soft);
+  transition:all .12s;
+}
+.tab-btn:hover{border-color:var(--indigo);color:var(--indigo);}
+.tab-btn.active{background:var(--indigo);border-color:var(--indigo);color:#fff;}
+
+.panel{display:none;}
+.panel.active{display:block;}
+
+.card{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:20px 22px;
+  margin-bottom:20px;
+}
+.card h3{font-family:var(--disp);font-size:14.5px;margin:0 0 14px;}
+.card .card-head{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+.card .card-head h3{margin:0;}
+.stage-kpi{
+  font-family:var(--mono);
+  font-size:13px;
+  color:var(--vat);
+  background:#eef4f7;
+  border:1px solid #d3e3ea;
+  padding:6px 14px;
+  border-radius:6px;
+  white-space:nowrap;
+}
+.stage-kpi b{font-family:var(--disp);font-size:15px;color:var(--indigo);}
+
+/* ---------- filter bar ---------- */
+.filters{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:16px;
+}
+.filters input, .filters select{
+  font-family:var(--body);
+  font-size:13px;
+  padding:8px 11px;
+  border:1px solid var(--line);
+  border-radius:6px;
+  background:#fbfbfa;
+  color:var(--ink);
+  min-width:140px;
+}
+.filters input:focus, .filters select:focus{outline:2px solid var(--vat);outline-offset:-1px;}
+.filters .grow{flex:1;min-width:200px;}
+.filters button{
+  font-family:var(--mono);
+  font-size:12px;
+  padding:8px 14px;
+  border-radius:6px;
+  border:1px solid var(--line);
+  background:#fff;
+  cursor:pointer;
+  color:var(--ink-soft);
+}
+.filters button:hover{color:var(--brick);border-color:var(--brick);}
+
+/* ---------- tables ---------- */
+.table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:6px;}
+table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:900px;}
+thead th{
+  background:#f4f6f5;
+  font-family:var(--mono);
+  text-transform:uppercase;
+  font-size:10px;
+  letter-spacing:.04em;
+  color:var(--ink-soft);
+  text-align:left;
+  padding:9px 12px;
+  border-bottom:1px solid var(--line);
+  white-space:nowrap;
+  position:sticky;top:0;
+}
+tbody td{
+  padding:8px 12px;
+  border-bottom:1px solid #eef0ef;
+  white-space:nowrap;
+  font-family:var(--body);
+}
+tbody tr:hover{background:#f7f9f8;}
+td.num, th.num{font-family:var(--mono);text-align:right;}
+.pill{
+  display:inline-block;
+  font-family:var(--mono);
+  font-size:10.5px;
+  padding:3px 9px;
+  border-radius:20px;
+  color:#fff;
+  white-space:nowrap;
+}
+.pill.dye{background:var(--vat);}
+.pill.pend{background:#8a9296;}
+.pill.fin{background:var(--indigo);}
+.pill.chk{background:var(--mustard);color:#3a2a06;}
+.pill.disp{background:var(--moss);}
+.pill.none{background:#c8cdd0;color:#54606a;}
+.pill.late{background:var(--brick);}
+.pill.ontime{background:var(--moss);}
+.pill.open{background:#d9dde0;color:#4a5560;}
+
+.row-count{font-size:12px;color:var(--ink-soft);margin-bottom:10px;font-family:var(--mono);}
+
+footer{
+  max-width:1400px;margin:0 auto;padding:10px 24px 40px;
+  font-size:11.5px;color:var(--ink-soft);font-family:var(--mono);
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <span class="mark">DYE HOUSE // FLOW</span>
+    <span class="sub">SALES → DYEING → FINISHING → CHECKING → DISPATCH</span>
+  </div>
+  <div class="status" id="statusLine"><span class="dot loading" id="statusDot"></span><span id="statusText">connecting to sheet…</span></div>
+  <button class="gear-btn" id="settingsBtn" title="Customize table columns">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+    Customize
+  </button>
+</div>
+
+<div class="wrap">
+
+  <div class="msg-banner" id="msgBanner"></div>
+
+  <!-- KPI ROW -->
+  <div class="kpi-row" id="kpiRow">
+    <div class="kpi">
+      <div class="label">Open Records</div>
+      <div class="value" id="kpiTotal">—</div>
+    </div>
+    <div class="kpi accent-dye">
+      <div class="label">In Dyeing</div>
+      <div class="value" id="kpiDyeing">—</div>
+    </div>
+    <div class="kpi accent-dye">
+      <div class="label">Pend. to Finishing</div>
+      <div class="value" id="kpiPending">—</div>
+    </div>
+    <div class="kpi accent-fin">
+      <div class="label">In Finishing</div>
+      <div class="value" id="kpiFinishing">—</div>
+    </div>
+    <div class="kpi accent-disp">
+      <div class="label">Ready to Dispatch</div>
+      <div class="value" id="kpiReady">—</div>
+    </div>
+    <div class="kpi accent-alert">
+      <div class="label">Delayed (past delivery)</div>
+      <div class="value" id="kpiDelayed">—</div>
+    </div>
+  </div>
+
+  <!-- SIGNATURE FLOW PIPELINE -->
+  <div class="flow-card">
+    <h2>Qty currently sitting at each stage</h2>
+    <div class="desc">Total weight (Kg) parked at each point in the pipeline right now — Dyeing → Pending to Finishing → Finishing → Ready to Dispatch → Dispatched.</div>
+    <div class="pipeline" id="pipeline"></div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" data-panel="panel-records">Record-wise</button>
+    <button class="tab-btn" data-panel="panel-po">PO-wise rollup</button>
+    <button class="tab-btn" data-panel="panel-delay">Delivery vs Dispatch</button>
+    <button class="tab-btn" data-panel="panel-shortage">Shortage %</button>
+    <button class="tab-btn" data-panel="panel-pend-dye">Pending Lots (Dyeing)</button>
+    <button class="tab-btn" data-panel="panel-pend-fin">Pending Lots (Finishing)</button>
+  </div>
+
+  <!-- RECORD-WISE -->
+  <div class="panel active" id="panel-records">
+    <div class="card">
+      <h3>Record-wise stage tracker</h3>
+      <div class="filters">
+        <input type="text" id="f-search" class="grow" placeholder="Search party, order no, shade, dyer, item…">
+        <select id="f-stage">
+          <option value="">All stages</option>
+          <option value="dye">In Dyeing</option>
+          <option value="pend">Pend. to Finishing</option>
+          <option value="fin">In Finishing</option>
+          <option value="chk">Ready to Dispatch</option>
+          <option value="disp">Dispatched</option>
+          <option value="open">Not yet in dyeing</option>
+        </select>
+        <button id="f-clear">Clear</button>
+      </div>
+      <div class="row-count" id="recCount"></div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr id="rec-head-row"></tr>
+          </thead>
+          <tbody id="recBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- PO-WISE -->
+  <div class="panel" id="panel-po">
+    <div class="card">
+      <h3>Purchase order rollup</h3>
+      <div class="filters">
+        <input type="text" id="po-search" class="grow" placeholder="Search order no. or party…">
+        <button id="po-clear">Clear</button>
+      </div>
+      <div class="row-count" id="poCount"></div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr id="po-head-row"></tr>
+          </thead>
+          <tbody id="poBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- DELAY -->
+  <div class="panel" id="panel-delay">
+    <div class="card">
+      <h3>Delivery date vs. actual dispatch date</h3>
+      <div class="filters">
+        <input type="text" id="d-search" class="grow" placeholder="Search party, order no…">
+        <select id="d-filter">
+          <option value="">All dispatched</option>
+          <option value="late">Late only</option>
+          <option value="ontime">On-time / early only</option>
+        </select>
+        <button id="d-clear">Clear</button>
+      </div>
+      <div class="row-count" id="delayCount"></div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr id="delay-head-row"></tr>
+          </thead>
+          <tbody id="delayBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHORTAGE -->
+  <div class="panel" id="panel-shortage">
+    <div class="card">
+      <h3>Fab / All shortage % (dyeing qty vs. dispatched qty)</h3>
+      <div class="filters">
+        <input type="text" id="s-search" class="grow" placeholder="Search party, order no, shade…">
+        <button id="s-clear">Clear</button>
+      </div>
+      <div class="row-count" id="shortCount"></div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr id="short-head-row"></tr>
+          </thead>
+          <tbody id="shortBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- PENDING LOTS (DYEING) -->
+  <div class="panel" id="panel-pend-dye">
+    <div class="card">
+      <div class="card-head">
+        <h3>Pending Lots (Dyeing) — lots not yet fully received from the dyer</h3>
+        <div class="stage-kpi">Total Pending Wt: <b id="pendDyeKpi">—</b></div>
+      </div>
+      <div class="filters">
+        <input type="text" id="pd-search" class="grow" placeholder="Search lot no, order no, party, dyeing name…">
+        <button id="pd-clear">Clear</button>
+      </div>
+      <div class="row-count" id="pendDyeCount"></div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr id="pend-dye-head-row"></tr>
+          </thead>
+          <tbody id="pendDyeBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- PENDING LOTS (FINISHING) -->
+  <div class="panel" id="panel-pend-fin">
+    <div class="card">
+      <div class="card-head">
+        <h3>Pending Lots (Finishing) — lots not yet received back from finishing</h3>
+        <div class="stage-kpi">Total Weight: <b id="pendFinKpi">—</b></div>
+      </div>
+      <div class="filters">
+        <input type="text" id="pf-search" class="grow" placeholder="Search lot no, finishing name…">
+        <button id="pf-clear">Clear</button>
+      </div>
+      <div class="row-count" id="pendFinCount"></div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr id="pend-fin-head-row"></tr>
+          </thead>
+          <tbody id="pendFinBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settingsOverlay">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Customize table columns</h3>
+      <button class="modal-close" id="modalCloseBtn">&times;</button>
+    </div>
+    <div class="modal-tabs" id="modalTabs">
+      <div class="modal-tab active" data-table="records">Record-wise</div>
+      <div class="modal-tab" data-table="po">PO-wise</div>
+      <div class="modal-tab" data-table="delay">Delivery vs Dispatch</div>
+      <div class="modal-tab" data-table="shortage">Shortage %</div>
+      <div class="modal-tab" data-table="pendDye">Pending (Dyeing)</div>
+      <div class="modal-tab" data-table="pendFin">Pending (Finishing)</div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-hint">Rename a header, tick/untick to show or hide a column, use the arrows to reorder. Saved automatically to this browser.</div>
+      <div id="colRowsContainer"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="reset-link" id="resetTableBtn">Reset this table to default</button>
+      <button class="save-btn" id="saveSettingsBtn">Save &amp; Apply</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Data source: published Google Sheet (CSV). Columns AF, AG, AO, AP are excluded from all calculations — working/rough columns.
+</footer>
+
+<script>
+/* ================================================================
+   CONFIG — edit this block if the sheet layout changes.
+   Everything below is 0-indexed (column A = 0, B = 1 … AA = 26 …).
+   ================================================================ */
+const SPREADSHEET_ID = "1OJTFphXppCN1Qifv1xjbjHODZZ5v4HsO5mF5aPY4Dss";
+const SHEET_GID = "1409221950";
+const DYE_SHEET_GID = "1012606388";
+const FINISH_SHEET_GID = "180967936";
+
+// Column map for the DYE tab (0-indexed: A=0, B=1 …)
+const DYE_COLS = {
+  date:        0,   // A
+  challanNo:   1,   // B
+  lotNo:       2,   // C
+  dyeingName:  3,   // D
+  orderNo:     4,   // E
+  shadeName:   5,   // F
+  recordNo:    6,   // G
+  pendingWt:   13,  // N
+  dyePenPct:   14,  // O
+  weightDetail:9    // J
+};
+
+// Column map for the FINISH tab (0-indexed)
+const FINISH_COLS = {
+  date:          0, // A
+  lotNo:         2, // C
+  finishingName: 3, // D
+  weightDetail:  5, // F
+  totalWt:       6, // G
+  recSummary:    7  // H
+};
+
+const COLS = {
+  recordNo:      0,   // A
+  orderNo:       1,   // B
+  orderDate:     2,   // C
+  deliveryDate:  3,   // D
+  party:         4,   // E
+  dyeingProcess: 5,   // F
+  finishProcess: 6,   // G
+  shade:         7,   // H
+  itemCode:      8,   // I
+  itemName:      9,   // J
+  totalWt:       26,  // AA
+
+  lotNo:         27,  // AB
+  shadeDye:      28,  // AC
+  dyer:          29,  // AD
+  actualAllQtyDye: 34, // AI  -> confirmed qty out of dyeing
+  inDyeing:      36,  // AK  -> qty still at dyeing
+  pendToFin:     37,  // AL  -> received from dyeing, pending to finishing
+
+  finisher:      38,  // AM
+  inFinishing:   45,  // AT  -> qty still at finishing
+
+  checkingOk:    46,  // AU
+  readyDispatch: 47,  // AV  -> ready to dispatch
+
+  dispatchDate:  48,  // AW
+  dispatchDetail:49,  // AX
+  allQtyDispatched: 51, // AZ -> final dispatched qty
+
+  fabShortPct:   57,  // BF
+  allShortPct:   58   // BG
+};
+
+// columns intentionally ignored (rough/working columns per Suraj)
+const IGNORE_COLS = [31, 32, 40, 41]; // AF, AG, AO, AP
+
+/* ================================================================ */
+
+let RAW_ROWS = [];
+let RECORDS = [];
+
+const $ = (id) => document.getElementById(id);
+
+function setStatus(text, kind){
+  $('statusText').textContent = text;
+  const dot = $('statusDot');
+  dot.className = 'dot' + (kind==='bad' ? ' bad' : kind==='loading' ? ' loading' : '');
+}
+
+function showMsg(text, isErr){
+  const b = $('msgBanner');
+  b.textContent = text;
+  b.className = 'msg-banner show' + (isErr ? ' err' : '');
+}
+
+function num(v){
+  if (v === undefined || v === null) return 0;
+  const n = parseFloat(String(v).replace(/,/g,'').trim());
+  return isNaN(n) ? 0 : n;
+}
+
+function str(v){ return (v===undefined || v===null) ? '' : String(v).trim(); }
+
+function parseDMY(s){
+  // expects DD/MM/YYYY
+  s = str(s);
+  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!m) return null;
+  const d = new Date(parseInt(m[3]), parseInt(m[2])-1, parseInt(m[1]));
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function fmtDate(d){
+  if (!d) return '—';
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  return `${dd}/${mm}/${d.getFullYear()}`;
+}
+
+function fmtNum(n){
+  if (!n) return '0';
+  return n.toLocaleString('en-IN', {maximumFractionDigits:1});
+}
+
+function stageOf(rec){
+  if (rec.allQtyDispatched > 0) return 'disp';
+  if (rec.readyDispatch > 0) return 'chk';
+  if (rec.inFinishing > 0) return 'fin';
+  if (rec.pendToFin > 0) return 'pend';
+  if (rec.inDyeing > 0) return 'dye';
+  return 'open';
+}
+
+const STAGE_LABEL = {
+  dye:'In Dyeing', pend:'Pend. to Finishing', fin:'In Finishing',
+  chk:'Ready to Dispatch', disp:'Dispatched', open:'Not yet in dyeing'
+};
+const STAGE_PILL = {
+  dye:'dye', pend:'pend', fin:'fin', chk:'chk', disp:'disp', open:'open'
+};
+
+function buildRecords(rows){
+  const out = [];
+  for (const r of rows){
+    const recordNo = str(r[COLS.recordNo]);
+    if (!recordNo) continue; // skip blank rows
+    const rec = {
+      recordNo,
+      orderNo: str(r[COLS.orderNo]),
+      orderDate: parseDMY(r[COLS.orderDate]),
+      deliveryDate: parseDMY(r[COLS.deliveryDate]),
+      party: str(r[COLS.party]),
+      shade: str(r[COLS.shade]) || str(r[COLS.shadeDye]),
+      itemName: str(r[COLS.itemName]),
+      lotNo: str(r[COLS.lotNo]),
+      dyer: str(r[COLS.dyer]),
+      finisher: str(r[COLS.finisher]),
+      totalWt: num(r[COLS.totalWt]),
+      actualAllQtyDye: num(r[COLS.actualAllQtyDye]),
+      inDyeing: num(r[COLS.inDyeing]),
+      pendToFin: num(r[COLS.pendToFin]),
+      inFinishing: num(r[COLS.inFinishing]),
+      readyDispatch: num(r[COLS.readyDispatch]),
+      dispatchDate: parseDMY(r[COLS.dispatchDate]),
+      allQtyDispatched: num(r[COLS.allQtyDispatched]),
+      fabShortPct: str(r[COLS.fabShortPct]),
+      allShortPct: str(r[COLS.allShortPct]),
+    };
+    rec.stage = stageOf(rec);
+    if (rec.deliveryDate && rec.dispatchDate){
+      const diff = Math.round((rec.dispatchDate - rec.deliveryDate) / 86400000);
+      rec.delayDays = diff;
+      rec.delayStatus = diff > 0 ? 'late' : 'ontime';
+    } else {
+      rec.delayDays = null;
+      rec.delayStatus = null;
+    }
+    out.push(rec);
+  }
+  return out;
+}
+
+/* ---------------- KPIs + pipeline ---------------- */
+function renderKPIs(records){
+  const sum = (key) => records.reduce((a,r)=>a+r[key],0);
+  $('kpiTotal').textContent = records.length;
+  $('kpiDyeing').innerHTML = fmtNum(sum('inDyeing')) + ' <small>kg</small>';
+  $('kpiPending').innerHTML = fmtNum(sum('pendToFin')) + ' <small>kg</small>';
+  $('kpiFinishing').innerHTML = fmtNum(sum('inFinishing')) + ' <small>kg</small>';
+  $('kpiReady').innerHTML = fmtNum(sum('readyDispatch')) + ' <small>kg</small>';
+  const delayed = records.filter(r => r.delayStatus === 'late').length;
+  $('kpiDelayed').textContent = delayed;
+
+  const stages = [
+    {cls:'s1', label:'Confirmed', value: sum('actualAllQtyDye'), count: records.filter(r=>r.actualAllQtyDye>0).length},
+    {cls:'s2', label:'In Dyeing', value: sum('inDyeing'), count: records.filter(r=>r.inDyeing>0).length},
+    {cls:'s3', label:'Pend. Finishing', value: sum('pendToFin'), count: records.filter(r=>r.pendToFin>0).length},
+    {cls:'s4', label:'In Finishing', value: sum('inFinishing'), count: records.filter(r=>r.inFinishing>0).length},
+    {cls:'s5', label:'Ready to Dispatch', value: sum('readyDispatch'), count: records.filter(r=>r.readyDispatch>0).length},
+    {cls:'s6', label:'Dispatched', value: sum('allQtyDispatched'), count: records.filter(r=>r.allQtyDispatched>0).length},
+  ];
+  $('pipeline').innerHTML = stages.map(s => `
+    <div class="stage ${s.cls}">
+      <div class="s-label">${s.label}</div>
+      <div class="s-value">${fmtNum(s.value)}</div>
+      <div class="s-count">${s.count} record${s.count===1?'':'s'}</div>
+    </div>
+  `).join('');
+}
+
+/* ================================================================
+   COLUMN CUSTOMIZATION — powers the "Customize" gear/settings panel.
+   Each table has a fixed list of possible columns (defs). The person
+   using the dashboard can rename, hide, and reorder them from the UI;
+   choices are saved to localStorage so they persist on reload.
+   ================================================================ */
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+const TABLES = {
+  records: {
+    headRowId: 'rec-head-row',
+    defs: [
+      {key:'recordNo', label:'Record', render:r=>r.recordNo},
+      {key:'orderNo', label:'Order No.', render:r=>r.orderNo},
+      {key:'party', label:'Party', render:r=>r.party},
+      {key:'shade', label:'Shade', render:r=>r.shade},
+      {key:'itemName', label:'Item', render:r=>r.itemName},
+      {key:'lotNo', label:'Lot No.', render:r=>r.lotNo || '—'},
+      {key:'dyer', label:'Dyer', render:r=>r.dyer || '—'},
+      {key:'stage', label:'Stage', render:r=>`<span class="pill ${STAGE_PILL[r.stage]}">${STAGE_LABEL[r.stage]}</span>`},
+      {key:'inDyeing', label:'In Dyeing', numeric:true, render:r=> r.inDyeing ? fmtNum(r.inDyeing) : '—'},
+      {key:'pendToFin', label:'Pend. Fin.', numeric:true, render:r=> r.pendToFin ? fmtNum(r.pendToFin) : '—'},
+      {key:'inFinishing', label:'In Finish.', numeric:true, render:r=> r.inFinishing ? fmtNum(r.inFinishing) : '—'},
+      {key:'readyDispatch', label:'Ready Disp.', numeric:true, render:r=> r.readyDispatch ? fmtNum(r.readyDispatch) : '—'},
+      {key:'allQtyDispatched', label:'Dispatched', numeric:true, render:r=> r.allQtyDispatched ? fmtNum(r.allQtyDispatched) : '—'},
+      {key:'deliveryDate', label:'Delivery', render:r=>fmtDate(r.deliveryDate)},
+      {key:'dispatchDate', label:'Dispatch', render:r=>fmtDate(r.dispatchDate)},
+    ]
+  },
+  po: {
+    headRowId: 'po-head-row',
+    defs: [
+      {key:'orderNo', label:'Order No.', render:g=>g.orderNo},
+      {key:'party', label:'Party', render:g=>g.party},
+      {key:'orderDate', label:'Order Date', render:g=>fmtDate(g.orderDate)},
+      {key:'deliveryDate', label:'Delivery Date', render:g=>fmtDate(g.deliveryDate)},
+      {key:'records', label:'Records', numeric:true, render:g=>g.records},
+      {key:'inDyeing', label:'In Dyeing', numeric:true, render:g=> g.inDyeing ? fmtNum(g.inDyeing) : '—'},
+      {key:'pendToFin', label:'Pend. Fin.', numeric:true, render:g=> g.pendToFin ? fmtNum(g.pendToFin) : '—'},
+      {key:'inFinishing', label:'In Finish.', numeric:true, render:g=> g.inFinishing ? fmtNum(g.inFinishing) : '—'},
+      {key:'readyDispatch', label:'Ready Disp.', numeric:true, render:g=> g.readyDispatch ? fmtNum(g.readyDispatch) : '—'},
+      {key:'allQtyDispatched', label:'Dispatched', numeric:true, render:g=> g.allQtyDispatched ? fmtNum(g.allQtyDispatched) : '—'},
+      {key:'status', label:'Status', render:g=>g.statusHtml},
+    ]
+  },
+  delay: {
+    headRowId: 'delay-head-row',
+    defs: [
+      {key:'recordNo', label:'Record', render:r=>r.recordNo},
+      {key:'orderNo', label:'Order No.', render:r=>r.orderNo},
+      {key:'party', label:'Party', render:r=>r.party},
+      {key:'shade', label:'Shade', render:r=>r.shade},
+      {key:'deliveryDate', label:'Delivery Date', render:r=>fmtDate(r.deliveryDate)},
+      {key:'dispatchDate', label:'Dispatch Date', render:r=>fmtDate(r.dispatchDate)},
+      {key:'delayDays', label:'Delay (days)', numeric:true, render:r=> r.delayDays > 0 ? '+' + r.delayDays : r.delayDays},
+      {key:'status', label:'Status', render:r=> r.delayStatus === 'late'
+          ? `<span class="pill late">${r.delayDays}d late</span>`
+          : `<span class="pill ontime">on time</span>`},
+    ]
+  },
+  shortage: {
+    headRowId: 'short-head-row',
+    defs: [
+      {key:'recordNo', label:'Record', render:r=>r.recordNo},
+      {key:'orderNo', label:'Order No.', render:r=>r.orderNo},
+      {key:'party', label:'Party', render:r=>r.party},
+      {key:'shade', label:'Shade', render:r=>r.shade},
+      {key:'actualAllQtyDye', label:'Actual All Qty', numeric:true, render:r=>fmtNum(r.actualAllQtyDye)},
+      {key:'allQtyDispatched', label:'Dispatched Qty', numeric:true, render:r=>fmtNum(r.allQtyDispatched)},
+      {key:'fabShortPct', label:'Fab Short %', numeric:true, render:r=> r.fabShortPct || '—'},
+      {key:'allShortPct', label:'All Short %', numeric:true, render:r=> r.allShortPct || '—'},
+    ]
+  },
+  pendDye: {
+    headRowId: 'pend-dye-head-row',
+    defs: [
+      {key:'lotNo', label:'Lot No.', render:r=>r.lotNo},
+      {key:'shade', label:'Shade', render:r=>r.shade},
+      {key:'orderNo', label:'Order No.', render:r=>r.orderNo},
+      {key:'party', label:'Party', render:r=>r.party || '—'},
+      {key:'dyeingName', label:'Dyeing Name', render:r=>r.dyeingName},
+      {key:'pendingWt', label:'Pending Wt', numeric:true, render:r=>fmtNum(r.pendingWt)},
+      {key:'pendingDays', label:'Pending Days', numeric:true, render:r=> r.pendingDays === null ? '—' : r.pendingDays},
+      {key:'weightDetail', label:'Weight Detail', render:r=>r.weightDetail || '—'},
+    ]
+  },
+  pendFin: {
+    headRowId: 'pend-fin-head-row',
+    defs: [
+      {key:'lotNo', label:'Lot No.', render:r=>r.lotNo},
+      {key:'date', label:'Date', render:r=>fmtDate(r.date)},
+      {key:'finishingName', label:'Finishing Name', render:r=>r.finishingName},
+      {key:'weightDetail', label:'Weight Detail', render:r=>r.weightDetail || '—'},
+      {key:'totalWt', label:'Total Wt', numeric:true, render:r=>fmtNum(r.totalWt)},
+    ]
+  }
+};
+
+const COL_STORAGE_KEY = 'dyeHouseDashboardColumnConfig_v1';
+
+function loadColumnConfig(){
+  try{
+    const raw = localStorage.getItem(COL_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch(e){ return {}; }
+}
+function saveColumnConfigToStorage(){
+  try{ localStorage.setItem(COL_STORAGE_KEY, JSON.stringify(COLUMN_CONFIG)); } catch(e){}
+}
+let COLUMN_CONFIG = loadColumnConfig();
+
+function getTableState(tableId){
+  const defs = TABLES[tableId].defs;
+  const allKeys = defs.map(d=>d.key);
+  const saved = COLUMN_CONFIG[tableId] || {};
+  let order = (Array.isArray(saved.order)) ? saved.order.filter(k=>allKeys.includes(k)) : [];
+  allKeys.forEach(k => { if (!order.includes(k)) order.push(k); });
+  const hidden = new Set(Array.isArray(saved.hidden) ? saved.hidden : []);
+  const labels = Object.assign({}, saved.labels || {});
+  return {order, hidden, labels};
+}
+
+function renderTableHead(tableId){
+  const rowEl = $(TABLES[tableId].headRowId);
+  if (!rowEl) return;
+  const defs = TABLES[tableId].defs;
+  const state = getTableState(tableId);
+  const visibleKeys = state.order.filter(k => !state.hidden.has(k));
+  rowEl.innerHTML = visibleKeys.map(k => {
+    const def = defs.find(d=>d.key===k);
+    const label = state.labels[k] || def.label;
+    return `<th${def.numeric ? ' class="num"' : ''}>${escapeHtml(label)}</th>`;
+  }).join('');
+}
+
+function buildRowHtml(tableId, rowData){
+  const defs = TABLES[tableId].defs;
+  const state = getTableState(tableId);
+  const visibleKeys = state.order.filter(k => !state.hidden.has(k));
+  return '<tr>' + visibleKeys.map(k => {
+    const def = defs.find(d=>d.key===k);
+    return `<td${def.numeric ? ' class="num"' : ''}>${def.render(rowData)}</td>`;
+  }).join('') + '</tr>';
+}
+
+function renderAllHeads(){
+  Object.keys(TABLES).forEach(renderTableHead);
+}
+
+/* ---------------- Record-wise table ---------------- */
+function renderRecords(){
+  renderTableHead('records');
+  const q = $('f-search').value.trim().toLowerCase();
+  const stageFilter = $('f-stage').value;
+  let rows = RECORDS.filter(r => {
+    if (stageFilter && r.stage !== stageFilter) return false;
+    if (!q) return true;
+    return [r.recordNo, r.orderNo, r.party, r.shade, r.itemName, r.lotNo, r.dyer]
+      .join(' ').toLowerCase().includes(q);
+  });
+  $('recCount').textContent = `${rows.length} of ${RECORDS.length} records`;
+  $('recBody').innerHTML = rows.map(r => buildRowHtml('records', r)).join('');
+}
+
+/* ---------------- PO-wise rollup ---------------- */
+function renderPO(){
+  renderTableHead('po');
+  const q = $('po-search').value.trim().toLowerCase();
+  const map = new Map();
+  for (const r of RECORDS){
+    if (!map.has(r.orderNo)){
+      map.set(r.orderNo, {
+        orderNo:r.orderNo, party:r.party, orderDate:r.orderDate, deliveryDate:r.deliveryDate,
+        records:0, inDyeing:0, pendToFin:0, inFinishing:0, readyDispatch:0, allQtyDispatched:0
+      });
+    }
+    const g = map.get(r.orderNo);
+    g.records++;
+    g.inDyeing += r.inDyeing;
+    g.pendToFin += r.pendToFin;
+    g.inFinishing += r.inFinishing;
+    g.readyDispatch += r.readyDispatch;
+    g.allQtyDispatched += r.allQtyDispatched;
+    if (r.deliveryDate && (!g.deliveryDate || r.deliveryDate > g.deliveryDate)) g.deliveryDate = r.deliveryDate;
+  }
+  let groups = Array.from(map.values());
+  if (q){
+    groups = groups.filter(g => (g.orderNo+' '+g.party).toLowerCase().includes(q));
+  }
+  groups.sort((a,b)=> (a.orderDate && b.orderDate) ? a.orderDate - b.orderDate : 0);
+  groups.forEach(g => {
+    const openPipeline = g.inDyeing + g.pendToFin + g.inFinishing + g.readyDispatch;
+    if (g.allQtyDispatched > 0 && openPipeline === 0){
+      g.statusHtml = '<span class="pill disp">Fully Dispatched</span>';
+    } else if (g.allQtyDispatched === 0 && openPipeline === 0){
+      g.statusHtml = '<span class="pill open">Not Yet In Dyeing</span>';
+    } else {
+      g.statusHtml = '<span class="pill open">In Progress</span>';
+    }
+  });
+  $('poCount').textContent = `${groups.length} purchase orders`;
+  $('poBody').innerHTML = groups.map(g => buildRowHtml('po', g)).join('');
+}
+
+/* ---------------- Delay tracker ---------------- */
+function renderDelay(){
+  renderTableHead('delay');
+  const q = $('d-search').value.trim().toLowerCase();
+  const filter = $('d-filter').value;
+  let rows = RECORDS.filter(r => r.dispatchDate && r.deliveryDate);
+  if (filter) rows = rows.filter(r => r.delayStatus === filter);
+  if (q) rows = rows.filter(r => (r.party+' '+r.orderNo).toLowerCase().includes(q));
+  rows.sort((a,b)=> (b.delayDays||0) - (a.delayDays||0));
+  $('delayCount').textContent = `${rows.length} dispatched records with both dates present`;
+  $('delayBody').innerHTML = rows.map(r => buildRowHtml('delay', r)).join('');
+}
+
+/* ---------------- Shortage % ---------------- */
+function renderShortage(){
+  renderTableHead('shortage');
+  const q = $('s-search').value.trim().toLowerCase();
+  let rows = RECORDS.filter(r => r.fabShortPct || r.allShortPct);
+  if (q) rows = rows.filter(r => (r.party+' '+r.orderNo+' '+r.shade).toLowerCase().includes(q));
+  $('shortCount').textContent = `${rows.length} records with shortage data`;
+  $('shortBody').innerHTML = rows.map(r => buildRowHtml('shortage', r)).join('');
+}
+
+function renderAll(){
+  renderKPIs(RECORDS);
+  renderRecords();
+  renderPO();
+  renderDelay();
+  renderShortage();
+  renderPendingDyeing();
+  renderPendingFinishing();
+}
+
+/* ---------------- settings modal ---------------- */
+let activeSettingsTable = 'records';
+// working copy edited in the modal; only committed to COLUMN_CONFIG on Save
+let draftState = null;
+
+function openSettingsModal(){
+  $('settingsOverlay').classList.add('show');
+  switchSettingsTab(activeSettingsTable);
+}
+function closeSettingsModal(){
+  $('settingsOverlay').classList.remove('show');
+  draftState = null;
+}
+
+function switchSettingsTab(tableId){
+  activeSettingsTable = tableId;
+  document.querySelectorAll('.modal-tab').forEach(t => t.classList.toggle('active', t.dataset.table === tableId));
+  const state = getTableState(tableId);
+  draftState = { order: state.order.slice(), hidden: new Set(state.hidden), labels: Object.assign({}, state.labels) };
+  renderColRows();
+}
+
+function renderColRows(){
+  const defs = TABLES[activeSettingsTable].defs;
+  const container = $('colRowsContainer');
+  container.innerHTML = draftState.order.map((key, idx) => {
+    const def = defs.find(d=>d.key===key);
+    const label = draftState.labels[key] !== undefined ? draftState.labels[key] : def.label;
+    const isHidden = draftState.hidden.has(key);
+    return `
+      <div class="col-row${isHidden ? ' hidden-col' : ''}" data-key="${key}">
+        <input type="checkbox" class="col-vis" data-key="${key}" ${isHidden ? '' : 'checked'} title="Show/hide column">
+        <input type="text" class="col-label" data-key="${key}" value="${escapeHtml(label)}">
+        <span class="col-key">${escapeHtml(def.label)}</span>
+        <div class="move-btns">
+          <button class="col-up" data-key="${key}" ${idx===0 ? 'disabled' : ''} title="Move up">&uarr;</button>
+          <button class="col-down" data-key="${key}" ${idx===draftState.order.length-1 ? 'disabled' : ''} title="Move down">&darr;</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  container.querySelectorAll('.col-vis').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const key = cb.dataset.key;
+      if (cb.checked) draftState.hidden.delete(key); else draftState.hidden.add(key);
+      renderColRows();
+    });
+  });
+  container.querySelectorAll('.col-label').forEach(inp => {
+    inp.addEventListener('input', () => { draftState.labels[inp.dataset.key] = inp.value; });
+  });
+  container.querySelectorAll('.col-up').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.key;
+      const i = draftState.order.indexOf(key);
+      if (i > 0){
+        [draftState.order[i-1], draftState.order[i]] = [draftState.order[i], draftState.order[i-1]];
+        renderColRows();
+      }
+    });
+  });
+  container.querySelectorAll('.col-down').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.key;
+      const i = draftState.order.indexOf(key);
+      if (i < draftState.order.length - 1){
+        [draftState.order[i+1], draftState.order[i]] = [draftState.order[i], draftState.order[i+1]];
+        renderColRows();
+      }
+    });
+  });
+}
+
+function saveSettings(){
+  COLUMN_CONFIG[activeSettingsTable] = {
+    order: draftState.order.slice(),
+    hidden: Array.from(draftState.hidden),
+    labels: Object.assign({}, draftState.labels)
+  };
+  saveColumnConfigToStorage();
+  renderAll();
+  closeSettingsModal();
+}
+
+function resetActiveTable(){
+  delete COLUMN_CONFIG[activeSettingsTable];
+  saveColumnConfigToStorage();
+  switchSettingsTab(activeSettingsTable);
+  renderAll();
+}
+
+/* ---------------- events ---------------- */
+function wireEvents(){
+  $('f-search').addEventListener('input', renderRecords);
+  $('f-stage').addEventListener('change', renderRecords);
+  $('f-clear').addEventListener('click', ()=>{ $('f-search').value=''; $('f-stage').value=''; renderRecords(); });
+
+  $('po-search').addEventListener('input', renderPO);
+  $('po-clear').addEventListener('click', ()=>{ $('po-search').value=''; renderPO(); });
+
+  $('d-search').addEventListener('input', renderDelay);
+  $('d-filter').addEventListener('change', renderDelay);
+  $('d-clear').addEventListener('click', ()=>{ $('d-search').value=''; $('d-filter').value=''; renderDelay(); });
+
+  $('s-search').addEventListener('input', renderShortage);
+  $('s-clear').addEventListener('click', ()=>{ $('s-search').value=''; renderShortage(); });
+
+  $('pd-search').addEventListener('input', renderPendingDyeing);
+  $('pd-clear').addEventListener('click', ()=>{ $('pd-search').value=''; renderPendingDyeing(); });
+
+  $('pf-search').addEventListener('input', renderPendingFinishing);
+  $('pf-clear').addEventListener('click', ()=>{ $('pf-search').value=''; renderPendingFinishing(); });
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+      btn.classList.add('active');
+      $(btn.dataset.panel).classList.add('active');
+    });
+  });
+
+  $('settingsBtn').addEventListener('click', openSettingsModal);
+  $('modalCloseBtn').addEventListener('click', closeSettingsModal);
+  $('settingsOverlay').addEventListener('click', (e) => { if (e.target.id === 'settingsOverlay') closeSettingsModal(); });
+  $('saveSettingsBtn').addEventListener('click', saveSettings);
+  $('resetTableBtn').addEventListener('click', resetActiveTable);
+  document.querySelectorAll('.modal-tab').forEach(tab => {
+    tab.addEventListener('click', () => switchSettingsTab(tab.dataset.table));
+  });
+
+  renderAllHeads();
+}
+
+/* ---------------- load ---------------- */
+// Google's published-CSV endpoint frequently doesn't send permissive CORS
+// headers, so a browser fetch() to it (or through a public CORS proxy) can
+// get blocked depending on network/browser. To sidestep that entirely, we
+// load the data via Google's Visualization API (gviz) as a JSONP <script>
+// tag instead of fetch/XHR. Script tags aren't subject to CORS, so this
+// works reliably from any page, including local files.
+//
+// If SPREADSHEET_ID or SHEET_GID above ever change (e.g. you make a copy
+// of the sheet, or add/reorder tabs), update those two constants — nothing
+// else needs to change.
+
+let gvizCallbackCounter = 0;
+
+function loadViaGviz(gid){
+  return new Promise((resolve, reject) => {
+    const cbName = 'gvizCb_' + (++gvizCallbackCounter) + '_' + Date.now();
+    const timeout = setTimeout(() => {
+      cleanup();
+      reject(new Error('gviz request timed out'));
+    }, 15000);
+
+    function cleanup(){
+      clearTimeout(timeout);
+      delete window[cbName];
+      if (script && script.parentNode) script.parentNode.removeChild(script);
+    }
+
+    window[cbName] = function(json){
+      cleanup();
+      resolve(json);
+    };
+
+    const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq`
+      + `?gid=${gid}&tqx=out:json;responseHandler:${cbName}`;
+
+    const script = document.createElement('script');
+    script.src = url;
+    script.onerror = () => { cleanup(); reject(new Error('gviz script failed to load')); };
+    document.head.appendChild(script);
+  });
+}
+
+function gvizRowToArray(row, colCount){
+  const arr = new Array(colCount).fill('');
+  if (!row || !row.c) return arr;
+  row.c.forEach((cell, i) => {
+    if (i >= colCount) return;
+    if (!cell){ arr[i] = ''; return; }
+    let val = (cell.f !== undefined && cell.f !== null) ? cell.f : cell.v;
+    arr[i] = (val === null || val === undefined) ? '' : val;
+  });
+  return arr;
+}
+
+async function fetchSheetRows(gid, minCols){
+  const json = await loadViaGviz(gid);
+  const colCount = Math.max((json.table.cols || []).length, minCols || 0);
+  return (json.table.rows || []).map(r => gvizRowToArray(r, colCount));
+}
+
+/* ---- Pending Lots (Dyeing) — sourced from the DYE tab ---- */
+let DYE_RAW_ROWS = [];
+let PEND_DYE_RECORDS = [];
+
+function buildPartyLookup(){
+  const map = {};
+  RECORDS.forEach(r => { if (r.orderNo && !map[r.orderNo]) map[r.orderNo] = r.party; });
+  return map;
+}
+
+function buildPendingDyeing(rows){
+  const partyLookup = buildPartyLookup();
+  const out = [];
+  for (const r of rows){
+    const lotNo = str(r[DYE_COLS.lotNo]);
+    if (!lotNo) continue;
+    const orderNo = str(r[DYE_COLS.orderNo]);
+    const dyePenRaw = str(r[DYE_COLS.dyePenPct]);
+    const dyePenPct = num(dyePenRaw.replace('%',''));
+    const date = parseDMY(r[DYE_COLS.date]);
+    let pendingDays = null;
+    if (date){
+      const today = new Date(); today.setHours(0,0,0,0);
+      const d0 = new Date(date); d0.setHours(0,0,0,0);
+      pendingDays = Math.round((today - d0) / 86400000);
+    }
+    out.push({
+      lotNo,
+      shade: str(r[DYE_COLS.shadeName]),
+      orderNo,
+      party: partyLookup[orderNo] || '',
+      dyeingName: str(r[DYE_COLS.dyeingName]),
+      pendingWt: num(r[DYE_COLS.pendingWt]),
+      pendingDays,
+      weightDetail: str(r[DYE_COLS.weightDetail]),
+      dyePenPct
+    });
+  }
+  return out;
+}
+
+function renderPendingDyeing(){
+  renderTableHead('pendDye');
+  const q = $('pd-search').value.trim().toLowerCase();
+  let rows = PEND_DYE_RECORDS.filter(r => r.dyePenPct > 0);
+  if (q){
+    rows = rows.filter(r => [r.lotNo, r.orderNo, r.party, r.dyeingName].join(' ').toLowerCase().includes(q));
+  }
+  const totalPending = rows.reduce((a,r)=>a+r.pendingWt, 0);
+  $('pendDyeKpi').textContent = fmtNum(totalPending) + ' kg';
+  $('pendDyeCount').textContent = `${rows.length} pending lots`;
+  $('pendDyeBody').innerHTML = rows.map(r => buildRowHtml('pendDye', r)).join('');
+}
+
+/* ---- Pending Lots (Finishing) — sourced from the FINISH tab ---- */
+let FINISH_RAW_ROWS = [];
+let PEND_FIN_RECORDS = [];
+
+function buildPendingFinishing(rows){
+  const out = [];
+  for (const r of rows){
+    const lotNo = str(r[FINISH_COLS.lotNo]);
+    if (!lotNo) continue;
+    out.push({
+      lotNo,
+      date: parseDMY(r[FINISH_COLS.date]),
+      finishingName: str(r[FINISH_COLS.finishingName]),
+      weightDetail: str(r[FINISH_COLS.weightDetail]),
+      totalWt: num(r[FINISH_COLS.totalWt]),
+      recSummary: str(r[FINISH_COLS.recSummary])
+    });
+  }
+  return out;
+}
+
+function renderPendingFinishing(){
+  renderTableHead('pendFin');
+  const q = $('pf-search').value.trim().toLowerCase();
+  let rows = PEND_FIN_RECORDS.filter(r => !r.recSummary);
+  if (q){
+    rows = rows.filter(r => [r.lotNo, r.finishingName].join(' ').toLowerCase().includes(q));
+  }
+  const totalWt = rows.reduce((a,r)=>a+r.totalWt, 0);
+  $('pendFinKpi').textContent = fmtNum(totalWt) + ' kg';
+  $('pendFinCount').textContent = `${rows.length} pending lots`;
+  $('pendFinBody').innerHTML = rows.map(r => buildRowHtml('pendFin', r)).join('');
+}
+
+async function loadData(){
+  setStatus('connecting to sheet…', 'loading');
+  try{
+    const [mainRows, dyeRows, finishRows] = await Promise.all([
+      fetchSheetRows(SHEET_GID, 59),
+      fetchSheetRows(DYE_SHEET_GID, 24),
+      fetchSheetRows(FINISH_SHEET_GID, 9)
+    ]);
+
+    RAW_ROWS = mainRows;
+    RECORDS = buildRecords(RAW_ROWS);
+
+    DYE_RAW_ROWS = dyeRows;
+    PEND_DYE_RECORDS = buildPendingDyeing(DYE_RAW_ROWS);
+
+    FINISH_RAW_ROWS = finishRows;
+    PEND_FIN_RECORDS = buildPendingFinishing(FINISH_RAW_ROWS);
+
+    if (RECORDS.length === 0){
+      showMsg('Sheet loaded but no records found — check that Record No. is in column A, and that SHEET_GID points to the right tab.', true);
+    } else {
+      $('msgBanner').classList.remove('show');
+    }
+    renderAll();
+    setStatus(`live · ${RECORDS.length} records · updated ${new Date().toLocaleTimeString('en-IN')}`, 'ok');
+  } catch(e){
+    console.error(e);
+    setStatus('could not reach sheet', 'bad');
+    showMsg('Could not load data. Please check your internet connection and reload this file.', true);
+  }
+}
+
+wireEvents();
+loadData();
+// auto-refresh every 5 minutes
+setInterval(loadData, 5 * 60 * 1000);
+</script>
+</body>
+</html>
