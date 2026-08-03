@@ -237,7 +237,7 @@ body{
 /* ---------- KPI row ---------- */
 .kpi-row{
   display:grid;
-  grid-template-columns:repeat(6,1fr);
+  grid-template-columns:repeat(7,1fr);
   gap:1px;
   background:var(--line);
   border:1px solid var(--line);
@@ -265,6 +265,7 @@ body{
   line-height:1;
 }
 .kpi .value small{font-family:var(--body);font-size:13px;font-weight:500;color:var(--ink-soft);}
+.kpi .kpi-count{font-size:11px;color:var(--ink-soft);margin-top:2px;font-family:var(--mono);}
 .kpi.accent-dye .value{color:var(--vat);}
 .kpi.accent-fin .value{color:var(--indigo);}
 .kpi.accent-disp .value{color:var(--moss);}
@@ -313,8 +314,9 @@ body{
 .stage.s2{background:var(--vat);}
 .stage.s3{background:#5c8ba3;}
 .stage.s4{background:var(--indigo);}
-.stage.s5{background:#2f5a3f;}
-.stage.s6{background:var(--moss);}
+.stage.s5{background:#b5791f;}
+.stage.s6{background:#2f5a3f;}
+.stage.s7{background:var(--moss);}
 
 /* ---------- panels / tabs ---------- */
 .tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;}
@@ -357,6 +359,44 @@ body{
 }
 .stage-kpi b{font-family:var(--disp);font-size:15px;color:var(--indigo);}
 
+.toggle-tab{
+  font-family:var(--mono);
+  font-size:12.5px;
+  padding:8px 16px;
+  border-radius:20px;
+  border:1px solid var(--line);
+  background:#fff;
+  color:var(--ink-soft);
+  cursor:pointer;
+  white-space:nowrap;
+  transition:all .12s;
+}
+.toggle-tab:hover{border-color:var(--indigo);color:var(--indigo);}
+.toggle-tab.active{background:var(--indigo);border-color:var(--indigo);color:#fff;}
+
+.expand-cell{width:36px;text-align:center;padding:6px !important;}
+.expand-btn{
+  width:22px;height:22px;
+  border-radius:5px;
+  border:1px solid var(--line);
+  background:#fff;
+  color:var(--indigo);
+  cursor:pointer;
+  font-size:14px;
+  line-height:1;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);
+}
+.expand-btn:hover{border-color:var(--indigo);background:#eef2f6;}
+.expand-btn.open{background:var(--indigo);color:#fff;border-color:var(--indigo);}
+
+.knit-detail-row td{background:#f7f9fb;padding:0 !important;border-bottom:1px solid var(--line);}
+.knit-detail-wrap{padding:14px 20px;overflow-x:auto;}
+.knit-detail-table{width:100%;border-collapse:collapse;font-size:11.5px;}
+.knit-detail-table th{background:#eef1f0;font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-soft);padding:6px 10px;text-align:left;white-space:normal;}
+.knit-detail-table td{padding:6px 10px;border-bottom:1px solid #e4e7e6;white-space:normal;word-break:break-word;font-family:var(--body);}
+.knit-detail-table .num{text-align:right;font-family:var(--mono);}
+
 /* ---------- filter bar ---------- */
 .filters{
   display:flex;
@@ -390,7 +430,7 @@ body{
 
 /* ---------- tables ---------- */
 .table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:6px;}
-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:900px;}
+table{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed;}
 thead th{
   background:#f4f6f5;
   font-family:var(--mono);
@@ -401,14 +441,29 @@ thead th{
   text-align:left;
   padding:9px 12px;
   border-bottom:1px solid var(--line);
-  white-space:nowrap;
+  white-space:normal;
+  word-break:break-word;
+  vertical-align:bottom;
   position:sticky;top:0;
+  width:130px;
 }
+.col-resize-handle{
+  position:absolute;
+  top:0; right:-3px; bottom:0;
+  width:6px;
+  cursor:col-resize;
+  z-index:2;
+  user-select:none;
+}
+.col-resize-handle:hover, .col-resize-handle:active{background:rgba(31,58,95,0.25);}
 tbody td{
   padding:8px 12px;
   border-bottom:1px solid #eef0ef;
-  white-space:nowrap;
+  white-space:normal;
+  word-break:break-word;
+  overflow-wrap:break-word;
   font-family:var(--body);
+  vertical-align:top;
 }
 tbody tr:hover{background:#f7f9f8;}
 td.num, th.num{font-family:var(--mono);text-align:right;}
@@ -425,6 +480,7 @@ td.num, th.num{font-family:var(--mono);text-align:right;}
 .pill.pend{background:#8a9296;}
 .pill.fin{background:var(--indigo);}
 .pill.chk{background:var(--mustard);color:#3a2a06;}
+.pill.ready{background:#5c8ba3;}
 .pill.disp{background:var(--moss);}
 .pill.none{background:#c8cdd0;color:#54606a;}
 .pill.late{background:var(--brick);}
@@ -460,8 +516,9 @@ footer{
   <!-- KPI ROW -->
   <div class="kpi-row" id="kpiRow">
     <div class="kpi">
-      <div class="label">Open Records</div>
+      <div class="label">Running Lots</div>
       <div class="value" id="kpiTotal">—</div>
+      <div class="kpi-count" id="kpiTotalCount"></div>
     </div>
     <div class="kpi accent-dye">
       <div class="label">In Dyeing</div>
@@ -474,6 +531,10 @@ footer{
     <div class="kpi accent-fin">
       <div class="label">In Finishing</div>
       <div class="value" id="kpiFinishing">—</div>
+    </div>
+    <div class="kpi accent-fin">
+      <div class="label">Checking</div>
+      <div class="value" id="kpiChecking">—</div>
     </div>
     <div class="kpi accent-disp">
       <div class="label">Ready to Dispatch</div>
@@ -495,11 +556,12 @@ footer{
   <!-- TABS -->
   <div class="tabs">
     <button class="tab-btn active" data-panel="panel-records">Record-wise</button>
+    <button class="tab-btn" data-panel="panel-knit-dye">Knit to Dye Pend.</button>
     <button class="tab-btn" data-panel="panel-po">PO-wise rollup</button>
-    <button class="tab-btn" data-panel="panel-delay">Delivery vs Dispatch</button>
-    <button class="tab-btn" data-panel="panel-shortage">Shortage %</button>
     <button class="tab-btn" data-panel="panel-pend-dye">Pending Lots (Dyeing)</button>
     <button class="tab-btn" data-panel="panel-pend-fin">Pending Lots (Finishing)</button>
+    <button class="tab-btn" data-panel="panel-shortage">Shortage %</button>
+    <button class="tab-btn" data-panel="panel-delay">Delivery vs Dispatch</button>
   </div>
 
   <!-- RECORD-WISE -->
@@ -513,7 +575,8 @@ footer{
           <option value="dye">In Dyeing</option>
           <option value="pend">Pend. to Finishing</option>
           <option value="fin">In Finishing</option>
-          <option value="chk">Ready to Dispatch</option>
+          <option value="chk">Checking</option>
+          <option value="ready">Ready to Dispatch</option>
           <option value="disp">Dispatched</option>
           <option value="open">Not yet in dyeing</option>
         </select>
@@ -642,6 +705,29 @@ footer{
     </div>
   </div>
 
+  <!-- KNIT TO DYE PEND. -->
+  <div class="panel" id="panel-knit-dye">
+    <div class="card">
+      <div class="card-head">
+        <h3>Knit to Dye Pend. — orders with lots still pending to send to dyeing</h3>
+        <button class="toggle-tab" id="kd-handover-toggle">Handover Date</button>
+      </div>
+      <div class="filters">
+        <input type="text" id="kd-search" class="grow" placeholder="Search party, order no…">
+        <button id="kd-clear">Clear</button>
+      </div>
+      <div class="row-count" id="knitCount"></div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr id="knit-head-row"></tr>
+          </thead>
+          <tbody id="knitBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- SETTINGS MODAL -->
@@ -653,11 +739,12 @@ footer{
     </div>
     <div class="modal-tabs" id="modalTabs">
       <div class="modal-tab active" data-table="records">Record-wise</div>
+      <div class="modal-tab" data-table="knitDye">Knit to Dye Pend.</div>
       <div class="modal-tab" data-table="po">PO-wise</div>
-      <div class="modal-tab" data-table="delay">Delivery vs Dispatch</div>
-      <div class="modal-tab" data-table="shortage">Shortage %</div>
       <div class="modal-tab" data-table="pendDye">Pending (Dyeing)</div>
       <div class="modal-tab" data-table="pendFin">Pending (Finishing)</div>
+      <div class="modal-tab" data-table="shortage">Shortage %</div>
+      <div class="modal-tab" data-table="delay">Delivery vs Dispatch</div>
     </div>
     <div class="modal-body">
       <div class="modal-hint">Rename a header, tick/untick to show or hide a column, use the arrows to reorder. Saved automatically to this browser.</div>
@@ -683,6 +770,7 @@ const SPREADSHEET_ID = "1OJTFphXppCN1Qifv1xjbjHODZZ5v4HsO5mF5aPY4Dss";
 const SHEET_GID = "1409221950";
 const DYE_SHEET_GID = "1012606388";
 const FINISH_SHEET_GID = "180967936";
+const KNIT_SHEET_GID = "1791112325";
 
 // Column map for the DYE tab (0-indexed: A=0, B=1 …)
 const DYE_COLS = {
@@ -708,6 +796,21 @@ const FINISH_COLS = {
   recSummary:    7  // H
 };
 
+// Column map for the KNIT tab (0-indexed) — order-level, not lot-level
+const KNIT_COLS = {
+  orderNo:        0,  // A
+  orderDate:      1,  // B
+  deliveryDate:   2,  // C
+  party:          3,  // D
+  totalLot:       11, // L
+  knitStart:      12, // M
+  endDate:        13, // N
+  handoverDate:   14, // O
+  actualStart:    15, // P
+  pendLotForDye:  16, // Q
+  ageInDays:      17  // R
+};
+
 const COLS = {
   recordNo:      0,   // A
   orderNo:       1,   // B
@@ -724,26 +827,28 @@ const COLS = {
   lotNo:         27,  // AB
   shadeDye:      28,  // AC
   dyer:          29,  // AD
-  actualAllQtyDye: 34, // AI  -> confirmed qty out of dyeing
+  actualAllQtyDye: 32, // AG  -> confirmed qty out of dyeing
   inDyeing:      36,  // AK  -> qty still at dyeing
   pendToFin:     37,  // AL  -> received from dyeing, pending to finishing
 
   finisher:      38,  // AM
   inFinishing:   45,  // AT  -> qty still at finishing
 
-  checkingOk:    46,  // AU
-  readyDispatch: 47,  // AV  -> ready to dispatch
+  checkingOk:    47,  // AV (was AU before the AU insert)
+  qtyOnChecking: 46,  // AU  -> qty currently sitting at checking stage (NEW col)
+  readyDispatch: 48,  // AW  -> ready to dispatch (was AV)
 
-  dispatchDate:  48,  // AW
-  dispatchDetail:49,  // AX
-  allQtyDispatched: 51, // AZ -> final dispatched qty
+  dispatchDate:  49,  // AX  (was AW)
+  dispatchDetail:50,  // AY  (was AX)
+  allQtyDispatched: 52, // BA -> final dispatched qty (was AZ)
 
-  fabShortPct:   57,  // BF
-  allShortPct:   58   // BG
+  fabShortPct:   58,  // BG (was BF)
+  allShortPct:   59,  // BH (was BG)
+  stageRaw:      60   // BI -> sheet's own Stage label (NEW col)
 };
 
 // columns intentionally ignored (rough/working columns per Suraj)
-const IGNORE_COLS = [31, 32, 40, 41]; // AF, AG, AO, AP
+const IGNORE_COLS = [33, 34, 42, 43]; // AH, AI, AQ, AR
 
 /* ================================================================ */
 
@@ -793,21 +898,42 @@ function fmtNum(n){
   return n.toLocaleString('en-IN', {maximumFractionDigits:1});
 }
 
+// Fallback: derive stage from qty columns when the sheet's own Stage
+// column (COLS.stageRaw) is blank or unrecognized.
 function stageOf(rec){
   if (rec.allQtyDispatched > 0) return 'disp';
-  if (rec.readyDispatch > 0) return 'chk';
+  if (rec.readyDispatch > 0) return 'ready';
+  if (rec.qtyOnChecking > 0) return 'chk';
   if (rec.inFinishing > 0) return 'fin';
   if (rec.pendToFin > 0) return 'pend';
   if (rec.inDyeing > 0) return 'dye';
   return 'open';
 }
 
+// Maps the sheet's own "Stage" text (col BI) to our internal stage keys.
+const SHEET_STAGE_MAP = {
+  'dispatched': 'disp',
+  'ready to disp.': 'ready',
+  'ready to disp': 'ready',
+  'checking': 'chk',
+  'in finshing': 'fin', // sheet's own spelling, kept as an alias
+  'in finishing': 'fin',
+  'pend. to fin': 'pend',
+  'pend to fin': 'pend',
+  'not yet in dyeing': 'open',
+  'in dyeing': 'dye'
+};
+function stageFromSheetLabel(label){
+  const key = str(label).toLowerCase().trim();
+  return SHEET_STAGE_MAP[key] || null;
+}
+
 const STAGE_LABEL = {
   dye:'In Dyeing', pend:'Pend. to Finishing', fin:'In Finishing',
-  chk:'Ready to Dispatch', disp:'Dispatched', open:'Not yet in dyeing'
+  chk:'Checking', ready:'Ready to Dispatch', disp:'Dispatched', open:'Not yet in dyeing'
 };
 const STAGE_PILL = {
-  dye:'dye', pend:'pend', fin:'fin', chk:'chk', disp:'disp', open:'open'
+  dye:'dye', pend:'pend', fin:'fin', chk:'chk', ready:'ready', disp:'disp', open:'open'
 };
 
 function buildRecords(rows){
@@ -831,13 +957,14 @@ function buildRecords(rows){
       inDyeing: num(r[COLS.inDyeing]),
       pendToFin: num(r[COLS.pendToFin]),
       inFinishing: num(r[COLS.inFinishing]),
+      qtyOnChecking: num(r[COLS.qtyOnChecking]),
       readyDispatch: num(r[COLS.readyDispatch]),
       dispatchDate: parseDMY(r[COLS.dispatchDate]),
       allQtyDispatched: num(r[COLS.allQtyDispatched]),
       fabShortPct: str(r[COLS.fabShortPct]),
       allShortPct: str(r[COLS.allShortPct]),
     };
-    rec.stage = stageOf(rec);
+    rec.stage = stageFromSheetLabel(r[COLS.stageRaw]) || stageOf(rec);
     if (rec.deliveryDate && rec.dispatchDate){
       const diff = Math.round((rec.dispatchDate - rec.deliveryDate) / 86400000);
       rec.delayDays = diff;
@@ -854,10 +981,16 @@ function buildRecords(rows){
 /* ---------------- KPIs + pipeline ---------------- */
 function renderKPIs(records){
   const sum = (key) => records.reduce((a,r)=>a+r[key],0);
-  $('kpiTotal').textContent = records.length;
+  const runningQty = sum('inDyeing') + sum('pendToFin') + sum('inFinishing') + sum('qtyOnChecking') + sum('readyDispatch');
+  const runningRecords = records.filter(r =>
+    r.inDyeing > 0 || r.pendToFin > 0 || r.inFinishing > 0 || r.qtyOnChecking > 0 || r.readyDispatch > 0
+  );
+  $('kpiTotal').innerHTML = fmtNum(runningQty) + ' <small>kg</small>';
+  $('kpiTotalCount').textContent = `${runningRecords.length} lot${runningRecords.length===1?'':'s'}`;
   $('kpiDyeing').innerHTML = fmtNum(sum('inDyeing')) + ' <small>kg</small>';
   $('kpiPending').innerHTML = fmtNum(sum('pendToFin')) + ' <small>kg</small>';
   $('kpiFinishing').innerHTML = fmtNum(sum('inFinishing')) + ' <small>kg</small>';
+  $('kpiChecking').innerHTML = fmtNum(sum('qtyOnChecking')) + ' <small>kg</small>';
   $('kpiReady').innerHTML = fmtNum(sum('readyDispatch')) + ' <small>kg</small>';
   const delayed = records.filter(r => r.delayStatus === 'late').length;
   $('kpiDelayed').textContent = delayed;
@@ -867,8 +1000,9 @@ function renderKPIs(records){
     {cls:'s2', label:'In Dyeing', value: sum('inDyeing'), count: records.filter(r=>r.inDyeing>0).length},
     {cls:'s3', label:'Pend. Finishing', value: sum('pendToFin'), count: records.filter(r=>r.pendToFin>0).length},
     {cls:'s4', label:'In Finishing', value: sum('inFinishing'), count: records.filter(r=>r.inFinishing>0).length},
-    {cls:'s5', label:'Ready to Dispatch', value: sum('readyDispatch'), count: records.filter(r=>r.readyDispatch>0).length},
-    {cls:'s6', label:'Dispatched', value: sum('allQtyDispatched'), count: records.filter(r=>r.allQtyDispatched>0).length},
+    {cls:'s5', label:'Checking', value: sum('qtyOnChecking'), count: records.filter(r=>r.qtyOnChecking>0).length},
+    {cls:'s6', label:'Ready to Dispatch', value: sum('readyDispatch'), count: records.filter(r=>r.readyDispatch>0).length},
+    {cls:'s7', label:'Dispatched', value: sum('allQtyDispatched'), count: records.filter(r=>r.allQtyDispatched>0).length},
   ];
   $('pipeline').innerHTML = stages.map(s => `
     <div class="stage ${s.cls}">
@@ -904,6 +1038,7 @@ const TABLES = {
       {key:'inDyeing', label:'In Dyeing', numeric:true, render:r=> r.inDyeing ? fmtNum(r.inDyeing) : '—'},
       {key:'pendToFin', label:'Pend. Fin.', numeric:true, render:r=> r.pendToFin ? fmtNum(r.pendToFin) : '—'},
       {key:'inFinishing', label:'In Finish.', numeric:true, render:r=> r.inFinishing ? fmtNum(r.inFinishing) : '—'},
+      {key:'qtyOnChecking', label:'Checking', numeric:true, render:r=> r.qtyOnChecking ? fmtNum(r.qtyOnChecking) : '—'},
       {key:'readyDispatch', label:'Ready Disp.', numeric:true, render:r=> r.readyDispatch ? fmtNum(r.readyDispatch) : '—'},
       {key:'allQtyDispatched', label:'Dispatched', numeric:true, render:r=> r.allQtyDispatched ? fmtNum(r.allQtyDispatched) : '—'},
       {key:'deliveryDate', label:'Delivery', render:r=>fmtDate(r.deliveryDate)},
@@ -921,6 +1056,7 @@ const TABLES = {
       {key:'inDyeing', label:'In Dyeing', numeric:true, render:g=> g.inDyeing ? fmtNum(g.inDyeing) : '—'},
       {key:'pendToFin', label:'Pend. Fin.', numeric:true, render:g=> g.pendToFin ? fmtNum(g.pendToFin) : '—'},
       {key:'inFinishing', label:'In Finish.', numeric:true, render:g=> g.inFinishing ? fmtNum(g.inFinishing) : '—'},
+      {key:'qtyOnChecking', label:'Checking', numeric:true, render:g=> g.qtyOnChecking ? fmtNum(g.qtyOnChecking) : '—'},
       {key:'readyDispatch', label:'Ready Disp.', numeric:true, render:g=> g.readyDispatch ? fmtNum(g.readyDispatch) : '—'},
       {key:'allQtyDispatched', label:'Dispatched', numeric:true, render:g=> g.allQtyDispatched ? fmtNum(g.allQtyDispatched) : '—'},
       {key:'status', label:'Status', render:g=>g.statusHtml},
@@ -976,6 +1112,24 @@ const TABLES = {
       {key:'weightDetail', label:'Weight Detail', render:r=>r.weightDetail || '—'},
       {key:'totalWt', label:'Total Wt', numeric:true, render:r=>fmtNum(r.totalWt)},
     ]
+  },
+  knitDye: {
+    headRowId: 'knit-head-row',
+    // A fixed, non-customizable leading column for the expand icon.
+    prefixHtml: '<th class="expand-cell" style="width:40px"></th>',
+    defs: [
+      {key:'orderNo', label:'Order No.', render:r=>r.orderNo},
+      {key:'orderDate', label:'Order Date', render:r=>r.orderDate || '—'},
+      {key:'deliveryDate', label:'Delivery Date', render:r=>r.deliveryDate || '—'},
+      {key:'party', label:'Party', render:r=>r.party},
+      {key:'knitStart', label:'Knit Start', render:r=>r.knitStart || '—'},
+      {key:'endDate', label:'End Date', render:r=>r.endDate || '—'},
+      {key:'handoverDate', label:'Handover Date', render:r=>r.handoverDate || '—'},
+      {key:'actualStart', label:'Actual Start', render:r=>r.actualStart || '—'},
+      {key:'totalLot', label:'Total Lot', numeric:true, render:r=>fmtNum(r.totalLot)},
+      {key:'pendLotForDye', label:'Pend. Lot for Dye', numeric:true, render:r=>fmtNum(r.pendLotForDye)},
+      {key:'ageInDays', label:'AgeIn Days', numeric:true, render:r=>r.ageInDays || '—'},
+    ]
   }
 };
 
@@ -1000,7 +1154,8 @@ function getTableState(tableId){
   allKeys.forEach(k => { if (!order.includes(k)) order.push(k); });
   const hidden = new Set(Array.isArray(saved.hidden) ? saved.hidden : []);
   const labels = Object.assign({}, saved.labels || {});
-  return {order, hidden, labels};
+  const widths = Object.assign({}, saved.widths || {});
+  return {order, hidden, labels, widths};
 }
 
 function renderTableHead(tableId){
@@ -1009,11 +1164,75 @@ function renderTableHead(tableId){
   const defs = TABLES[tableId].defs;
   const state = getTableState(tableId);
   const visibleKeys = state.order.filter(k => !state.hidden.has(k));
-  rowEl.innerHTML = visibleKeys.map(k => {
+  const dynamicHtml = visibleKeys.map(k => {
     const def = defs.find(d=>d.key===k);
     const label = state.labels[k] || def.label;
-    return `<th${def.numeric ? ' class="num"' : ''}>${escapeHtml(label)}</th>`;
+    const w = state.widths[k] || 130;
+    return `<th${def.numeric ? ' class="num"' : ''} style="width:${w}px" data-key="${k}">${escapeHtml(label)}<span class="col-resize-handle" data-table="${tableId}" data-key="${k}"></span></th>`;
   }).join('');
+  rowEl.innerHTML = (TABLES[tableId].prefixHtml || '') + dynamicHtml;
+  attachResizeHandlesToEl(rowEl, tableId);
+}
+
+/* ---- drag-to-resize columns ---- */
+let colResizeState = null;
+function attachResizeHandlesToEl(rowEl, tableId){
+  if (!rowEl) return;
+  rowEl.querySelectorAll('.col-resize-handle').forEach(handle => {
+    handle.addEventListener('mousedown', (e) => startColumnResize(e, tableId, handle.dataset.key));
+  });
+}
+function attachResizeHandles(tableId){
+  attachResizeHandlesToEl($(TABLES[tableId].headRowId), tableId);
+}
+function startColumnResize(e, tableId, key){
+  e.preventDefault();
+  const th = e.target.closest('th');
+  if (!th) return;
+  colResizeState = {
+    tableId, key, th,
+    startX: e.clientX,
+    startWidth: th.getBoundingClientRect().width,
+    currentWidth: null
+  };
+  document.addEventListener('mousemove', onColumnResizeMove);
+  document.addEventListener('mouseup', onColumnResizeEnd);
+  document.body.style.cursor = 'col-resize';
+  document.body.style.userSelect = 'none';
+}
+function onColumnResizeMove(e){
+  if (!colResizeState) return;
+  const delta = e.clientX - colResizeState.startX;
+  const newWidth = Math.max(50, Math.round(colResizeState.startWidth + delta));
+  colResizeState.th.style.width = newWidth + 'px';
+  colResizeState.currentWidth = newWidth;
+}
+function onColumnResizeEnd(){
+  if (!colResizeState) { cleanupResizeListeners(); return; }
+  const { tableId, key, currentWidth } = colResizeState;
+  if (currentWidth){
+    if (!COLUMN_CONFIG[tableId]) COLUMN_CONFIG[tableId] = {};
+    if (!COLUMN_CONFIG[tableId].widths) COLUMN_CONFIG[tableId].widths = {};
+    COLUMN_CONFIG[tableId].widths[key] = currentWidth;
+    saveColumnConfigToStorage();
+    // The 'records' width state is shared with the Knit to Dye Pend.
+    // drill-down sub-tables, so refresh those too when it changes.
+    // The 'records' width state is shared between the main Record-wise
+    // table and the Knit to Dye Pend. drill-down sub-tables — refresh
+    // both sides so a resize from either place stays in sync everywhere.
+    if (tableId === 'records'){
+      if (typeof renderRecords === 'function') renderRecords();
+      if (typeof renderKnitDye === 'function') renderKnitDye();
+    }
+  }
+  colResizeState = null;
+  cleanupResizeListeners();
+}
+function cleanupResizeListeners(){
+  document.removeEventListener('mousemove', onColumnResizeMove);
+  document.removeEventListener('mouseup', onColumnResizeEnd);
+  document.body.style.cursor = '';
+  document.body.style.userSelect = '';
 }
 
 function buildRowHtml(tableId, rowData){
@@ -1054,7 +1273,7 @@ function renderPO(){
     if (!map.has(r.orderNo)){
       map.set(r.orderNo, {
         orderNo:r.orderNo, party:r.party, orderDate:r.orderDate, deliveryDate:r.deliveryDate,
-        records:0, inDyeing:0, pendToFin:0, inFinishing:0, readyDispatch:0, allQtyDispatched:0
+        records:0, inDyeing:0, pendToFin:0, inFinishing:0, qtyOnChecking:0, readyDispatch:0, allQtyDispatched:0
       });
     }
     const g = map.get(r.orderNo);
@@ -1062,6 +1281,7 @@ function renderPO(){
     g.inDyeing += r.inDyeing;
     g.pendToFin += r.pendToFin;
     g.inFinishing += r.inFinishing;
+    g.qtyOnChecking += r.qtyOnChecking;
     g.readyDispatch += r.readyDispatch;
     g.allQtyDispatched += r.allQtyDispatched;
     if (r.deliveryDate && (!g.deliveryDate || r.deliveryDate > g.deliveryDate)) g.deliveryDate = r.deliveryDate;
@@ -1072,7 +1292,7 @@ function renderPO(){
   }
   groups.sort((a,b)=> (a.orderDate && b.orderDate) ? a.orderDate - b.orderDate : 0);
   groups.forEach(g => {
-    const openPipeline = g.inDyeing + g.pendToFin + g.inFinishing + g.readyDispatch;
+    const openPipeline = g.inDyeing + g.pendToFin + g.inFinishing + g.qtyOnChecking + g.readyDispatch;
     if (g.allQtyDispatched > 0 && openPipeline === 0){
       g.statusHtml = '<span class="pill disp">Fully Dispatched</span>';
     } else if (g.allQtyDispatched === 0 && openPipeline === 0){
@@ -1116,6 +1336,7 @@ function renderAll(){
   renderShortage();
   renderPendingDyeing();
   renderPendingFinishing();
+  renderKnitDye();
 }
 
 /* ---------------- settings modal ---------------- */
@@ -1230,6 +1451,14 @@ function wireEvents(){
 
   $('pf-search').addEventListener('input', renderPendingFinishing);
   $('pf-clear').addEventListener('click', ()=>{ $('pf-search').value=''; renderPendingFinishing(); });
+
+  $('kd-search').addEventListener('input', renderKnitDye);
+  $('kd-clear').addEventListener('click', ()=>{ $('kd-search').value=''; renderKnitDye(); });
+  $('kd-handover-toggle').addEventListener('click', () => {
+    knitHandoverToggleActive = !knitHandoverToggleActive;
+    $('kd-handover-toggle').classList.toggle('active', knitHandoverToggleActive);
+    renderKnitDye();
+  });
 
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1401,13 +1630,113 @@ function renderPendingFinishing(){
   $('pendFinBody').innerHTML = rows.map(r => buildRowHtml('pendFin', r)).join('');
 }
 
+/* ---- Knit to Dye — sourced from the KNIT tab (order-level) ---- */
+let KNIT_RAW_ROWS = [];
+let KNIT_RECORDS = [];
+let knitExpandedOrders = new Set();
+let knitHandoverToggleActive = false;
+
+function buildKnitRecords(rows){
+  const out = [];
+  for (const r of rows){
+    const orderNo = str(r[KNIT_COLS.orderNo]);
+    if (!orderNo) continue;
+    out.push({
+      orderNo,
+      orderDate: str(r[KNIT_COLS.orderDate]),
+      deliveryDate: str(r[KNIT_COLS.deliveryDate]),
+      party: str(r[KNIT_COLS.party]),
+      knitStart: str(r[KNIT_COLS.knitStart]),
+      endDate: str(r[KNIT_COLS.endDate]),
+      handoverDate: str(r[KNIT_COLS.handoverDate]),
+      actualStart: str(r[KNIT_COLS.actualStart]),
+      totalLot: num(r[KNIT_COLS.totalLot]),
+      pendLotForDye: num(r[KNIT_COLS.pendLotForDye]),
+      ageInDays: str(r[KNIT_COLS.ageInDays])
+    });
+  }
+  return out;
+}
+
+// Builds the nested Record-wise-style drill-down table for one order,
+// reusing the same column defs/customization as the main Record-wise tab.
+// Nested drill-down table for one order — mirrors Record-wise's current
+// column order/labels/hidden-state/widths (they share the same 'records'
+// column config, so resizing either one keeps both in sync).
+function knitDetailHeadId(orderNo){
+  return 'knit-detail-head-' + String(orderNo).replace(/[^a-zA-Z0-9_-]/g, '_');
+}
+function buildKnitDetailTableHtml(orderNo){
+  const state = getTableState('records');
+  const defs = TABLES.records.defs;
+  const visibleKeys = state.order.filter(k => !state.hidden.has(k));
+  const headId = knitDetailHeadId(orderNo);
+  const headerHtml = visibleKeys.map(k => {
+    const def = defs.find(d=>d.key===k);
+    const label = state.labels[k] || def.label;
+    const w = state.widths[k] || 130;
+    return `<th${def.numeric ? ' class="num"' : ''} style="width:${w}px" data-key="${k}">${escapeHtml(label)}<span class="col-resize-handle" data-table="records" data-key="${k}"></span></th>`;
+  }).join('');
+  const matched = RECORDS.filter(r => r.orderNo === orderNo);
+  const bodyHtml = matched.length
+    ? matched.map(r => buildRowHtml('records', r)).join('')
+    : `<tr><td colspan="${visibleKeys.length}" style="text-align:center;color:var(--ink-soft);padding:14px;">No matching records</td></tr>`;
+  return `<div class="knit-detail-wrap"><table class="knit-detail-table" style="table-layout:fixed;"><thead><tr id="${headId}">${headerHtml}</tr></thead><tbody>${bodyHtml}</tbody></table></div>`;
+}
+
+function renderKnitDye(){
+  renderTableHead('knitDye');
+  const state = getTableState('knitDye');
+  const defs = TABLES.knitDye.defs;
+  const visibleKeys = state.order.filter(k => !state.hidden.has(k));
+
+  const q = $('kd-search').value.trim().toLowerCase();
+  let rows = KNIT_RECORDS.filter(r => r.pendLotForDye > 0);
+  if (knitHandoverToggleActive) rows = rows.filter(r => r.handoverDate);
+  if (q) rows = rows.filter(r => (r.orderNo + ' ' + r.party).toLowerCase().includes(q));
+
+  $('knitCount').textContent = `${rows.length} orders`;
+  $('knitBody').innerHTML = rows.map(r => {
+    const isOpen = knitExpandedOrders.has(r.orderNo);
+    const dynamicCells = visibleKeys.map(k => {
+      const def = defs.find(d=>d.key===k);
+      return `<td${def.numeric ? ' class="num"' : ''}>${def.render(r)}</td>`;
+    }).join('');
+    const mainRow = `
+      <tr class="knit-row">
+        <td class="expand-cell"><button class="expand-btn${isOpen ? ' open' : ''}" data-order="${escapeHtml(r.orderNo)}" title="Show lot-wise records">${isOpen ? '&minus;' : '&plus;'}</button></td>
+        ${dynamicCells}
+      </tr>`;
+    const detailRow = isOpen
+      ? `<tr class="knit-detail-row"><td colspan="${visibleKeys.length + 1}">${buildKnitDetailTableHtml(r.orderNo)}</td></tr>`
+      : '';
+    return mainRow + detailRow;
+  }).join('');
+
+  $('knitBody').querySelectorAll('.expand-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const orderNo = btn.dataset.order;
+      if (knitExpandedOrders.has(orderNo)) knitExpandedOrders.delete(orderNo);
+      else knitExpandedOrders.add(orderNo);
+      renderKnitDye();
+    });
+  });
+
+  // wire resize handles for every currently-open drill-down sub-table
+  knitExpandedOrders.forEach(orderNo => {
+    const el = document.getElementById(knitDetailHeadId(orderNo));
+    if (el) attachResizeHandlesToEl(el, 'records');
+  });
+}
+
 async function loadData(){
   setStatus('connecting to sheet…', 'loading');
   try{
-    const [mainRows, dyeRows, finishRows] = await Promise.all([
-      fetchSheetRows(SHEET_GID, 59),
+    const [mainRows, dyeRows, finishRows, knitRows] = await Promise.all([
+      fetchSheetRows(SHEET_GID, 61),
       fetchSheetRows(DYE_SHEET_GID, 24),
-      fetchSheetRows(FINISH_SHEET_GID, 9)
+      fetchSheetRows(FINISH_SHEET_GID, 9),
+      fetchSheetRows(KNIT_SHEET_GID, 18)
     ]);
 
     RAW_ROWS = mainRows;
@@ -1418,6 +1747,9 @@ async function loadData(){
 
     FINISH_RAW_ROWS = finishRows;
     PEND_FIN_RECORDS = buildPendingFinishing(FINISH_RAW_ROWS);
+
+    KNIT_RAW_ROWS = knitRows;
+    KNIT_RECORDS = buildKnitRecords(KNIT_RAW_ROWS);
 
     if (RECORDS.length === 0){
       showMsg('Sheet loaded but no records found — check that Record No. is in column A, and that SHEET_GID points to the right tab.', true);
