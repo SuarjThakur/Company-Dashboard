@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Attendance Report</title>
+<style>
+  :root{
+    --ink:#1c1b1a;
+    --paper:#f7f5f1;
+    --card:#ffffff;
+    --line:#e7e3db;
+    --accent:#3b6e5e;
+    --accent-soft:#dcebe5;
+    --warn:#b5502f;
+    --warn-soft:#f5e2da;
+    --muted:#8a8478;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+    min-height:100vh;
+    padding-bottom:40px;
+  }
+  header{
+    padding:28px 20px 18px;
+    position:sticky;
+    top:0;
+    background:var(--paper);
+    z-index:10;
+    border-bottom:1px solid var(--line);
+  }
+  .eyebrow{
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--accent);
+    font-weight:700;
+    margin-bottom:6px;
+  }
+  h1{
+    font-family:Georgia, 'Times New Roman', serif;
+    font-size:26px;
+    margin:0 0 4px;
+    letter-spacing:-.01em;
+  }
+  .sub{
+    font-size:13px;
+    color:var(--muted);
+    margin:0;
+  }
+  .controls{
+    display:flex;
+    gap:8px;
+    margin-top:16px;
+  }
+  input[type="search"]{
+    flex:1;
+    padding:10px 14px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:var(--card);
+    font-size:15px;
+    color:var(--ink);
+    outline:none;
+  }
+  input[type="search"]:focus{border-color:var(--accent);}
+  select{
+    padding:10px 12px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:var(--card);
+    font-size:14px;
+    color:var(--ink);
+  }
+  main{padding:16px;}
+  .list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    max-width:520px;
+    margin:0 auto;
+  }
+  .row{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px 16px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+  }
+  .avatar{
+    width:42px;
+    height:42px;
+    min-width:42px;
+    border-radius:50%;
+    background:var(--accent-soft);
+    color:var(--accent);
+    font-weight:700;
+    font-size:14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:Georgia, serif;
+  }
+  .info{flex:1;min-width:0;}
+  .name{
+    font-weight:600;
+    font-size:15.5px;
+    margin-bottom:6px;
+  }
+  .bar-track{
+    height:6px;
+    background:var(--line);
+    border-radius:4px;
+    overflow:hidden;
+  }
+  .bar-fill{
+    height:100%;
+    background:var(--accent);
+    border-radius:4px;
+    transition:width .4s ease;
+  }
+  .val{
+    font-family:Georgia, serif;
+    font-size:19px;
+    font-weight:700;
+    min-width:44px;
+    text-align:right;
+    color:var(--ink);
+  }
+  .val.high{color:var(--warn);}
+  .empty{
+    text-align:center;
+    color:var(--muted);
+    padding:40px 20px;
+    font-size:14px;
+  }
+  footer{
+    text-align:center;
+    color:var(--muted);
+    font-size:11.5px;
+    padding:24px 20px 8px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Attendance · Late Automation</div>
+  <h1>Report</h1>
+  <p class="sub" id="summary">Loading…</p>
+  <div class="controls">
+    <input type="search" id="search" placeholder="Search name…" autocomplete="off">
+    <select id="sort">
+      <option value="value-desc">Highest first</option>
+      <option value="value-asc">Lowest first</option>
+      <option value="name-asc">A–Z</option>
+    </select>
+  </div>
+</header>
+
+<main>
+  <div class="list" id="list"></div>
+</main>
+
+<script>
+  const SHEET_ID = "1f4Qiq8-XaTJcFYMlA704FCXZPsFcXJ6Q14YNeNchQs0";
+  const GID = "1907769844"; // REPORT tab
+
+  let data = [];
+  let maxVal = 0.0001;
+  let lastUpdated = "";
+
+  const listEl = document.getElementById('list');
+  const searchEl = document.getElementById('search');
+  const sortEl = document.getElementById('sort');
+  const summaryEl = document.getElementById('summary');
+
+  function formatTime(d){
+    return d.toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+  }
+
+  // Uses Google's JSONP-style endpoint so this works even when opened as a
+  // local file (a plain fetch() gets blocked by CORS in that case).
+  window.handleGViz = function(response){
+    try{
+      const rows = response.table.rows || [];
+      data = rows.map(r => ({
+        name: r.c[0] ? String(r.c[0].v).trim() : "",
+        value: r.c[2] ? parseFloat(r.c[2].v) : NaN
+      })).filter(d => d.name && !isNaN(d.value));
+
+      if(data.length === 0) throw new Error("No rows parsed");
+
+      maxVal = Math.max(...data.map(d => d.value), 0.0001);
+      lastUpdated = formatTime(new Date());
+      render();
+    }catch(err){
+      showError();
+    }
+  };
+
+  function showError(){
+    summaryEl.textContent = "Couldn't load live data — check your connection.";
+    listEl.innerHTML = '<div class="empty">Unable to fetch the sheet right now. Reopen the page to retry.</div>';
+  }
+
+  function loadData(){
+    summaryEl.textContent = "Loading live data…";
+    const script = document.createElement('script');
+    script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${GID}&tqx=out:json;responseHandler:handleGViz`;
+    script.onerror = showError;
+    document.body.appendChild(script);
+  }
+
+  function render(){
+    const q = searchEl.value.trim().toLowerCase();
+    const sort = sortEl.value;
+
+    let rows = data.filter(d => d.name.toLowerCase().includes(q));
+
+    rows.sort((a,b) => {
+      if(sort === 'value-desc') return b.value - a.value;
+      if(sort === 'value-asc') return a.value - b.value;
+      return a.name.localeCompare(b.name);
+    });
+
+    summaryEl.textContent = `Last updated: ${lastUpdated}`;
+
+    if(rows.length === 0){
+      listEl.innerHTML = '<div class="empty">No matching names.</div>';
+      return;
+    }
+
+    listEl.innerHTML = rows.map((d, i) => {
+      const pct = (d.value / maxVal) * 100;
+      const isHigh = d.value === maxVal;
+      return `
+        <div class="row">
+          <div class="avatar">${i + 1}</div>
+          <div class="info">
+            <div class="name">${d.name}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+          </div>
+          <div class="val ${isHigh ? 'high' : ''}">${d.value.toFixed(1)}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  searchEl.addEventListener('input', render);
+  sortEl.addEventListener('change', render);
+  loadData();
+</script>
+
+</body>
+</html>
