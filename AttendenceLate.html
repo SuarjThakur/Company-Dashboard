@@ -189,8 +189,20 @@
   // local file (a plain fetch() gets blocked by CORS in that case).
   window.handleGViz = function(response){
     try{
-      const rows = response.table.rows || [];
-      data = rows.map(r => ({
+      const rawRows = response.table.rows || [];
+      if(rawRows.length < 2) throw new Error("Not enough rows");
+
+      // D1 (column index 3) holds the month name.
+      // Prefer the formatted text (.f) over the raw value (.v) — if D1 is a
+      // date-formatted cell, .v would be a raw Date(...) object instead of
+      // just the month name.
+      const d1 = rawRows[0].c[3];
+      const monthCell = d1 ? String(d1.f != null ? d1.f : d1.v).trim() : "";
+      const titleEl = document.querySelector('h1');
+      titleEl.textContent = monthCell ? `${monthCell.toUpperCase()} REPORT` : "Report";
+
+      // Remaining rows are the actual people/values, skipping the header row.
+      data = rawRows.slice(1).map(r => ({
         name: r.c[0] ? String(r.c[0].v).trim() : "",
         value: r.c[2] ? parseFloat(r.c[2].v) : NaN
       })).filter(d => d.name && !isNaN(d.value));
@@ -213,7 +225,7 @@
   function loadData(){
     summaryEl.textContent = "Loading live data…";
     const script = document.createElement('script');
-    script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${GID}&tqx=out:json;responseHandler:handleGViz`;
+    script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${GID}&headers=0&tqx=out:json;responseHandler:handleGViz`;
     script.onerror = showError;
     document.body.appendChild(script);
   }
