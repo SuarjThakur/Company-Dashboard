@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yarn Dyeing Dashboard</title>
+<style>
+:root{
+  --navy:#122b4d;
+  --navy2:#1d416b;
+  --blue:#3f6f98;
+  --blue-soft:#eaf2f8;
+  --green:#2f6b4a;
+  --green-soft:#eaf6ef;
+  --orange:#c28420;
+  --orange-soft:#fff5df;
+  --red:#c63b2f;
+  --red-soft:#fff0ee;
+  --ink:#203047;
+  --muted:#68778a;
+  --bg:#f3f6f8;
+  --card:#ffffff;
+  --line:#d8e0e7;
+  --shadow:0 2px 8px rgba(24,43,67,.06);
+  --radius:8px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:Arial,Helvetica,sans-serif;
+}
+button,input,select{font:inherit}
+.header{
+  background:var(--navy);
+  color:#fff;
+  border-bottom:4px solid #d49a31;
+}
+.header-inner{
+  max-width:1320px;
+  margin:auto;
+  min-height:82px;
+  padding:18px 28px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:18px;
+}
+.brand h1{
+  margin:0;
+  font-size:24px;
+  letter-spacing:.3px;
+}
+.flow{
+  color:#b9cde1;
+  font-size:12px;
+  letter-spacing:1px;
+  font-weight:700;
+}
+.live{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:#c7d5e3;
+  font-size:12px;
+  white-space:nowrap;
+}
+.live-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:#62a76e;
+}
+.container{
+  max-width:1320px;
+  margin:auto;
+  padding:26px 24px 50px;
+}
+.section-title{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin:0 0 12px;
+}
+.section-title h2{
+  margin:0;
+  font-size:16px;
+  color:var(--ink);
+}
+.section-title span{
+  color:var(--muted);
+  font-size:12px;
+}
+.yarn-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+  margin-bottom:26px;
+}
+.yarn-card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:18px 20px;
+  box-shadow:var(--shadow);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  min-height:82px;
+}
+.yarn-name{
+  font-size:14px;
+  font-weight:700;
+  color:#42566d;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  max-width:62%;
+}
+.yarn-balance{
+  font-size:21px;
+  font-weight:800;
+  color:var(--navy2);
+  white-space:nowrap;
+}
+.yarn-balance small{
+  font-size:11px;
+  color:var(--muted);
+  font-weight:600;
+}
+.empty-yarn{
+  grid-column:1/-1;
+  background:#fff;
+  border:1px dashed var(--line);
+  border-radius:var(--radius);
+  padding:22px;
+  color:var(--muted);
+  text-align:center;
+  font-size:13px;
+}
+.nav-tabs{
+  display:flex;
+  gap:7px;
+  flex-wrap:wrap;
+  margin-bottom:14px;
+}
+.nav-tab{
+  border:1px solid var(--line);
+  background:#fff;
+  color:#53667b;
+  border-radius:7px;
+  padding:10px 18px;
+  cursor:pointer;
+  font-size:13px;
+  font-weight:700;
+}
+.nav-tab.active{
+  background:var(--navy2);
+  color:#fff;
+  border-color:var(--navy2);
+}
+.panel{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:22px;
+  margin-bottom:18px;
+}
+.panel-title{
+  margin:0 0 18px;
+  font-size:16px;
+}
+.form-grid{
+  display:grid;
+  grid-template-columns:1.05fr 1fr 1.35fr 1fr;
+  gap:14px;
+  align-items:end;
+}
+.form-grid.dye{
+  grid-template-columns:1fr 1fr 1.2fr 1.2fr 1fr;
+}
+.field label{
+  display:block;
+  font-size:11px;
+  color:#607187;
+  font-weight:700;
+  margin:0 0 6px;
+  text-transform:uppercase;
+  letter-spacing:.7px;
+}
+.field input,.field select{
+  width:100%;
+  height:40px;
+  border:1px solid #cfd8e1;
+  border-radius:6px;
+  padding:0 11px;
+  color:var(--ink);
+  background:#fff;
+  outline:none;
+}
+.field input:focus,.field select:focus{
+  border-color:#6d94b5;
+  box-shadow:0 0 0 3px rgba(73,119,157,.12);
+}
+.field input[readonly]{background:#f2f5f7;color:#778597}
+.primary{
+  height:40px;
+  border:0;
+  border-radius:6px;
+  background:var(--navy2);
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+  padding:0 18px;
+}
+.primary:hover{background:#173653}
+.hint{
+  margin-top:10px;
+  min-height:18px;
+  font-size:12px;
+}
+.hint.ok{color:var(--green)}
+.hint.bad{color:var(--red)}
+.table-wrap{overflow:auto}
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:780px;
+}
+th{
+  text-align:left;
+  padding:11px 10px;
+  font-size:10px;
+  color:#65778c;
+  text-transform:uppercase;
+  letter-spacing:.7px;
+  border-bottom:1px solid #cbd5de;
+  background:#f8fafb;
+}
+td{
+  padding:12px 10px;
+  border-bottom:1px solid #e6ebef;
+  font-size:13px;
+}
+td.num{text-align:center;font-variant-numeric:tabular-nums}
+tr:hover td{background:#fbfcfd}
+.status{
+  border-radius:20px;
+  border:0;
+  padding:6px 9px;
+  font-size:11px;
+  font-weight:700;
+  cursor:pointer;
+}
+.status.pending{background:var(--orange-soft);color:#9a650f}
+.status.receive{background:var(--green-soft);color:#286043}
+.status.mismatch{background:var(--red-soft);color:#ad352b}
+.status-select{
+  border:0;
+  border-radius:20px;
+  padding:6px 9px;
+  font-size:11px;
+  font-weight:700;
+  outline:none;
+  cursor:pointer;
+}
+.status-select.pending{background:var(--orange-soft);color:#9a650f}
+.status-select.receive{background:var(--green-soft);color:#286043}
+.status-select.mismatch{background:var(--red-soft);color:#ad352b}
+.delete{
+  background:none;
+  border:0;
+  color:#b3443b;
+  cursor:pointer;
+  font-size:11px;
+}
+.summary-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+}
+.summary-card{
+  border:1px solid var(--line);
+  border-radius:7px;
+  padding:15px;
+  background:#fff;
+}
+.summary-card .label{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase}
+.summary-card .value{font-size:22px;font-weight:800;margin-top:5px}
+.balance-positive{color:var(--green)}
+.balance-zero{color:#718091}
+.balance-negative{color:var(--red)}
+.hidden{display:none!important}
+.empty{
+  padding:22px;
+  text-align:center;
+  color:var(--muted);
+  font-size:13px;
+}
+@media(max-width:900px){
+  .yarn-grid{grid-template-columns:repeat(2,1fr)}
+  .form-grid,.form-grid.dye{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:600px){
+  .header-inner{align-items:flex-start;flex-direction:column}
+  .container{padding:18px 12px 35px}
+  .yarn-grid,.summary-grid{grid-template-columns:1fr}
+  .form-grid,.form-grid.dye{grid-template-columns:1fr}
+}
+
+.settings-btn{position:relative;z-index:9999;pointer-events:auto;width:31px;height:31px;border-radius:6px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;cursor:pointer;font-size:16px;margin-left:4px}
+.settings-btn:hover{background:rgba(255,255,255,.18)}
+.panel-heading-row{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}
+.panel-heading-row .panel-title{margin:0}
+.pending-total{color:#66778a;font-size:12px;font-weight:700;white-space:nowrap}
+.pending-total strong{color:#b57418;font-size:16px;margin-left:5px}
+.table-search{width:290px;height:38px;border:1px solid #cfd8e1;border-radius:6px;padding:0 12px;outline:none;color:var(--ink)}
+.table-search:focus{border-color:#6d94b5;box-shadow:0 0 0 3px rgba(73,119,157,.12)}
+.edit{background:#eef4f9;color:#2d5f87;border:1px solid #d5e1eb;border-radius:5px;padding:5px 10px;cursor:pointer;font-size:11px;font-weight:700}
+.edit:hover{background:#e2edf5}
+
+.settings-overlay{position:fixed;inset:0;background:rgba(15,30,48,.38);display:flex;align-items:flex-start;justify-content:flex-end;padding:86px 28px 20px;z-index:50}
+.settings-modal{width:min(520px,calc(100vw - 32px));max-height:calc(100vh - 110px);overflow:auto;background:#fff;border:1px solid var(--line);border-radius:9px;box-shadow:0 14px 40px rgba(15,30,48,.22);padding:22px}
+.settings-modal h3{margin:0 0 5px;font-size:18px}
+.settings-sub{margin:0 0 20px;color:var(--muted);font-size:12px}
+.setting-section{border-top:1px solid #e5eaf0;padding-top:16px;margin-top:16px}
+.setting-section h4{margin:0 0 10px;font-size:13px}
+.setting-row{display:flex;gap:8px;margin-bottom:10px}
+.setting-row input{flex:1;height:36px;border:1px solid #cfd8e1;border-radius:6px;padding:0 9px}
+.setting-list{display:flex;flex-wrap:wrap;gap:7px}
+.setting-chip{background:#f2f5f8;border:1px solid #d9e1e8;border-radius:16px;padding:6px 9px;font-size:11px;display:flex;gap:6px;align-items:center}
+.chip-remove{border:0;background:none;color:#b34b43;cursor:pointer;font-weight:700}
+.modal-actions{display:flex;justify-content:flex-end;margin-top:20px}
+.secondary{height:38px;padding:0 14px;border-radius:6px;border:1px solid #ccd6df;background:#fff;color:#4c6074;font-weight:700;cursor:pointer}
+@media(max-width:600px){.panel-heading-row{align-items:stretch;flex-direction:column}.table-search{width:100%}.settings-overlay{padding:76px 12px 12px}}
+
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <div class="brand">
+      <h1>YARN DYEING</h1>
+      <div class="flow">SENT FOR DYEING → DYEING → RECEIVE</div>
+    </div>
+    <div class="live"><span class="live-dot"></span><span id="record-count">0 records</span><span>•</span><span id="updated-time">connecting…</span><button class="settings-btn" id="settings-btn" type="button" title="Settings" onclick="openSettingsPanel(event)">⚙</button></div>
+  </div>
+</header>
+
+<main class="container">
+
+  <div class="section-title">
+    <h2>Yarn Balance</h2>
+    <span>Current pending balance by yarn</span>
+  </div>
+  <div class="yarn-grid" id="yarn-grid"></div>
+
+  <nav class="nav-tabs">
+    <button class="nav-tab active" data-tab="sent">Sent for Dyeing</button>
+    <button class="nav-tab" data-tab="dyed">Dyeing Entry</button>
+    <button class="nav-tab" data-tab="balance">Balance</button>
+  </nav>
+
+  <section id="sent-view">
+    <div class="panel">
+      <h2 class="panel-title">Yarn Sent for Dyeing</h2>
+      <form id="sent-form" class="form-grid">
+        <div class="field">
+          <label>Date</label>
+          <input type="date" id="sent-date" required>
+        </div>
+        <div class="field">
+          <label>Doc. No.</label>
+          <input type="text" id="sent-doc" required>
+        </div>
+        <div class="field">
+          <label>Yarn</label>
+          <select id="sent-yarn" required><option value="">Select Yarn</option></select>
+        </div>
+        <div class="field">
+          <label>Qty (KG)</label>
+          <input type="number" id="sent-qty" step="0.01" min="0.01" required>
+        </div>
+        <button class="primary" type="submit">Save Entry</button>
+      </form>
+      <div id="sent-hint" class="hint"></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">Sent Register</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Doc. No.</th><th>Yarn</th><th>Qty Sent</th><th>Dyed So Far</th><th>Balance</th><th></th></tr></thead>
+          <tbody id="sent-table"></tbody>
+        </table>
+      </div>
+      <div id="sent-empty" class="empty">No sent entries yet.</div>
+    </div>
+  </section>
+
+  <section id="dyed-view" class="hidden">
+    <div class="panel">
+      <h2 class="panel-title">Dyeing Entry</h2>
+      <form id="dyed-form" class="form-grid dye">
+        <div class="field">
+          <label>Date</label>
+          <input type="date" id="dyed-date" required>
+        </div>
+        <div class="field">
+          <label>Doc. No.</label>
+          <select id="dyed-doc" required><option value="">Select...</option></select>
+        </div>
+        <div class="field">
+          <label>Shade</label>
+          <input type="text" id="dyed-shade" required>
+        </div>
+        <div class="field">
+          <label>Yarn (Auto)</label>
+          <input type="text" id="dyed-yarn" readonly placeholder="—">
+        </div>
+        <div class="field">
+          <label>Qty (KG)</label>
+          <input type="number" id="dyed-qty" step="0.01" min="0.01" required>
+        </div>
+        <button class="primary" type="submit">Save Dyeing Entry</button>
+      </form>
+      <div id="dyed-hint" class="hint"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-heading-row"><h2 class="panel-title">Dyeing Register</h2><div class="pending-total">Pending Qty <strong id="pending-qty">0 KG</strong></div></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Doc. No.</th><th>Shade</th><th>Yarn</th><th>Qty (KG)</th><th>Status</th><th></th></tr></thead>
+          <tbody id="dyed-table"></tbody>
+        </table>
+      </div>
+      <div id="dyed-empty" class="empty">No dyeing entries yet.</div>
+    </div>
+  </section>
+
+  <section id="balance-view" class="hidden">
+    <div class="panel">
+      <div class="panel-heading-row"><h2 class="panel-title">Document-wise Balance</h2><input class="table-search" id="balance-search" type="search" placeholder="Search Yarn or Doc. No."></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Doc. No.</th><th>Yarn</th><th>Sent</th><th>Dyed</th><th>Balance</th><th>Shades Done</th></tr></thead>
+          <tbody id="balance-table"></tbody>
+        </table>
+      </div>
+      <div id="balance-empty" class="empty">No balance data yet.</div>
+    </div>
+  </section>
+
+</main>
+
+<div class="settings-overlay hidden" id="settings-overlay">
+  <div class="settings-modal">
+    <h3>Settings</h3>
+    <p class="settings-sub">Manage the Yarn and Status dropdown lists.</p>
+    <div class="setting-section">
+      <h4>Yarn List</h4>
+      <div class="setting-row">
+        <input id="new-yarn" type="text" placeholder="Add yarn">
+        <button class="primary" id="add-yarn" type="button">Add</button>
+      </div>
+      <div class="setting-list" id="yarn-settings-list"></div>
+    </div>
+    <div class="setting-section">
+      <h4>Status List</h4>
+      <div class="setting-row">
+        <input id="new-status" type="text" placeholder="Add status">
+        <button class="primary" id="add-status" type="button">Add</button>
+      </div>
+      <div class="setting-list" id="status-settings-list"></div>
+    </div>
+    <div class="modal-actions"><button class="secondary" id="close-settings" type="button">Close</button></div>
+  </div>
+</div>
+
+<script>
+function openSettingsPanel(event){
+  if(event){event.preventDefault();event.stopPropagation();}
+  var overlay=document.getElementById('settings-overlay');
+  if(overlay){
+    overlay.classList.remove('hidden');
+    overlay.style.display='flex';
+    if(typeof renderSettings==='function') renderSettings();
+  }
+}
+
+const API_URL = 'https://script.google.com/macros/s/AKfycbwEdpbXB65RA3K75AvJc0shRprB64NoDDdXqDdhLs3zMKWEBIdrK-j-93sSOYPYGHZsfQ/exec';
+let state = {
+  sent: [],
+  dyed: [],
+  yarnOptions: [],
+  statusOptions: ['Pending','Receive','Shade Mismatch']
+};
+let backendReady = false;
+
+async function apiPost(action, data={}){
+  const response = await fetch(API_URL, {
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify({action, data})
+  });
+  const text = await response.text();
+  let result;
+  try {
+    result = JSON.parse(text);
+  } catch(e) {
+    throw new Error('Backend returned an invalid response.');
+  }
+  if(!result.success) throw new Error(result.error || 'Backend request failed.');
+  return result;
+}
+
+async function loadBackendData(){
+  const response = await fetch(API_URL + '?action=getData', {cache:'no-store'});
+  const text = await response.text();
+  let result;
+  try {
+    result = JSON.parse(text);
+  } catch(e) {
+    throw new Error('Could not read backend data.');
+  }
+  if(!result.success) throw new Error(result.error || 'Could not load data.');
+  state.sent = Array.isArray(result.sent) ? result.sent : [];
+  state.dyed = Array.isArray(result.dyed) ? result.dyed : [];
+  state.yarnOptions = result.dropdown && Array.isArray(result.dropdown.yarns) ? result.dropdown.yarns : [];
+  state.statusOptions = result.dropdown && Array.isArray(result.dropdown.statuses) && result.dropdown.statuses.length
+    ? result.dropdown.statuses
+    : ['Pending','Receive','Shade Mismatch'];
+  normalizeState();
+  renderAll();
+  backendReady = true;
+}
+
+function normalizeState(){
+  if(!Array.isArray(state.sent))state.sent=[];
+  if(!Array.isArray(state.dyed))state.dyed=[];
+  if(!Array.isArray(state.yarnOptions))state.yarnOptions=[];
+  if(!Array.isArray(state.statusOptions)||!state.statusOptions.length)state.statusOptions=['Pending','Receive','Shade Mismatch'];
+  state.sent.forEach(r=>{if(r.yarn&&!state.yarnOptions.includes(r.yarn))state.yarnOptions.push(r.yarn)});
+  state.dyed.forEach(r=>{if(!r.status)r.status='Pending'});
+}
+
+function persist(){
+  document.getElementById('updated-time').textContent =
+    'updated ' + new Date().toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'});
+}
+
+function uid(){
+
+  return Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+}
+function today(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function displayDate(iso){
+  const p=String(iso||'').split('-');
+  return p.length===3 ? `${p[2]}/${p[1]}/${p[0]}` : iso;
+}
+function fmt(n){
+  return (Math.round(Number(n)*100)/100).toLocaleString('en-IN');
+}
+function dyedQty(doc){
+  return state.dyed.filter(x=>x.doc===doc).reduce((s,x)=>s+Number(x.qty),0);
+}
+function yarnBalances(){
+  const map = new Map();
+  state.sent.forEach(r=>{
+    map.set(r.yarn,(map.get(r.yarn)||0)+Number(r.qty));
+  });
+  state.dyed.forEach(r=>{
+    map.set(r.yarn,(map.get(r.yarn)||0)-Number(r.qty));
+  });
+  return [...map.entries()].filter(([y])=>y.trim()).slice(0,6);
+}
+
+function renderYarnSelect(){
+  const sel=document.getElementById('sent-yarn');
+  const cur=sel.value;
+  sel.innerHTML='<option value="">Select Yarn</option>';
+  state.yarnOptions.forEach(y=>{
+    const o=document.createElement('option');o.value=y;o.textContent=y;sel.appendChild(o);
+  });
+  if([...sel.options].some(o=>o.value===cur))sel.value=cur;
+}
+function renderSettings(){
+  const yl=document.getElementById('yarn-settings-list');
+  yl.innerHTML=state.yarnOptions.map((y,i)=>`<span class="setting-chip">${escapeHtml(y)} <button class="chip-remove" data-setting="yarn" data-index="${i}" type="button">×</button></span>`).join('');
+  const sl=document.getElementById('status-settings-list');
+  sl.innerHTML=state.statusOptions.map((s,i)=>`<span class="setting-chip">${escapeHtml(s)} <button class="chip-remove" data-setting="status" data-index="${i}" type="button">×</button></span>`).join('');
+}
+function updatePendingQty(){
+  const total=state.dyed.filter(x=>x.status==='Pending').reduce((s,x)=>s+Number(x.qty),0);
+  document.getElementById('pending-qty').textContent=`${fmt(total)} KG`;
+}
+
+function renderDashboard(){
+  const grid = document.getElementById('yarn-grid');
+  grid.innerHTML='';
+  const items = yarnBalances();
+  if(!items.length){
+    grid.innerHTML='<div class="empty-yarn">Yarn balance will appear here after yarn is entered in Sent for Dyeing.</div>';
+  }else{
+    items.forEach(([y,b])=>{
+      const cls=b<0?'balance-negative':b===0?'balance-zero':'balance-positive';
+      const card=document.createElement('div');
+      card.className='yarn-card';
+      card.innerHTML=`<div class="yarn-name" title="${escapeHtml(y)}">${escapeHtml(y)}</div>
+        <div class="yarn-balance ${cls}">${fmt(b)} <small>KG</small></div>`;
+      grid.appendChild(card);
+    });
+  }
+}
+function renderSent(){
+  const tb=document.getElementById('sent-table');
+  tb.innerHTML='';
+  document.getElementById('sent-empty').style.display=state.sent.length?'none':'block';
+  [...state.sent].sort((a,b)=>b.date.localeCompare(a.date)).forEach(r=>{
+    const dyed=dyedQty(r.doc);
+    const bal=Number(r.qty)-dyed;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${displayDate(r.date)}</td><td><strong>${escapeHtml(r.doc)}</strong></td><td>${escapeHtml(r.yarn)}</td>
+      <td class="num">${fmt(r.qty)}</td><td class="num">${fmt(dyed)}</td>
+      <td class="num ${bal<0?'balance-negative':bal===0?'balance-zero':'balance-positive'}">${fmt(bal)}</td>
+      <td><button class="edit" data-type="sent" data-id="${r.id}">Edit</button></td>`;
+    tb.appendChild(tr);
+  });
+}
+function renderDocOptions(){
+  const sel=document.getElementById('dyed-doc');
+  const current=sel.value;
+  sel.innerHTML='<option value="">Select...</option>';
+  [...new Set(state.sent.map(x=>x.doc))].forEach(doc=>{
+    const r=state.sent.find(x=>x.doc===doc);
+    const bal=Number(r.qty)-dyedQty(doc);
+    const opt=document.createElement('option');
+    opt.value=doc;
+    opt.textContent=`${doc} — ${r.yarn} (bal ${fmt(bal)} kg)`;
+    sel.appendChild(opt);
+  });
+  if([...sel.options].some(o=>o.value===current)) sel.value=current;
+}
+function renderDyed(){
+  const tb=document.getElementById('dyed-table');
+  tb.innerHTML='';
+  document.getElementById('dyed-empty').style.display=state.dyed.length?'none':'block';
+  [...state.dyed].sort((a,b)=>b.date.localeCompare(a.date)).forEach(r=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${displayDate(r.date)}</td><td><strong>${escapeHtml(r.doc)}</strong></td><td>${escapeHtml(r.shade)}</td>
+      <td>${escapeHtml(r.yarn)}</td><td class="num">${fmt(r.qty)}</td>
+      <td>${statusControl(r)}</td>
+      <td><button class="edit" data-type="dyed" data-id="${r.id}">Edit</button></td>`;
+    tb.appendChild(tr);
+  });
+}
+function statusClass(s){
+  return s==='Receive'?'receive':s==='Shade Mismatch'?'mismatch':'pending';
+}
+function statusControl(r){
+  const cls=statusClass(r.status);
+  return `<select class="status-select ${cls}" data-status-id="${r.id}">
+    ${state.statusOptions.map(s=>`<option ${r.status===s?'selected':''}>${escapeHtml(s)}</option>`).join('')}
+  </select>`;
+}
+function renderBalance(search=''){
+  const tb=document.getElementById('balance-table');
+  tb.innerHTML='';
+  const q=search.trim().toLowerCase();
+  const rows=state.sent.filter(r=>!q||String(r.doc).toLowerCase().includes(q)||String(r.yarn).toLowerCase().includes(q));
+  document.getElementById('balance-empty').style.display=rows.length?'none':'block';
+  [...rows].sort((a,b)=>a.doc.localeCompare(b.doc)).forEach(r=>{
+    const rows2=state.dyed.filter(x=>x.doc===r.doc);
+    const dyed=rows2.reduce((s,x)=>s+Number(x.qty),0);
+    const bal=Number(r.qty)-dyed;
+    const shades=rows2.length?rows2.map(x=>`${escapeHtml(x.shade)} (${fmt(x.qty)})`).join(', '):'—';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><strong>${escapeHtml(r.doc)}</strong></td><td>${escapeHtml(r.yarn)}</td>
+      <td class="num">${fmt(r.qty)}</td><td class="num">${fmt(dyed)}</td>
+      <td class="num ${bal<0?'balance-negative':bal===0?'balance-zero':'balance-positive'}">${fmt(bal)}</td><td>${shades}</td>`;
+    tb.appendChild(tr);
+  });
+}
+function renderAll(){
+  normalizeState();
+  renderYarnSelect();
+  renderSettings();
+  renderDashboard();
+  renderSent();
+  renderDocOptions();
+  renderDyed();
+  renderBalance(document.getElementById('balance-search')?.value || '');
+  updatePendingQty();
+  document.getElementById('record-count').textContent=`${state.sent.length+state.dyed.length} records`;
+}
+function escapeHtml(v){
+  return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+document.querySelectorAll('.nav-tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.nav-tab').forEach(x=>x.classList.remove('active'));
+    btn.classList.add('active');
+    const tab=btn.dataset.tab;
+    document.getElementById('sent-view').classList.toggle('hidden',tab!=='sent');
+    document.getElementById('dyed-view').classList.toggle('hidden',tab!=='dyed');
+    document.getElementById('balance-view').classList.toggle('hidden',tab!=='balance');
+  });
+});
+
+document.getElementById('sent-form').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const doc=document.getElementById('sent-doc').value.trim();
+  const date=document.getElementById('sent-date').value;
+  const yarn=document.getElementById('sent-yarn').value;
+  const qty=Number(document.getElementById('sent-qty').value);
+  const hint=document.getElementById('sent-hint');
+  const editing=state.sent.find(x=>x._editing);
+
+  if(!backendReady){
+    hint.textContent='Backend is not ready. Please wait and try again.';
+    hint.className='hint bad';
+    return;
+  }
+
+  if(!doc || !yarn || !qty || qty<=0){
+    hint.textContent='Please fill all required fields.';
+    hint.className='hint bad';
+    return;
+  }
+
+  if(!editing && state.sent.some(x=>x.doc===doc)){
+    hint.textContent=`Doc. No. ${doc} already exists.`;
+    hint.className='hint bad';
+    return;
+  }
+
+  const payload={id:editing?.id||'',date,doc,yarn,qty};
+
+  try{
+    await apiPost('saveSent',payload);
+    if(yarn&&!state.yarnOptions.includes(yarn)){
+      await apiPost('addYarn',{yarn});
+    }
+    await loadBackendData();
+    e.target.reset();
+    document.getElementById('sent-date').value=today();
+    hint.textContent='Entry saved successfully.';
+    hint.className='hint ok';
+  }catch(err){
+    hint.textContent=err.message||'Could not save entry.';
+    hint.className='hint bad';
+  }
+});
+
+document.addEventListener('click', function(e){
+  const btn=e.target.closest('#settings-btn');
+  if(btn){
+    e.preventDefault();
+    e.stopPropagation();
+    openSettingsPanel(e);
+  }
+});
+
+document.getElementById('close-settings').addEventListener('click',()=>{
+  document.getElementById('settings-overlay').classList.add('hidden');
+});
+
+document.getElementById('settings-overlay').addEventListener('click',async e=>{
+  if(e.target.id==='settings-overlay'){
+    e.currentTarget.classList.add('hidden');
+    return;
+  }
+
+  const remove=e.target.closest('.chip-remove');
+  if(!remove)return;
+
+  const type=remove.dataset.setting;
+  const i=Number(remove.dataset.index);
+  const list=type==='yarn'?state.yarnOptions:state.statusOptions;
+  const value=list[i];
+
+  try{
+    if(type==='yarn'){
+      await apiPost('removeYarn',{yarn:value});
+    }else{
+      await apiPost('removeStatus',{status:value});
+    }
+    await loadBackendData();
+  }catch(err){
+    alert(err.message||'Could not remove item.');
+  }
+});
+
+document.getElementById('add-yarn').addEventListener('click',async()=>{
+  const input=document.getElementById('new-yarn');
+  const value=input.value.trim();
+  if(!value){input.focus();return;}
+
+  if(state.yarnOptions.some(x=>x.toLowerCase()===value.toLowerCase())){
+    alert('This yarn is already in the list.');
+    input.focus();
+    return;
+  }
+
+  try{
+    await apiPost('addYarn',{yarn:value});
+    await loadBackendData();
+    input.value='';
+    input.focus();
+  }catch(err){
+    alert(err.message||'Could not add yarn.');
+  }
+});
+
+document.getElementById('add-status').addEventListener('click',async()=>{
+  const input=document.getElementById('new-status');
+  const value=input.value.trim();
+  if(!value){input.focus();return;}
+
+  if(state.statusOptions.some(x=>x.toLowerCase()===value.toLowerCase())){
+    alert('This status is already in the list.');
+    input.focus();
+    return;
+  }
+
+  try{
+    await apiPost('addStatus',{status:value});
+    await loadBackendData();
+    input.value='';
+    input.focus();
+  }catch(err){
+    alert(err.message||'Could not add status.');
+  }
+});
+
+document.getElementById('balance-search').addEventListener('input',e=>{
+  renderBalance(e.target.value);
+});
+
+document.getElementById('sent-date').value=today();
+
+document.getElementById('dyed-doc').addEventListener('change',()=>{
+  const doc=document.getElementById('dyed-doc').value;
+  const r=state.sent.find(x=>x.doc===doc);
+  document.getElementById('dyed-yarn').value=r?r.yarn:'';
+});
+
+document.getElementById('dyed-form').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const doc=document.getElementById('dyed-doc').value;
+  const date=document.getElementById('dyed-date').value;
+  const shade=document.getElementById('dyed-shade').value.trim();
+  const qty=Number(document.getElementById('dyed-qty').value);
+  const rec=state.sent.find(x=>x.doc===doc);
+  const hint=document.getElementById('dyed-hint');
+
+  if(!backendReady){
+    hint.textContent='Backend is not ready. Please wait and try again.';
+    hint.className='hint bad';
+    return;
+  }
+
+  if(!rec){
+    hint.textContent='Select a valid Doc. No.';
+    hint.className='hint bad';
+    return;
+  }
+
+  const editing=state.dyed.find(x=>x._editing);
+  const oldQty=editing&&editing.doc===doc?Number(editing.qty):0;
+  const bal=Number(rec.qty)-dyedQty(doc)+oldQty;
+
+  if(qty>bal){
+    hint.textContent=`Cannot save. Available balance is only ${fmt(bal)} kg.`;
+    hint.className='hint bad';
+    return;
+  }
+
+  try{
+    await apiPost('saveDyeing',{
+      id:editing?.id||'',
+      date,
+      doc,
+      shade,
+      qty,
+      status:editing?.status||'Pending'
+    });
+
+    await loadBackendData();
+    e.target.reset();
+    document.getElementById('dyed-date').value=today();
+    hint.textContent=`Dyeing entry saved. Remaining balance: ${fmt(bal-qty)} kg.`;
+    hint.className='hint ok';
+  }catch(err){
+    hint.textContent=err.message||'Could not save dyeing entry.';
+    hint.className='hint bad';
+  }
+});
+
+document.addEventListener('change',async e=>{
+  if(!e.target.matches('[data-status-id]')) return;
+  const r=state.dyed.find(x=>x.id===e.target.dataset.statusId);
+  if(!r)return;
+
+  try{
+    await apiPost('updateStatus',{id:r.id,status:e.target.value});
+    await loadBackendData();
+    document.querySelector('[data-tab="dyed"]').click();
+  }catch(err){
+    alert(err.message||'Could not update status.');
+    await loadBackendData();
+  }
+});
+
+document.addEventListener('click',e=>{
+  const edit=e.target.closest('.edit');
+  if(!edit)return;
+
+  const id=edit.dataset.id;
+  const type=edit.dataset.type;
+
+  if(type==='sent'){
+    const r=state.sent.find(x=>x.id===id);
+    if(!r)return;
+    document.querySelector('[data-tab="sent"]').click();
+    document.getElementById('sent-date').value=r.date;
+    document.getElementById('sent-doc').value=r.doc;
+    document.getElementById('sent-yarn').value=r.yarn;
+    document.getElementById('sent-qty').value=r.qty;
+    r._editing=true;
+    document.getElementById('sent-hint').textContent='Edit mode: update the entry and click Save Entry.';
+    document.getElementById('sent-hint').className='hint';
+  }else{
+    const r=state.dyed.find(x=>x.id===id);
+    if(!r)return;
+    document.querySelector('[data-tab="dyed"]').click();
+    document.getElementById('dyed-date').value=r.date;
+    document.getElementById('dyed-doc').value=r.doc;
+    document.getElementById('dyed-shade').value=r.shade;
+    document.getElementById('dyed-yarn').value=r.yarn;
+    document.getElementById('dyed-qty').value=r.qty;
+    r._editing=true;
+    document.getElementById('dyed-hint').textContent='Edit mode: update the entry and click Save Entry.';
+    document.getElementById('dyed-hint').className='hint';
+  }
+});
+
+document.getElementById('sent-date').value=today();
+document.getElementById('dyed-date').value=today();
+renderAll();
+loadBackendData().catch(err=>{
+  backendReady=false;
+  document.getElementById('updated-time').textContent='backend connection failed';
+  console.error(err);
+});
+</script>
+</body>
+</html>
