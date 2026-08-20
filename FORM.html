@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Local Input Form System</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f6f8;color:#202124}
+header{background:#1f6feb;color:#fff;padding:16px 22px;display:flex;justify-content:space-between;align-items:center}
+header h1{font-size:21px;margin:0} header span{font-size:12px;opacity:.9}
+nav{display:flex;gap:6px;background:#fff;padding:10px 18px;border-bottom:1px solid #ddd;position:sticky;top:0;z-index:5}
+nav button,.btn{border:0;border-radius:6px;padding:9px 14px;cursor:pointer;font-weight:600}
+nav button{background:#eef2f7;color:#333}nav button.active{background:#1f6feb;color:#fff}
+main{padding:18px;max-width:1500px;margin:auto}.page{display:none}.page.active{display:block}
+.card{background:#fff;border:1px solid #ddd;border-radius:10px;padding:16px;margin-bottom:16px;box-shadow:0 1px 3px #00000010}
+.card h2{font-size:16px;margin:0 0 14px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+label{font-size:12px;font-weight:700;display:block;margin-bottom:5px}input,select{width:100%;padding:9px;border:1px solid #c9ced6;border-radius:6px;background:#fff}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.primary{background:#1f6feb;color:#fff}.success{background:#16803c;color:#fff}.danger{background:#d93025;color:#fff}.secondary{background:#eef2f7}
+.record-wrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(390px,1fr));gap:14px}
+.record{border:1px solid #cfd5dc;border-radius:8px;padding:12px;background:#fbfcfe}.record-title{display:flex;gap:8px;align-items:end;margin-bottom:10px}
+.record-title>div{flex:1}.record-title .num{max-width:120px}.record-title .del{max-width:42px}
+table{border-collapse:collapse;width:100%;font-size:13px}th,td{border:1px solid #d4d8de;padding:7px;text-align:center}th{background:#edf0f3}td input,td select{padding:6px;border:0;background:transparent}
+.table-scroll{overflow:auto} .search{max-width:320px}
+.toast{position:fixed;right:18px;bottom:18px;background:#222;color:#fff;padding:11px 15px;border-radius:7px;display:none;z-index:20}
+.small{font-size:12px;color:#666}.field-row{display:grid;grid-template-columns:1fr 120px 80px;gap:8px;align-items:end;margin-bottom:8px}
+.badge{display:inline-block;padding:4px 8px;border-radius:12px;background:#e8f0fe;color:#174ea6;font-size:11px;font-weight:700}
+@media(max-width:700px){.record-wrap{grid-template-columns:1fr}.field-row{grid-template-columns:1fr}.field-row button{width:100%}}
+</style>
+</head>
+<body>
+<header><h1>Local Input Form System</h1><span>Data stored on this PC • Offline</span></header>
+<nav>
+<button class="active" onclick="showPage('entry',this)">New Entry</button>
+<button onclick="showPage('saved',this)">Saved Data</button>
+<button onclick="showPage('fields',this)">Fields / Setup</button>
+<button onclick="backup()">Backup</button>
+<button onclick="restoreFile()">Restore</button>
+</nav>
+
+<main>
+<section id="entry" class="page active">
+<div class="card">
+<h2>1. HEADER / ONE-TIME INFORMATION</h2>
+<div id="headerFields" class="grid"></div>
+</div>
+
+<div class="card">
+<h2>2. RECORDS / REPEATING ITEMS</h2>
+<div id="records" class="record-wrap"></div>
+<div class="actions">
+<button class="btn success" onclick="addRecord()">+ Add Record</button>
+<button class="btn primary" onclick="saveEntry()">SAVE ORDER</button>
+<button class="btn secondary" onclick="newEntry()">Clear Form</button>
+</div>
+<p class="small">Each record can contain a different number of items. When saved, every item becomes one database row while header values are repeated automatically.</p>
+</div>
+</section>
+
+<section id="saved" class="page">
+<div class="card">
+<h2>3. SAVED DATA</h2>
+<div class="actions">
+<input id="search" class="search" placeholder="Search Order No, Customer, Shade, Item..." oninput="renderSaved()">
+<button class="btn secondary" onclick="exportCSV()">Export CSV</button>
+</div>
+<div class="table-scroll"><table id="savedTable"></table></div>
+</div>
+</section>
+
+<section id="fields" class="page">
+<div class="card">
+<h2>HEADER FIELDS</h2>
+<p class="small">Add or remove the one-time fields you want later. Existing saved data keeps its values.</p>
+<div id="fieldList"></div>
+<div class="field-row">
+<div><label>New Header Field</label><input id="newHeaderField" placeholder="e.g. Sales Person"></div>
+<div><label>Type</label><select id="newHeaderType"><option>text</option><option>date</option><option>number</option></select></div>
+<button class="btn success" onclick="addHeaderField()">Add</button>
+</div>
+</div>
+
+<div class="card">
+<h2>REPEATING ITEM FIELDS</h2>
+<p class="small">These fields appear in every item row of every record.</p>
+<div id="detailFieldList"></div>
+<div class="field-row">
+<div><label>New Item Field</label><input id="newDetailField" placeholder="e.g. GSM"></div>
+<div><label>Type</label><select id="newDetailType"><option>text</option><option>number</option><option>date</option></select></div>
+<button class="btn success" onclick="addDetailField()">Add</button>
+</div>
+</div>
+</section>
+</main>
+<div id="toast" class="toast"></div>
+<input id="restoreInput" type="file" accept=".json" style="display:none">
+
+<script>
+const KEY='local_input_system_v1';
+const defaults={
+ header:[
+  {key:'order_no',label:'ORDER NO',type:'text'},
+  {key:'customer',label:'CUSTOMER',type:'text'},
+  {key:'order_date',label:'ORDER DATE',type:'date'},
+  {key:'delivery_date',label:'DELIVERY DATE',type:'date'}
+ ],
+ detail:[
+  {key:'item',label:'ITEM',type:'text'},
+  {key:'roll',label:'ROLL',type:'number'},
+  {key:'qty',label:'QTY',type:'number'},
+  {key:'rate',label:'RATE',type:'number'}
+ ],
+ records:[], saved:[]
+};
+let db=loadDB();
+
+function loadDB(){
+ try{return JSON.parse(localStorage.getItem(KEY))||structuredClone(defaults)}
+ catch(e){return structuredClone(defaults)}
+}
+function persist(){localStorage.setItem(KEY,JSON.stringify(db))}
+function keyify(s){return s.toLowerCase().replace(/[^a-z0-9]+(.)/g,(_,c)=>c.toUpperCase()).replace(/[^a-zA-Z0-9]/g,'')||('field'+Date.now())}
+function toast(s){let t=document.getElementById('toast');t.textContent=s;t.style.display='block';setTimeout(()=>t.style.display='none',2200)}
+function showPage(id,btn){
+ document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+ document.getElementById(id).classList.add('active');
+ document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));btn.classList.add('active');
+ if(id==='saved')renderSaved(); if(id==='fields')renderFields();
+}
+function inputHtml(f,val=''){
+ return `<div><label>${esc(f.label)}</label><input data-key="${esc(f.key)}" type="${f.type}" value="${esc(val)}"></div>`;
+}
+function renderHeader(values={}){
+ document.getElementById('headerFields').innerHTML=db.header.map(f=>inputHtml(f,values[f.key]||'')).join('');
+}
+function addRecord(data={}){
+ const r={recordNo:data.recordNo||nextRecordNo(),shade:data.shade||'',items:data.items||[]};
+ db.records.push(r);renderRecords();
+}
+function nextRecordNo(){return db.records.length?Math.max(...db.records.map(x=>Number(x.recordNo)||0))+1:1}
+function renderRecords(){
+ const el=document.getElementById('records');
+ el.innerHTML=db.records.map((r,ri)=>`
+ <div class="record">
+  <div class="record-title">
+   <div class="num"><label>RECORD NO</label><input type="number" value="${esc(r.recordNo)}" onchange="db.records[${ri}].recordNo=this.value"></div>
+   <div><label>SHADE</label><input value="${esc(r.shade)}" placeholder="e.g. RED" onchange="db.records[${ri}].shade=this.value"></div>
+   <button class="btn danger del" onclick="removeRecord(${ri})">×</button>
+  </div>
+  <div class="table-scroll"><table>
+   <thead><tr>${db.detail.map(f=>`<th>${esc(f.label)}</th>`).join('')}<th>DEL</th></tr></thead>
+   <tbody>${r.items.map((item,ii)=>`
+    <tr>${db.detail.map(f=>`<td><input type="${f.type}" value="${esc(item[f.key]??'')}" onchange="db.records[${ri}].items[${ii}]['${f.key}']=this.value"></td>`).join('')}
+    <td><button class="btn danger" onclick="removeItem(${ri},${ii})">×</button></td></tr>`).join('')}
+   </tbody>
+  </table></div>
+  <div class="actions"><button class="btn secondary" onclick="addItem(${ri})">+ Add Item</button></div>
+ </div>`).join('');
+}
+function addItem(ri){let o={};db.detail.forEach(f=>o[f.key]='');db.records[ri].items.push(o);renderRecords()}
+function removeItem(ri,ii){db.records[ri].items.splice(ii,1);renderRecords()}
+function removeRecord(ri){if(confirm('Delete this record from the current form?')){db.records.splice(ri,1);renderRecords()}}
+function collectHeader(){
+ const o={};document.querySelectorAll('#headerFields input').forEach(x=>o[x.dataset.key]=x.value);return o
+}
+function saveEntry(){
+ const h=collectHeader();
+ if(!h.order_no && db.header.some(f=>f.key==='order_no')){toast('Enter ORDER NO');return}
+ let rows=0;
+ db.records.forEach(r=>r.items.forEach(item=>{
+   const row={...h,record_no:String(r.recordNo),shade:r.shade};
+   db.detail.forEach(f=>row[f.key]=item[f.key]??'');
+   row.id=crypto.randomUUID();row.saved_at=new Date().toISOString();db.saved.push(row);rows++;
+ }));
+ if(!rows){toast('Add at least one item');return}
+ persist();toast(rows+' item rows saved');newEntry(false)
+}
+function newEntry(reset=true){
+ db.records=[];renderHeader();renderRecords();if(reset)toast('Form cleared')
+}
+function renderSaved(){
+ const q=(document.getElementById('search')?.value||'').toLowerCase();
+ const all=db.saved.filter(r=>JSON.stringify(r).toLowerCase().includes(q));
+ let cols=[...db.header.map(f=>f.key), 'record_no','shade',...db.detail.map(f=>f.key)];
+ let labels=[...db.header.map(f=>f.label),'RECORD NO','SHADE',...db.detail.map(f=>f.label)];
+ document.getElementById('savedTable').innerHTML='<thead><tr>'+labels.map(x=>`<th>${esc(x)}</th>`).join('')+'</tr></thead><tbody>'+
+ all.map(r=>'<tr>'+cols.map(c=>`<td>${esc(r[c]??'')}</td>`).join('')+'</tr>').join('')+'</tbody>';
+}
+function renderFields(){
+ document.getElementById('fieldList').innerHTML=db.header.map((f,i)=>`
+ <div class="field-row"><div><label>${esc(f.label)}</label><span class="badge">${f.type}</span></div><div></div><button class="btn danger" onclick="removeHeaderField(${i})">Remove</button></div>`).join('');
+ document.getElementById('detailFieldList').innerHTML=db.detail.map((f,i)=>`
+ <div class="field-row"><div><label>${esc(f.label)}</label><span class="badge">${f.type}</span></div><div></div><button class="btn danger" onclick="removeDetailField(${i})">Remove</button></div>`).join('');
+}
+function addHeaderField(){
+ const label=document.getElementById('newHeaderField').value.trim();if(!label)return;
+ const key=keyify(label);if(db.header.some(f=>f.key===key)){toast('Field already exists');return}
+ db.header.push({key,label,type:document.getElementById('newHeaderType').value});persist();document.getElementById('newHeaderField').value='';renderFields();renderHeader();toast('Header field added')
+}
+function addDetailField(){
+ const label=document.getElementById('newDetailField').value.trim();if(!label)return;
+ const key=keyify(label);if(db.detail.some(f=>f.key===key)){toast('Field already exists');return}
+ db.detail.push({key,label,type:document.getElementById('newDetailType').value});db.records.forEach(r=>r.items.forEach(i=>i[key]=''));persist();document.getElementById('newDetailField').value='';renderFields();renderRecords();toast('Item field added')
+}
+function removeHeaderField(i){
+ if(db.header[i].key==='order_no'){toast('ORDER NO cannot be removed in this version');return}
+ if(confirm('Remove this header field from the form? Existing saved rows will keep old data.')){db.header.splice(i,1);persist();renderFields();renderHeader()}
+}
+function removeDetailField(i){
+ if(db.detail.length<=1){toast('At least one item field is required');return}
+ if(confirm('Remove this item field from the form?')){db.detail.splice(i,1);persist();renderFields();renderRecords()}
+}
+function backup(){
+ const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='local_input_system_backup_'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href)
+}
+function restoreFile(){document.getElementById('restoreInput').click()}
+document.getElementById('restoreInput').onchange=e=>{
+ const f=e.target.files[0];if(!f)return;const rd=new FileReader();
+ rd.onload=()=>{try{db=JSON.parse(rd.result);persist();renderHeader();renderRecords();renderFields();renderSaved();toast('Backup restored')}catch(x){toast('Invalid backup file')}};rd.readAsText(f)
+}
+function exportCSV(){
+ const rows=db.saved; if(!rows.length){toast('No saved data');return}
+ const cols=[...db.header.map(f=>f.key),'record_no','shade',...db.detail.map(f=>f.key)];
+ const labels=[...db.header.map(f=>f.label),'RECORD NO','SHADE',...db.detail.map(f=>f.label)];
+ const csv=[labels,...rows.map(r=>cols.map(c=>r[c]??''))].map(a=>a.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+ const blob=new Blob([csv],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='saved_data.csv';a.click();URL.revokeObjectURL(a.href)
+}
+function esc(v){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+renderHeader();renderRecords();renderFields();
+</script>
+</body>
+</html>
