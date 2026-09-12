@@ -107,6 +107,14 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{border-bottom:1px
 <div class="tableWrap"><table><thead><tr><th>Date/Time</th><th>Name</th><th>Designation</th><th>Reporting To</th><th>Departments</th><th>Details</th></tr></thead><tbody id="dataBody"></tbody></table></div>
 </div></div>
 
+<div id="recordModal" class="modal hidden"><div class="modalBox">
+<div style="display:flex;justify-content:space-between;align-items:center"><h2 id="recordTitle">Submission Details</h2><button class="btn secondary" onclick="closeRecord()">Close</button></div>
+<div class="tableWrap" style="margin-top:12px"><table><thead><tr><th>Department</th><th>Activities</th><th>Time %</th><th>Instructions</th><th>Depends On</th></tr></thead><tbody id="recordDeptBody"></tbody></table></div>
+<div style="margin-top:18px">
+<div class="tableWrap"><table><thead><tr><th style="width:38%">Question</th><th>Answer</th></tr></thead><tbody id="recordOverallBody"></tbody></table></div>
+</div>
+</div></div>
+
 <script>
 const T={
 en:{title:"Employee Work & Responsibility Mapping Form",intro:"We are undertaking an internal exercise to understand the work currently being performed across the company. Please answer honestly and comprehensively. There are no right or wrong answers.",s1:"SECTION A — BASIC INFORMATION",s1n:"Tell us about your current role and reporting structure.",name:"1. Your Name *",desig:"2. Your Current Designation *",report:"3. Whom do you currently report to for your day-to-day work? *",s2:"SECTION B — DEPARTMENTS YOU CURRENTLY WORK IN",s2n:"Select all departments where you currently perform work.",s3:"",s3n:"For every selected department, list the work you actually perform, including occasional or support work.",selectDept:"Please select at least one department above.",s4:"SECTION C — YOUR OVERALL WORK",s5:"SECTION D — PROBLEMS & BOTTLENECKS",s6:"SECTION E — YOUR VIEW OF YOUR ROLE",q9:"5. Work that does not properly belong to your role or department",q10:"6. Work you SHOULD be doing, but someone else is doing it or nobody is doing it",q11:"7. Which 3 activities take up most of your working time?",q12:"8. Which activities are most critical to the company, according to you?",q13:"9. What are the 3 biggest problems or delays you face?",q14:"10. What work frequently gets stuck while waiting for another person or department?",q15:"11. What is one thing the company should change to make your work more efficient?",q16:"12. If you had to give your present job a suitable designation, what would you call it?",q17:"13. What do you think should be your MAIN responsibility?",q18:"14. What additional responsibility are you capable of taking?",q19:"15. Is there anything else about your work that management should know?",clear:"Clear",submit:"Submit Form",protected:"Protected Data",enterpass:"Enter password to view saved submissions.",cancel:"Cancel",view:"View Data",saved:"Saved Submissions",activity:"Activity",time:"Approx. % of working time",instruction:"Who gives you instructions/work related to this department?",depends:"Whose work depends upon you in this department?",add:"＋ Add Another Activity",ph:"Describe the activity you perform",select:"Select department",success:"Form submitted successfully.",required:"Please complete Name, Designation, Reporting To and select at least one department.",wrong:"Incorrect password.",saving:"Saving…",loaderr:"Could not load saved submissions. Please try again."},
@@ -117,7 +125,7 @@ const departments=["Management / Administration","Sales & Marketing","Spare/Stor
 const depNames={en:departments,hi:["प्रबंधन / प्रशासन","बिक्री एवं विपणन","स्पेयर/स्टोर","यार्न एवं खरीद","यार्न डाइंग / समन्वय","निटिंग / उत्पादन","ग्रे फैब्रिक गुणवत्ता / निरीक्षण","फैब्रिक डाइंग / समन्वय","डाइड फैब्रिक गुणवत्ता / निरीक्षण","फिनिशिंग","कॉलर एवं रिब उत्पादन","कॉलर एवं रिब गुणवत्ता / निरीक्षण","पैकिंग एवं डिस्पैच","लेखा एवं वित्त","भुगतान संग्रह / प्राप्तियां","एचआर / कार्मिक","रखरखाव / इंजीनियरिंग","आईटी / कंप्यूटर / सिस्टम","सामान्य कार्यालय सहायता","अन्य"],pa:["ਪ੍ਰਬੰਧਨ / ਪ੍ਰਸ਼ਾਸਨ","ਸੇਲਜ਼ ਅਤੇ ਮਾਰਕੀਟਿੰਗ","ਸਪੇਅਰ/ਸਟੋਰ","ਯਾਰਨ ਅਤੇ ਖਰੀਦ","ਯਾਰਨ ਡਾਇੰਗ / ਕੋਆਰਡੀਨੇਸ਼ਨ","ਨਿਟਿੰਗ / ਉਤਪਾਦਨ","ਗ੍ਰੇ ਫੈਬਰਿਕ ਗੁਣਵੱਤਾ / ਇੰਸਪੈਕਸ਼ਨ","ਫੈਬਰਿਕ ਡਾਇੰਗ / ਕੋਆਰਡੀਨੇਸ਼ਨ","ਡਾਇਡ ਫੈਬਰਿਕ ਗੁਣਵੱਤਾ / ਇੰਸਪੈਕਸ਼ਨ","ਫਿਨਿਸ਼ਿੰਗ","ਕਾਲਰ ਅਤੇ ਰਿਬ ਉਤਪਾਦਨ","ਕਾਲਰ ਅਤੇ ਰਿਬ ਗੁਣਵੱਤਾ / ਇੰਸਪੈਕਸ਼ਨ","ਪੈਕਿੰਗ ਅਤੇ ਡਿਸਪੈਚ","ਅਕਾਊਂਟਸ ਅਤੇ ਫਾਇਨੈਂਸ","ਪੇਮੈਂਟ ਕਲੈਕਸ਼ਨ / ਰਿਸੀਵੇਬਲਜ਼","HR / ਪਰਸੋਨਲ","ਮੇਨਟੇਨੈਂਸ / ਇੰਜੀਨੀਅਰਿੰਗ","IT / ਕੰਪਿਊਟਰ / ਸਿਸਟਮ","ਜਨਰਲ ਆਫਿਸ ਸਪੋਰਟ","ਹੋਰ"]};
 
 // ==== SETTINGS: paste your Apps Script Web App URL here (ends in /exec) ====
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz4AB5t6Lk2jOClFcIVZIVNzV1WdbB5EpO2MQeFzTxhB-ynXCohPzVC925SeC5zGebh/exec";
+const APPS_SCRIPT_URL = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
 
 let lang="en";
 const t=()=>T[lang];
@@ -225,13 +233,22 @@ async function showData(pwd){
    else{console.error("Load failed:",e);alert(t().loaderr);}
  }
 }
+const overallLabels=["q9","q10","q11","q12","q13","q14","q15","q16","q17","q18","q19"];
 function viewRecord(id){
- const r=(window.__cachedEntries||[]).find(x=>x.id===id);
+ const r=(window.__cachedEntries||[]).find(x=>String(x.id)===String(id));
  if(!r)return;
- let s=`${r.name} — ${r.designation}\nReporting: ${r.reporting}\n\n`;
- r.departments.forEach(d=>{let x=r.departmentData[d];s+=`\n${d}\nActivities: ${(x.activities||[]).join(" | ")}\nTime: ${x.time}%\nInstructions: ${x.instructions}\nDepends: ${x.depends}\n`});
- alert(s);
+ document.getElementById("recordTitle").textContent=`${r.name} — ${r.designation} (reports to ${r.reporting})`;
+ document.getElementById("recordDeptBody").innerHTML=r.departments.map(d=>{
+   const x=r.departmentData[d]||{};
+   return `<tr><td>${esc(d)}</td><td>${(x.activities||[]).map(a=>esc(a)).join("<br>")}</td><td>${esc(x.time)}</td><td>${esc(x.instructions)||"—"}</td><td>${esc(x.depends)||"—"}</td></tr>`;
+ }).join("")||`<tr><td colspan="5" class="muted">No department data.</td></tr>`;
+ document.getElementById("recordOverallBody").innerHTML=overallLabels.map(key=>{
+   const answer=(r.overall&&r.overall[key])?r.overall[key]:"—";
+   return `<tr><td>${esc(t()[key]||key)}</td><td>${esc(answer)}</td></tr>`;
+ }).join("");
+ document.getElementById("recordModal").classList.remove("hidden");
 }
+function closeRecord(){document.getElementById("recordModal").classList.add("hidden")}
 function closeData(){document.getElementById("dataModal").classList.add("hidden")}
 window.addEventListener("DOMContentLoaded", function(){
   // Always open in English and render Section B immediately.
