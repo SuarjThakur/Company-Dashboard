@@ -207,13 +207,15 @@ async function saveForm(){
   }
 
   try{
+    // Formspree accepts standard form-encoded/FormData submissions.
+    // Using FormData is more reliable than sending a raw JSON body.
+    const formData=new FormData();
+    Object.entries(payload).forEach(([key,value])=>formData.append(key,value));
+
     const response=await fetch("https://formspree.io/f/mnpqykav",{
       method:"POST",
-      headers:{
-        "Accept":"application/json",
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify(payload)
+      headers:{"Accept":"application/json"},
+      body:formData
     });
 
     const result=await response.json().catch(()=>({}));
