@@ -50,7 +50,7 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:8px;
 textarea{min-height:48px;height:48px;resize:none;overflow:hidden;line-height:1.45}
 input:focus,textarea:focus,select:focus{outline:none;border-color:var(--steel-600);box-shadow:0 0 0 3px #3a5f8524;background:#fff}
 .depts{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
-.dept{border:1px solid var(--line);border-radius:9px;padding:11px;background:var(--surface-2);transition:border-color .15s,background .15s}
+.dept{border:1px solid var(--line);border-radius:9px;padding:11px;background:var(--surface-2);transition:border-color .2s ease,background .2s ease}
 .dept:has(input:checked){border-color:var(--steel-600);background:#eef4fa}
 .dept input{width:auto;margin-right:8px;accent-color:var(--navy-700)}
 .deptBlock{border:1px solid var(--line);border-radius:12px;margin-top:16px;padding:18px;background:linear-gradient(180deg,#fbfdff,#f6f9fc)}
@@ -203,9 +203,24 @@ function selectLanguage(x){
 function setLang(x){lang=x;document.documentElement.lang=x==="en"?"en":x==="hi"?"hi":"pa";document.querySelectorAll(".langbar button").forEach(b=>b.classList.toggle("active",b.dataset.lang===x));document.querySelectorAll("[data-t]").forEach(e=>{if(t()[e.dataset.t])e.textContent=t()[e.dataset.t]});document.querySelectorAll("[data-ph]").forEach(e=>e.placeholder=t()[e.dataset.ph]||"");renderDepts();renderBlocks();}
 function renderDepts(){
  const old=[...document.querySelectorAll(".dept input")].filter(x=>x.checked).map(x=>x.value);
- document.getElementById("deptList").innerHTML=departments.map((d,i)=>`<label class="dept"><input type="checkbox" value="${d}" ${old.includes(d)?"checked":""} onchange="renderBlocks()"> ${depNames[lang][i]}</label>`).join("");
+ document.getElementById("deptList").innerHTML=departments.map((d,i)=>`<label class="dept"><input type="checkbox" value="${d}" ${old.includes(d)?"checked":""} onchange="updateDeptBlocks()"> ${depNames[lang][i]}</label>`).join("");
 }
 function selected(){return [...document.querySelectorAll(".dept input:checked")].map(x=>x.value)}
+function buildDeptBlockHTML(d,e){
+ e=e||{acts:[""],time:"",instr:"",dep:""};
+ return `<div class="deptBlock" data-dept="${esc(d)}">
+    <div class="deptHead">${depNames[lang][departments.indexOf(d)]}</div>
+    <label>${t().activity}</label>
+    <div class="activities">${e.acts.length?e.acts.map((a,i)=>activityRow(i,a)).join(""):activityRow(0,"")}</div>
+    <button class="add" type="button" onclick="addActivity(this)">${t().add}</button>
+    <div class="grid" style="margin-top:16px">
+      <div><label>${t().time}</label><input class="time" value="${esc(e.time)}" placeholder="0–100"></div>
+      <div><label>${t().instruction}</label><input class="instr" value="${esc(e.instr)}"></div>
+      <div class="full"><label>${t().depends}</label><input class="depends" value="${esc(e.dep)}"></div>
+    </div>
+   </div>`;
+}
+// Full rebuild — used only on language switch, when every label needs re-translating.
 function renderBlocks(){
  const list=selected(), wrap=document.getElementById("deptBlocks");
  if(!list.length){wrap.innerHTML=`<p class="muted">${t().selectDept}</p>`;return}
@@ -218,20 +233,26 @@ function renderBlocks(){
      dep:b.querySelector(".depends")?.value||""
    };
  });
- wrap.innerHTML=list.map(d=>{
-   let e=existing[d]||{acts:[""],time:"",instr:"",dep:""};
-   return `<div class="deptBlock" data-dept="${esc(d)}">
-    <div class="deptHead">${depNames[lang][departments.indexOf(d)]}</div>
-    <label>${t().activity}</label>
-    <div class="activities">${e.acts.length?e.acts.map((a,i)=>activityRow(i,a)).join(""):activityRow(0,"")}</div>
-    <button class="add" type="button" onclick="addActivity(this)">${t().add}</button>
-    <div class="grid" style="margin-top:16px">
-      <div><label>${t().time}</label><input class="time" value="${esc(e.time)}" placeholder="0–100"></div>
-      <div><label>${t().instruction}</label><input class="instr" value="${esc(e.instr)}"></div>
-      <div class="full"><label>${t().depends}</label><input class="depends" value="${esc(e.dep)}"></div>
-    </div>
-   </div>`;
- }).join("");
+ wrap.innerHTML=list.map(d=>buildDeptBlockHTML(d,existing[d])).join("");
+}
+// Incremental update — used when a department checkbox is toggled. Only the
+// department that changed is added/removed; every other block, and anything
+// already typed into it, is left untouched so the page doesn't flash/jump.
+function updateDeptBlocks(){
+ const list=selected(), wrap=document.getElementById("deptBlocks");
+ if(!list.length){wrap.innerHTML=`<p class="muted">${t().selectDept}</p>`;return}
+ const placeholder=wrap.querySelector("p.muted");
+ if(placeholder) placeholder.remove();
+ [...wrap.querySelectorAll(".deptBlock")].forEach(b=>{ if(!list.includes(b.dataset.dept)) b.remove(); });
+ list.forEach((d,idx)=>{
+   let block=[...wrap.children].find(el=>el.dataset && el.dataset.dept===d);
+   if(!block){
+     wrap.insertAdjacentHTML("beforeend",buildDeptBlockHTML(d));
+     block=wrap.lastElementChild;
+   }
+   const ref=wrap.children[idx];
+   if(ref!==block) wrap.insertBefore(block,ref||null);
+ });
 }
 function activityRow(i,v){return `<div class="activity"><span>${i+1}.</span><input value="${esc(v)}" placeholder="${t().ph}"><button class="remove" type="button" onclick="this.parentElement.remove();renumber(this.closest('.deptBlock'))" title="Remove">×</button></div>`}
 document.addEventListener('input',e=>{if(e.target.tagName==='TEXTAREA')autoGrow(e.target)});
