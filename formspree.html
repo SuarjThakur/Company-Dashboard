@@ -5,32 +5,84 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Employee Work & Responsibility Mapping</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:#f4f7fb;color:#172033}
-header{background:#17324d;color:#fff;padding:11px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:20;box-shadow:0 2px 12px #0002;min-height:46px}
-.brand{font-size:17px;font-weight:750;white-space:nowrap}.confidential{background:#fff4d6;border:1px solid #efd58a;color:#6b5100;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13px;font-weight:800;text-align:center}.langbar{display:flex;align-items:center;gap:2px}.langbar button{border:0;background:transparent;color:#dce8f3;padding:5px 8px;font-size:12px;cursor:pointer;border-radius:5px}.langbar button.active,.langbar button:hover{background:#fff;color:#17324d;font-weight:800;box-shadow:0 0 0 1px #fff}
-.container{max-width:1050px;margin:28px auto;padding:0 18px}
-.card{background:#fff;border:1px solid #e4e9f0;border-radius:14px;padding:24px;margin-bottom:18px;box-shadow:0 4px 16px #17324d0a}
-h1{font-size:25px;margin:0 0 8px}.intro{color:#5b6678;line-height:1.6;margin:0}
-.section-title{font-size:16px;font-weight:750;margin:0;white-space:nowrap}.section-note{color:#687386;font-size:12px;margin:7px 0 14px}.work-subnote{color:#687386;font-size:12px;margin:18px 0 10px;padding-top:12px;border-top:1px solid #e8edf3}.language-area{display:flex;align-items:center;gap:8px}.lang-hint{font-size:11px;font-weight:700;color:#fff;background:#2b587d;border:1px solid #6f93b1;padding:5px 8px;border-radius:14px;animation:pulseHint 1.6s infinite;white-space:nowrap}.lang-hint.hide{display:none}@keyframes pulseHint{0%,100%{opacity:.75;transform:scale(1)}50%{opacity:1;transform:scale(1.04)}}
+:root{
+  --navy-950:#0b1626;--navy-900:#0f2138;--navy-800:#15304f;--navy-700:#1c3f66;
+  --steel-600:#3a5f85;--steel-400:#6a90b8;--steel-200:#c9dbec;
+  --gold-500:#c69a3a;--gold-100:#f7ecd3;
+  --bg:#eef2f7;--surface:#ffffff;--surface-2:#f7f9fc;
+  --ink-900:#111a27;--ink-600:#4a5a70;--ink-400:#7c8ba0;
+  --line:#dfe6ef;--line-soft:#e9eef4;
+  --ok:#1c6e4f;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Inter,Arial,sans-serif;background:
+  radial-gradient(1200px 600px at 100% -10%, #e4ecf6 0%, transparent 55%),
+  radial-gradient(1000px 500px at -10% 110%, #eef3f9 0%, transparent 50%),
+  var(--bg);color:var(--ink-900)}
+header{background:linear-gradient(135deg,var(--navy-950) 0%,var(--navy-800) 55%,var(--navy-700) 100%);color:#fff;padding:13px 26px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:56;box-shadow:0 4px 18px #0b16264d;min-height:50px;border-bottom:2px solid var(--gold-500)}
+.brand{font-size:16px;font-weight:750;white-space:nowrap;letter-spacing:.4px;text-transform:uppercase;display:flex;align-items:center;gap:10px}
+.brand::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--gold-500);box-shadow:0 0 0 3px #c69a3a33;display:inline-block}
+.confidential{background:linear-gradient(180deg,#fff9ec,#fdf1d8);border:1px solid #e9cd8c;color:#7a5b12;border-radius:10px;padding:11px 16px;margin-bottom:14px;font-size:13px;font-weight:700;text-align:center;box-shadow:0 2px 8px #7a5b1214}
+.langbar{display:flex;align-items:center;gap:2px;background:#0b16264d;border:1px solid #ffffff26;border-radius:9px;padding:3px}
+.langbar button{border:0;background:transparent;color:#dce8f3;padding:6px 10px;font-size:12px;cursor:pointer;border-radius:6px;font-weight:600;transition:all .15s ease}
+.langbar button.active,.langbar button:hover{background:var(--gold-500);color:var(--navy-950);font-weight:800}
+.container{max-width:1050px;margin:30px auto;padding:0 18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:26px;margin-bottom:20px;box-shadow:0 6px 20px #0f21380a,0 1px 3px #0f21380f}
+h1{font-size:25px;margin:0 0 8px}.intro{color:var(--ink-600);line-height:1.6;margin:0}
+.section-title{font-size:15px;font-weight:800;margin:0;white-space:nowrap;color:var(--navy-800);letter-spacing:.3px;padding-left:12px;border-left:4px solid var(--gold-500)}
+.section-note{color:var(--ink-400);font-size:12px;margin:8px 0 16px;padding-left:16px}
+.work-subnote{color:var(--ink-400);font-size:12px;margin:18px 0 10px;padding-top:14px;border-top:1px dashed var(--line)}
+.language-area{display:flex;align-items:center;gap:10px;position:relative}
+.lang-overlay{position:fixed;inset:0;z-index:55;background:radial-gradient(circle at calc(100% - 70px) 46px, transparent 100px, #0b1626b3 180px);transition:opacity .35s ease;pointer-events:none}
+.lang-overlay.hide{opacity:0;visibility:hidden}
+.langbar{position:relative;z-index:57}
+.lang-callout{position:fixed;top:66px;right:14px;z-index:58;display:flex;flex-direction:column;align-items:center;pointer-events:none;animation:calloutBob 1.15s infinite}
+.lang-callout.hide{display:none}
+.lang-callout-arrow{width:58px;height:58px;filter:drop-shadow(0 4px 10px #0b162680)}
+.lang-callout-box{background:var(--gold-500);color:var(--navy-950);font-weight:800;padding:12px 18px;border-radius:14px;margin-top:-4px;box-shadow:0 8px 22px #0b162666;text-align:center;font-size:15px;line-height:1.45;max-width:220px}
+.lang-callout-sub{font-weight:700;font-size:12px;opacity:.85;margin-top:3px}
+@keyframes calloutBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@media(max-width:700px){.lang-callout{top:58px;right:8px}.lang-callout-arrow{width:42px;height:42px}.lang-callout-box{font-size:12px;padding:9px 12px;max-width:150px}}
+@keyframes bobArrow{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.full{grid-column:1/-1}
-label{display:block;font-size:13px;font-weight:650;margin-bottom:7px}input,textarea,select{width:100%;border:1px solid #d6dde7;border-radius:8px;padding:9px 11px;font:inherit;background:#fff}textarea{min-height:48px;height:48px;resize:none;overflow:hidden;line-height:1.45}input:focus,textarea:focus,select:focus{outline:2px solid #8eb8df;border-color:#4d86ba}
-.depts{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.dept{border:1px solid #e0e5ec;border-radius:9px;padding:10px;background:#fafbfd}.dept input{width:auto;margin-right:8px}
-.deptBlock{border:1px solid #dce5ef;border-radius:12px;margin-top:16px;padding:18px;background:#fbfdff}.deptHead{font-weight:750;color:#17324d;font-size:16px;margin-bottom:14px}
-.activity{display:flex;gap:8px;margin:8px 0}.activity span{min-width:26px;padding-top:11px;font-weight:700;color:#536274}.activity input{flex:1}.remove{border:0;background:#f2f4f7;border-radius:8px;width:40px}
-.add{margin-top:7px;border:1px dashed #7797b5;background:#fff;padding:9px 12px;border-radius:8px;color:#24577f;font-weight:650}
-.actions{display:flex;justify-content:flex-end;gap:10px}.btn{border:0;border-radius:9px;padding:12px 18px;font-weight:700;cursor:pointer}.btn:disabled{opacity:.6;cursor:default}.primary{background:#17324d;color:white}.secondary{background:#e9eef4;color:#17324d}
-.icon{position:fixed;right:22px;bottom:22px;width:52px;height:52px;border-radius:50%;border:0;background:#17324d;color:white;font-size:22px;box-shadow:0 5px 18px #0003;cursor:pointer;z-index:30}
-.hidden{display:none!important}.muted{color:#718096;font-size:13px}
-table{width:100%;border-collapse:collapse;font-size:13px}th,td{border-bottom:1px solid #e6eaf0;padding:10px;text-align:left;vertical-align:top}th{background:#f5f7fa}.tableWrap{overflow:auto}.pill{background:#e8f0f7;border-radius:20px;padding:4px 8px;display:inline-block;margin:2px}
-.modal{position:fixed;inset:0;background:#10203099;display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}.modalBox{background:white;border-radius:14px;max-width:1100px;width:100%;max-height:90vh;overflow:auto;padding:22px}
-@media(max-width:700px){.grid,.depts{grid-template-columns:1fr}.full{grid-column:auto}header{padding:10px 12px}.brand{font-size:13px}.language-area{gap:3px}.lang-hint{font-size:9px;padding:4px 5px}.langbar button{padding:4px 5px;font-size:11px}.container{margin:14px auto}.card{padding:15px}}
+label{display:block;font-size:13px;font-weight:650;margin-bottom:7px;color:var(--ink-900)}
+input,textarea,select{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font:inherit;background:var(--surface-2);transition:border-color .15s,box-shadow .15s}
+textarea{min-height:48px;height:48px;resize:none;overflow:hidden;line-height:1.45}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--steel-600);box-shadow:0 0 0 3px #3a5f8524;background:#fff}
+.depts{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.dept{border:1px solid var(--line);border-radius:9px;padding:11px;background:var(--surface-2);transition:border-color .15s,background .15s}
+.dept:has(input:checked){border-color:var(--steel-600);background:#eef4fa}
+.dept input{width:auto;margin-right:8px;accent-color:var(--navy-700)}
+.deptBlock{border:1px solid var(--line);border-radius:12px;margin-top:16px;padding:18px;background:linear-gradient(180deg,#fbfdff,#f6f9fc)}
+.deptHead{font-weight:800;color:var(--navy-800);font-size:15px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line-soft)}
+.activity{display:flex;gap:8px;margin:8px 0}.activity span{min-width:26px;padding-top:11px;font-weight:700;color:var(--ink-400)}.activity input{flex:1}
+.remove{border:1px solid var(--line);background:var(--surface-2);border-radius:8px;width:40px;color:var(--ink-600);cursor:pointer}
+.remove:hover{background:#fbe9e9;border-color:#e3b3b3;color:#a33}
+.add{margin-top:7px;border:1px dashed var(--steel-400);background:#fff;padding:9px 12px;border-radius:8px;color:var(--navy-700);font-weight:650;cursor:pointer}
+.add:hover{background:#f2f7fc}
+.actions{display:flex;justify-content:flex-end;gap:10px}
+.btn{border:0;border-radius:9px;padding:12px 20px;font-weight:700;cursor:pointer;transition:transform .1s,box-shadow .15s}
+.btn:disabled{opacity:.6;cursor:default}
+.primary{background:linear-gradient(135deg,var(--navy-800),var(--navy-700));color:#fff;box-shadow:0 4px 14px #15304f40}
+.primary:hover:not(:disabled){box-shadow:0 6px 18px #15304f55}
+.secondary{background:var(--surface-2);color:var(--navy-800);border:1px solid var(--line)}
+.secondary:hover{background:#eef2f7}
+.icon{position:fixed;right:22px;bottom:22px;width:52px;height:52px;border-radius:50%;border:0;background:linear-gradient(135deg,var(--navy-800),var(--navy-950));color:white;font-size:22px;box-shadow:0 6px 20px #0b162655;cursor:pointer;z-index:30}
+.hidden{display:none!important}.muted{color:var(--ink-400);font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{border-bottom:1px solid var(--line-soft);padding:10px;text-align:left;vertical-align:top}
+th{background:var(--surface-2);color:var(--navy-800);font-weight:750;text-transform:uppercase;font-size:11px;letter-spacing:.3px}
+.tableWrap{overflow:auto}
+.pill{background:#e8f0f7;border:1px solid var(--steel-200);color:var(--navy-800);border-radius:20px;padding:4px 9px;display:inline-block;margin:2px;font-size:12px;font-weight:600}
+.modal{position:fixed;inset:0;background:#0b1626b3;display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.modalBox{background:white;border-radius:16px;max-width:1100px;width:100%;max-height:90vh;overflow:auto;padding:24px;box-shadow:0 20px 60px #0b162655}
+@media(max-width:700px){.grid,.depts{grid-template-columns:1fr}.full{grid-column:auto}header{padding:10px 12px}.brand{font-size:12px}.language-area{gap:3px}.lang-hint{font-size:9px;padding:4px 5px}.langbar button{padding:4px 5px;font-size:11px}.container{margin:14px auto}.card{padding:15px}.lang-arrow{width:24px;height:24px}}
 </style>
 </head>
 <body>
 <header>
  <div class="brand">EMPLOYEE NAME AND RESPONSIBILITY FORM</div>
  <div class="language-area">
- <span id="langHint" class="lang-hint">🌐 Select Language</span>
  <div class="langbar">
   <button onclick="selectLanguage('en')" data-lang="en">English</button>
   <button onclick="selectLanguage('hi')" data-lang="hi">हिंदी</button>
@@ -38,9 +90,20 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{border-bottom:1px
  </div>
 </div>
 </header>
+<div id="langOverlay" class="lang-overlay"></div>
+<div id="langCallout" class="lang-callout">
+ <svg class="lang-callout-arrow" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+   <path d="M12 22V4" stroke="#c69a3a" stroke-width="2.8" stroke-linecap="round"/>
+   <path d="M4 12l8-8 8 8" stroke="#c69a3a" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+ </svg>
+ <div class="lang-callout-box">
+   🌐 Select your language
+   <div class="lang-callout-sub">भाषा चुनें · ਭਾਸ਼ਾ ਚੁਣੋ</div>
+ </div>
+</div>
 
 <main class="container" id="formView">
-<section class="confidential">This information is confidential and must not be disclosed to any other staff member.</section>
+<section class="confidential" data-t="confidential">This information is confidential and must not be disclosed to any other staff member.</section>
 <section class="card">
 <div class="section-title" data-t="s1">SECTION A — BASIC INFORMATION</div>
 <div class="section-note" data-t="s1n">Tell us about your current role and reporting structure.</div>
@@ -117,9 +180,9 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{border-bottom:1px
 
 <script>
 const T={
-en:{title:"Employee Work & Responsibility Mapping Form",intro:"We are undertaking an internal exercise to understand the work currently being performed across the company. Please answer honestly and comprehensively. There are no right or wrong answers.",s1:"SECTION A — BASIC INFORMATION",s1n:"Tell us about your current role and reporting structure.",name:"1. Your Name *",desig:"2. Your Current Designation *",report:"3. Whom do you currently report to for your day-to-day work? *",s2:"SECTION B — DEPARTMENTS YOU CURRENTLY WORK IN",s2n:"Select all departments where you currently perform work.",s3:"",s3n:"For every selected department, list the work you actually perform, including occasional or support work.",selectDept:"Please select at least one department above.",s4:"SECTION C — YOUR OVERALL WORK",s5:"SECTION D — PROBLEMS & BOTTLENECKS",s6:"SECTION E — YOUR VIEW OF YOUR ROLE",q9:"5. Work that does not properly belong to your role or department",q10:"6. Work you SHOULD be doing, but someone else is doing it or nobody is doing it",q11:"7. Which 3 activities take up most of your working time?",q12:"8. Which activities are most critical to the company, according to you?",q13:"9. What are the 3 biggest problems or delays you face?",q14:"10. What work frequently gets stuck while waiting for another person or department?",q15:"11. What is one thing the company should change to make your work more efficient?",q16:"12. If you had to give your present job a suitable designation, what would you call it?",q17:"13. What do you think should be your MAIN responsibility?",q18:"14. What additional responsibility are you capable of taking?",q19:"15. Is there anything else about your work that management should know?",clear:"Clear",submit:"Submit Form",protected:"Protected Data",enterpass:"Enter password to view saved submissions.",cancel:"Cancel",view:"View Data",saved:"Saved Submissions",activity:"Activity",time:"Approx. % of working time",instruction:"Who gives you instructions/work related to this department?",depends:"Whose work depends upon you in this department?",add:"＋ Add Another Activity",ph:"Describe the activity you perform",select:"Select department",success:"Form submitted successfully.",required:"Please complete Name, Designation, Reporting To and select at least one department.",wrong:"Incorrect password.",saving:"Saving…",loaderr:"Could not load saved submissions. Please try again."},
-hi:{title:"कर्मचारी कार्य एवं जिम्मेदारी मैपिंग फॉर्म",intro:"कंपनी में वर्तमान में किए जा रहे कार्यों को समझने के लिए यह आंतरिक अभ्यास किया जा रहा है। कृपया ईमानदारी और विस्तार से जानकारी दें। यहां कोई सही या गलत उत्तर नहीं है।",s1:"खंड 1 — मूल जानकारी",s1n:"अपनी वर्तमान भूमिका और रिपोर्टिंग संरचना के बारे में बताएं।",name:"1. आपका नाम *",desig:"2. आपका वर्तमान पदनाम *",report:"3. दैनिक कार्य के लिए आप किसे रिपोर्ट करते हैं? *",s2:"खंड 2 — वे विभाग जिनमें आप वर्तमान में कार्य करते हैं",s2n:"सभी संबंधित विभाग चुनें।",s3:"खंड 3 — प्रत्येक विभाग में आपका कार्य",s3n:"हर चुने गए विभाग में आपके द्वारा वास्तव में किए जाने वाले सभी कार्य लिखें, जिसमें कभी-कभी किया जाने वाला कार्य भी शामिल है।",selectDept:"कृपया ऊपर कम से कम एक विभाग चुनें।",s4:"खंड 4 — आपका समग्र कार्य",s5:"खंड 5 — समस्याएं एवं बाधाएं",s6:"खंड 6 — आपकी भूमिका के बारे में आपका विचार",q9:"5. ऐसा कार्य जो आपकी भूमिका या विभाग से संबंधित नहीं है",q10:"6. ऐसा कार्य जो आपको करना चाहिए, लेकिन कोई और कर रहा है या कोई नहीं कर रहा",q11:"7. आपके कार्य समय का सबसे अधिक हिस्सा लेने वाली 3 गतिविधियां कौन सी हैं?",q12:"8. आपके अनुसार कंपनी के लिए सबसे महत्वपूर्ण गतिविधियां कौन सी हैं?",q13:"9. आपके सामने आने वाली 3 सबसे बड़ी समस्याएं या देरी क्या हैं?",q14:"10. दूसरे व्यक्ति या विभाग की प्रतीक्षा के कारण कौन सा कार्य अक्सर अटक जाता है?",q15:"11. कार्य को अधिक कुशल बनाने के लिए कंपनी को क्या बदलाव करना चाहिए?",q16:"12. यदि आपको अपने वर्तमान कार्य के लिए उपयुक्त पदनाम देना हो, तो आप क्या नाम देंगे?",q17:"13. आपके अनुसार आपकी मुख्य जिम्मेदारी क्या होनी चाहिए?",q18:"14. आप कौन सी अतिरिक्त जिम्मेदारी संभालने में सक्षम हैं?",q19:"15. क्या आपके कार्य के बारे में कोई अन्य बात है जो प्रबंधन को जाननी चाहिए?",clear:"साफ करें",submit:"फॉर्म जमा करें",protected:"सुरक्षित डेटा",enterpass:"सहेजे गए डेटा को देखने के लिए पासवर्ड दर्ज करें।",cancel:"रद्द करें",view:"डेटा देखें",saved:"सहेजे गए रिकॉर्ड",activity:"कार्य",time:"कार्य समय का लगभग %",instruction:"इस विभाग से संबंधित कार्य/निर्देश आपको कौन देता है?",depends:"इस विभाग में किसका कार्य आप पर निर्भर है?",add:"＋ एक और कार्य जोड़ें",ph:"आपके द्वारा किया जाने वाला कार्य लिखें",select:"विभाग चुनें",success:"फॉर्म सफलतापूर्वक जमा हो गया।",required:"कृपया नाम, पदनाम, रिपोर्टिंग व्यक्ति और कम से कम एक विभाग भरें।",wrong:"गलत पासवर्ड।",saving:"सेव हो रहा है…",loaderr:"सहेजे गए डेटा लोड नहीं हो सके। कृपया पुनः प्रयास करें।"},
-pa:{title:"ਕਰਮਚਾਰੀ ਕੰਮ ਅਤੇ ਜ਼ਿੰਮੇਵਾਰੀ ਮੈਪਿੰਗ ਫਾਰਮ",intro:"ਕੰਪਨੀ ਵਿੱਚ ਇਸ ਸਮੇਂ ਕੀਤੇ ਜਾ ਰਹੇ ਕੰਮ ਨੂੰ ਸਮਝਣ ਲਈ ਇਹ ਅੰਦਰੂਨੀ ਅਭਿਆਸ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ। ਕਿਰਪਾ ਕਰਕੇ ਇਮਾਨਦਾਰੀ ਅਤੇ ਵਿਸਥਾਰ ਨਾਲ ਜਾਣਕਾਰੀ ਦਿਓ। ਕੋਈ ਸਹੀ ਜਾਂ ਗਲਤ ਜਵਾਬ ਨਹੀਂ ਹੈ।",s1:"ਭਾਗ 1 — ਮੁੱਢਲੀ ਜਾਣਕਾਰੀ",s1n:"ਆਪਣੀ ਮੌਜੂਦਾ ਭੂਮਿਕਾ ਅਤੇ ਰਿਪੋਰਟਿੰਗ ਬਾਰੇ ਦੱਸੋ।",name:"1. ਤੁਹਾਡਾ ਨਾਮ *",desig:"2. ਤੁਹਾਡਾ ਮੌਜੂਦਾ ਅਹੁਦਾ *",report:"3. ਰੋਜ਼ਾਨਾ ਕੰਮ ਲਈ ਤੁਸੀਂ ਕਿਸ ਨੂੰ ਰਿਪੋਰਟ ਕਰਦੇ ਹੋ? *",s2:"ਭਾਗ 2 — ਉਹ ਵਿਭਾਗ ਜਿਨ੍ਹਾਂ ਵਿੱਚ ਤੁਸੀਂ ਕੰਮ ਕਰਦੇ ਹੋ",s2n:"ਸਾਰੇ ਸੰਬੰਧਿਤ ਵਿਭਾਗ ਚੁਣੋ।",s3:"ਭਾਗ 3 — ਹਰੇਕ ਵਿਭਾਗ ਵਿੱਚ ਤੁਹਾਡਾ ਕੰਮ",s3n:"ਹਰੇਕ ਚੁਣੇ ਵਿਭਾਗ ਵਿੱਚ ਤੁਹਾਡੇ ਵੱਲੋਂ ਕੀਤੇ ਜਾਣ ਵਾਲੇ ਸਾਰੇ ਕੰਮ ਲਿਖੋ, ਕਦੇ-ਕਦੇ ਕੀਤੇ ਜਾਣ ਵਾਲੇ ਕੰਮ ਸਮੇਤ।",selectDept:"ਕਿਰਪਾ ਕਰਕੇ ਉੱਪਰ ਘੱਟੋ-ਘੱਟ ਇੱਕ ਵਿਭਾਗ ਚੁਣੋ।",s4:"ਭਾਗ 4 — ਤੁਹਾਡਾ ਸਮੁੱਚਾ ਕੰਮ",s5:"ਭਾਗ 5 — ਸਮੱਸਿਆਵਾਂ ਅਤੇ ਰੁਕਾਵਟਾਂ",s6:"ਭਾਗ 6 — ਤੁਹਾਡੀ ਭੂਮਿਕਾ ਬਾਰੇ ਤੁਹਾਡੀ ਰਾਏ",q9:"5. ਉਹ ਕੰਮ ਜੋ ਤੁਹਾਡੀ ਭੂਮਿਕਾ ਜਾਂ ਵਿਭਾਗ ਨਾਲ ਠੀਕ ਤਰ੍ਹਾਂ ਸੰਬੰਧਿਤ ਨਹੀਂ ਹੈ",q10:"6. ਉਹ ਕੰਮ ਜੋ ਤੁਹਾਨੂੰ ਕਰਨਾ ਚਾਹੀਦਾ ਹੈ, ਪਰ ਕੋਈ ਹੋਰ ਕਰ ਰਿਹਾ ਹੈ ਜਾਂ ਕੋਈ ਨਹੀਂ ਕਰ ਰਿਹਾ",q11:"7. ਤੁਹਾਡੇ ਕੰਮ ਦੇ ਸਮੇਂ ਦਾ ਸਭ ਤੋਂ ਵੱਧ ਹਿੱਸਾ ਲੈਣ ਵਾਲੀਆਂ 3 ਗਤੀਵਿਧੀਆਂ ਕਿਹੜੀਆਂ ਹਨ?",q12:"8. ਤੁਹਾਡੇ ਅਨੁਸਾਰ ਕੰਪਨੀ ਲਈ ਸਭ ਤੋਂ ਮਹੱਤਵਪੂਰਨ ਗਤੀਵਿਧੀਆਂ ਕਿਹੜੀਆਂ ਹਨ?",q13:"9. ਤੁਹਾਨੂੰ ਆਉਣ ਵਾਲੀਆਂ 3 ਸਭ ਤੋਂ ਵੱਡੀਆਂ ਸਮੱਸਿਆਵਾਂ ਜਾਂ ਦੇਰੀਆਂ ਕੀ ਹਨ?",q14:"10. ਕਿਸੇ ਹੋਰ ਵਿਅਕਤੀ ਜਾਂ ਵਿਭਾਗ ਦੀ ਉਡੀਕ ਕਾਰਨ ਕਿਹੜਾ ਕੰਮ ਅਕਸਰ ਰੁਕ ਜਾਂਦਾ ਹੈ?",q15:"11. ਕੰਮ ਨੂੰ ਹੋਰ ਕੁਸ਼ਲ ਬਣਾਉਣ ਲਈ ਕੰਪਨੀ ਨੂੰ ਕੀ ਬਦਲਣਾ ਚਾਹੀਦਾ ਹੈ?",q16:"12. ਜੇ ਤੁਸੀਂ ਆਪਣੇ ਮੌਜੂਦਾ ਕੰਮ ਲਈ ਢੁਕਵਾਂ ਅਹੁਦਾ ਰੱਖਣਾ ਹੋਵੇ ਤਾਂ ਕੀ ਰੱਖੋਗੇ?",q17:"13. ਤੁਹਾਡੇ ਅਨੁਸਾਰ ਤੁਹਾਡੀ ਮੁੱਖ ਜ਼ਿੰਮੇਵਾਰੀ ਕੀ ਹੋਣੀ ਚਾਹੀਦੀ ਹੈ?",q18:"14. ਤੁਸੀਂ ਕਿਹੜੀ ਵਾਧੂ ਜ਼ਿੰਮੇਵਾਰੀ ਸੰਭਾਲ ਸਕਦੇ ਹੋ?",q19:"15. ਕੀ ਤੁਹਾਡੇ ਕੰਮ ਬਾਰੇ ਹੋਰ ਕੋਈ ਗੱਲ ਹੈ ਜੋ ਪ੍ਰਬੰਧਨ ਨੂੰ ਪਤਾ ਹੋਣੀ ਚਾਹੀਦੀ ਹੈ?",clear:"ਸਾਫ਼ ਕਰੋ",submit:"ਫਾਰਮ ਜਮ੍ਹਾਂ ਕਰੋ",protected:"ਸੁਰੱਖਿਅਤ ਡਾਟਾ",enterpass:"ਸੇਵ ਕੀਤੇ ਡਾਟਾ ਨੂੰ ਦੇਖਣ ਲਈ ਪਾਸਵਰਡ ਦਿਓ।",cancel:"ਰੱਦ ਕਰੋ",view:"ਡਾਟਾ ਵੇਖੋ",saved:"ਸੇਵ ਕੀਤੇ ਰਿਕਾਰਡ",activity:"ਕੰਮ",time:"ਕੰਮ ਦੇ ਸਮੇਂ ਦਾ ਲਗਭਗ %",instruction:"ਇਸ ਵਿਭਾਗ ਨਾਲ ਸਬੰਧਤ ਕੰਮ/ਹਦਾਇਤਾਂ ਤੁਹਾਨੂੰ ਕੌਣ ਦਿੰਦਾ ਹੈ?",depends:"ਇਸ ਵਿਭਾਗ ਵਿੱਚ ਕਿਸ ਦਾ ਕੰਮ ਤੁਹਾਡੇ ਉੱਤੇ ਨਿਰਭਰ ਕਰਦਾ ਹੈ?",add:"＋ ਇੱਕ ਹੋਰ ਕੰਮ ਸ਼ਾਮਲ ਕਰੋ",ph:"ਤੁਹਾਡੇ ਵੱਲੋਂ ਕੀਤਾ ਜਾਣ ਵਾਲਾ ਕੰਮ ਲਿਖੋ",select:"ਵਿਭਾਗ ਚੁਣੋ",success:"ਫਾਰਮ ਸਫਲਤਾਪੂਰਵਕ ਜਮ੍ਹਾਂ ਹੋ ਗਿਆ ਹੈ।",required:"ਕਿਰਪਾ ਕਰਕੇ ਨਾਮ, ਅਹੁਦਾ, ਰਿਪੋਰਟਿੰਗ ਵਿਅਕਤੀ ਅਤੇ ਘੱਟੋ-ਘੱਟ ਇੱਕ ਵਿਭਾਗ ਭਰੋ।",wrong:"ਗਲਤ ਪਾਸਵਰਡ।",saving:"ਸੇਵ ਹੋ ਰਿਹਾ ਹੈ…",loaderr:"ਸੇਵ ਕੀਤਾ ਡਾਟਾ ਲੋਡ ਨਹੀਂ ਹੋ ਸਕਿਆ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।"}
+en:{title:"Employee Work & Responsibility Mapping Form",intro:"We are undertaking an internal exercise to understand the work currently being performed across the company. Please answer honestly and comprehensively. There are no right or wrong answers.",confidential:"This information is confidential and must not be disclosed to any other staff member.",s1:"SECTION A — BASIC INFORMATION",s1n:"Tell us about your current role and reporting structure.",name:"1. Your Name *",desig:"2. Your Current Designation *",report:"3. Whom do you currently report to for your day-to-day work? *",s2:"SECTION B — DEPARTMENTS YOU CURRENTLY WORK IN",s2n:"Select all departments where you currently perform work.",s3:"",s3n:"For every selected department, list the work you actually perform, including occasional or support work.",selectDept:"Please select at least one department above.",s4:"SECTION C — YOUR OVERALL WORK",s5:"SECTION D — PROBLEMS & BOTTLENECKS",s6:"SECTION E — YOUR VIEW OF YOUR ROLE",q9:"5. Work that does not properly belong to your role or department",q10:"6. Work you SHOULD be doing, but someone else is doing it or nobody is doing it",q11:"7. Which 3 activities take up most of your working time?",q12:"8. Which activities are most critical to the company, according to you?",q13:"9. What are the 3 biggest problems or delays you face?",q14:"10. What work frequently gets stuck while waiting for another person or department?",q15:"11. What is one thing the company should change to make your work more efficient?",q16:"12. If you had to give your present job a suitable designation, what would you call it?",q17:"13. What do you think should be your MAIN responsibility?",q18:"14. What additional responsibility are you capable of taking?",q19:"15. Is there anything else about your work that management should know?",clear:"Clear",submit:"Submit Form",protected:"Protected Data",enterpass:"Enter password to view saved submissions.",cancel:"Cancel",view:"View Data",saved:"Saved Submissions",activity:"Activity",time:"Approx. % of working time",instruction:"Who gives you instructions/work related to this department?",depends:"Whose work depends upon you in this department?",add:"＋ Add Another Activity",ph:"Describe the activity you perform",select:"Select department",success:"Form submitted successfully.",required:"Please complete Name, Designation, Reporting To and select at least one department.",wrong:"Incorrect password.",saving:"Saving…",loaderr:"Could not load saved submissions. Please try again."},
+hi:{title:"कर्मचारी कार्य एवं जिम्मेदारी मैपिंग फॉर्म",intro:"कंपनी में वर्तमान में किए जा रहे कार्यों को समझने के लिए यह आंतरिक अभ्यास किया जा रहा है। कृपया ईमानदारी और विस्तार से जानकारी दें। यहां कोई सही या गलत उत्तर नहीं है।",confidential:"यह जानकारी गोपनीय है और इसे किसी अन्य कर्मचारी के साथ साझा नहीं किया जाना चाहिए।",s1:"खंड 1 — मूल जानकारी",s1n:"अपनी वर्तमान भूमिका और रिपोर्टिंग संरचना के बारे में बताएं।",name:"1. आपका नाम *",desig:"2. आपका वर्तमान पदनाम *",report:"3. दैनिक कार्य के लिए आप किसे रिपोर्ट करते हैं? *",s2:"खंड 2 — वे विभाग जिनमें आप वर्तमान में कार्य करते हैं",s2n:"सभी संबंधित विभाग चुनें।",s3:"खंड 3 — प्रत्येक विभाग में आपका कार्य",s3n:"हर चुने गए विभाग में आपके द्वारा वास्तव में किए जाने वाले सभी कार्य लिखें, जिसमें कभी-कभी किया जाने वाला कार्य भी शामिल है।",selectDept:"कृपया ऊपर कम से कम एक विभाग चुनें।",s4:"खंड 4 — आपका समग्र कार्य",s5:"खंड 5 — समस्याएं एवं बाधाएं",s6:"खंड 6 — आपकी भूमिका के बारे में आपका विचार",q9:"5. ऐसा कार्य जो आपकी भूमिका या विभाग से संबंधित नहीं है",q10:"6. ऐसा कार्य जो आपको करना चाहिए, लेकिन कोई और कर रहा है या कोई नहीं कर रहा",q11:"7. आपके कार्य समय का सबसे अधिक हिस्सा लेने वाली 3 गतिविधियां कौन सी हैं?",q12:"8. आपके अनुसार कंपनी के लिए सबसे महत्वपूर्ण गतिविधियां कौन सी हैं?",q13:"9. आपके सामने आने वाली 3 सबसे बड़ी समस्याएं या देरी क्या हैं?",q14:"10. दूसरे व्यक्ति या विभाग की प्रतीक्षा के कारण कौन सा कार्य अक्सर अटक जाता है?",q15:"11. कार्य को अधिक कुशल बनाने के लिए कंपनी को क्या बदलाव करना चाहिए?",q16:"12. यदि आपको अपने वर्तमान कार्य के लिए उपयुक्त पदनाम देना हो, तो आप क्या नाम देंगे?",q17:"13. आपके अनुसार आपकी मुख्य जिम्मेदारी क्या होनी चाहिए?",q18:"14. आप कौन सी अतिरिक्त जिम्मेदारी संभालने में सक्षम हैं?",q19:"15. क्या आपके कार्य के बारे में कोई अन्य बात है जो प्रबंधन को जाननी चाहिए?",clear:"साफ करें",submit:"फॉर्म जमा करें",protected:"सुरक्षित डेटा",enterpass:"सहेजे गए डेटा को देखने के लिए पासवर्ड दर्ज करें।",cancel:"रद्द करें",view:"डेटा देखें",saved:"सहेजे गए रिकॉर्ड",activity:"कार्य",time:"कार्य समय का लगभग %",instruction:"इस विभाग से संबंधित कार्य/निर्देश आपको कौन देता है?",depends:"इस विभाग में किसका कार्य आप पर निर्भर है?",add:"＋ एक और कार्य जोड़ें",ph:"आपके द्वारा किया जाने वाला कार्य लिखें",select:"विभाग चुनें",success:"फॉर्म सफलतापूर्वक जमा हो गया।",required:"कृपया नाम, पदनाम, रिपोर्टिंग व्यक्ति और कम से कम एक विभाग भरें।",wrong:"गलत पासवर्ड।",saving:"सेव हो रहा है…",loaderr:"सहेजे गए डेटा लोड नहीं हो सके। कृपया पुनः प्रयास करें।"},
+pa:{title:"ਕਰਮਚਾਰੀ ਕੰਮ ਅਤੇ ਜ਼ਿੰਮੇਵਾਰੀ ਮੈਪਿੰਗ ਫਾਰਮ",intro:"ਕੰਪਨੀ ਵਿੱਚ ਇਸ ਸਮੇਂ ਕੀਤੇ ਜਾ ਰਹੇ ਕੰਮ ਨੂੰ ਸਮਝਣ ਲਈ ਇਹ ਅੰਦਰੂਨੀ ਅਭਿਆਸ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ। ਕਿਰਪਾ ਕਰਕੇ ਇਮਾਨਦਾਰੀ ਅਤੇ ਵਿਸਥਾਰ ਨਾਲ ਜਾਣਕਾਰੀ ਦਿਓ। ਕੋਈ ਸਹੀ ਜਾਂ ਗਲਤ ਜਵਾਬ ਨਹੀਂ ਹੈ।",confidential:"ਇਹ ਜਾਣਕਾਰੀ ਗੁਪਤ ਹੈ ਅਤੇ ਇਸਨੂੰ ਕਿਸੇ ਹੋਰ ਸਟਾਫ ਮੈਂਬਰ ਨਾਲ ਸਾਂਝਾ ਨਹੀਂ ਕੀਤਾ ਜਾਣਾ ਚਾਹੀਦਾ।",s1:"ਭਾਗ 1 — ਮੁੱਢਲੀ ਜਾਣਕਾਰੀ",s1n:"ਆਪਣੀ ਮੌਜੂਦਾ ਭੂਮਿਕਾ ਅਤੇ ਰਿਪੋਰਟਿੰਗ ਬਾਰੇ ਦੱਸੋ।",name:"1. ਤੁਹਾਡਾ ਨਾਮ *",desig:"2. ਤੁਹਾਡਾ ਮੌਜੂਦਾ ਅਹੁਦਾ *",report:"3. ਰੋਜ਼ਾਨਾ ਕੰਮ ਲਈ ਤੁਸੀਂ ਕਿਸ ਨੂੰ ਰਿਪੋਰਟ ਕਰਦੇ ਹੋ? *",s2:"ਭਾਗ 2 — ਉਹ ਵਿਭਾਗ ਜਿਨ੍ਹਾਂ ਵਿੱਚ ਤੁਸੀਂ ਕੰਮ ਕਰਦੇ ਹੋ",s2n:"ਸਾਰੇ ਸੰਬੰਧਿਤ ਵਿਭਾਗ ਚੁਣੋ।",s3:"ਭਾਗ 3 — ਹਰੇਕ ਵਿਭਾਗ ਵਿੱਚ ਤੁਹਾਡਾ ਕੰਮ",s3n:"ਹਰੇਕ ਚੁਣੇ ਵਿਭਾਗ ਵਿੱਚ ਤੁਹਾਡੇ ਵੱਲੋਂ ਕੀਤੇ ਜਾਣ ਵਾਲੇ ਸਾਰੇ ਕੰਮ ਲਿਖੋ, ਕਦੇ-ਕਦੇ ਕੀਤੇ ਜਾਣ ਵਾਲੇ ਕੰਮ ਸਮੇਤ।",selectDept:"ਕਿਰਪਾ ਕਰਕੇ ਉੱਪਰ ਘੱਟੋ-ਘੱਟ ਇੱਕ ਵਿਭਾਗ ਚੁਣੋ।",s4:"ਭਾਗ 4 — ਤੁਹਾਡਾ ਸਮੁੱਚਾ ਕੰਮ",s5:"ਭਾਗ 5 — ਸਮੱਸਿਆਵਾਂ ਅਤੇ ਰੁਕਾਵਟਾਂ",s6:"ਭਾਗ 6 — ਤੁਹਾਡੀ ਭੂਮਿਕਾ ਬਾਰੇ ਤੁਹਾਡੀ ਰਾਏ",q9:"5. ਉਹ ਕੰਮ ਜੋ ਤੁਹਾਡੀ ਭੂਮਿਕਾ ਜਾਂ ਵਿਭਾਗ ਨਾਲ ਠੀਕ ਤਰ੍ਹਾਂ ਸੰਬੰਧਿਤ ਨਹੀਂ ਹੈ",q10:"6. ਉਹ ਕੰਮ ਜੋ ਤੁਹਾਨੂੰ ਕਰਨਾ ਚਾਹੀਦਾ ਹੈ, ਪਰ ਕੋਈ ਹੋਰ ਕਰ ਰਿਹਾ ਹੈ ਜਾਂ ਕੋਈ ਨਹੀਂ ਕਰ ਰਿਹਾ",q11:"7. ਤੁਹਾਡੇ ਕੰਮ ਦੇ ਸਮੇਂ ਦਾ ਸਭ ਤੋਂ ਵੱਧ ਹਿੱਸਾ ਲੈਣ ਵਾਲੀਆਂ 3 ਗਤੀਵਿਧੀਆਂ ਕਿਹੜੀਆਂ ਹਨ?",q12:"8. ਤੁਹਾਡੇ ਅਨੁਸਾਰ ਕੰਪਨੀ ਲਈ ਸਭ ਤੋਂ ਮਹੱਤਵਪੂਰਨ ਗਤੀਵਿਧੀਆਂ ਕਿਹੜੀਆਂ ਹਨ?",q13:"9. ਤੁਹਾਨੂੰ ਆਉਣ ਵਾਲੀਆਂ 3 ਸਭ ਤੋਂ ਵੱਡੀਆਂ ਸਮੱਸਿਆਵਾਂ ਜਾਂ ਦੇਰੀਆਂ ਕੀ ਹਨ?",q14:"10. ਕਿਸੇ ਹੋਰ ਵਿਅਕਤੀ ਜਾਂ ਵਿਭਾਗ ਦੀ ਉਡੀਕ ਕਾਰਨ ਕਿਹੜਾ ਕੰਮ ਅਕਸਰ ਰੁਕ ਜਾਂਦਾ ਹੈ?",q15:"11. ਕੰਮ ਨੂੰ ਹੋਰ ਕੁਸ਼ਲ ਬਣਾਉਣ ਲਈ ਕੰਪਨੀ ਨੂੰ ਕੀ ਬਦਲਣਾ ਚਾਹੀਦਾ ਹੈ?",q16:"12. ਜੇ ਤੁਸੀਂ ਆਪਣੇ ਮੌਜੂਦਾ ਕੰਮ ਲਈ ਢੁਕਵਾਂ ਅਹੁਦਾ ਰੱਖਣਾ ਹੋਵੇ ਤਾਂ ਕੀ ਰੱਖੋਗੇ?",q17:"13. ਤੁਹਾਡੇ ਅਨੁਸਾਰ ਤੁਹਾਡੀ ਮੁੱਖ ਜ਼ਿੰਮੇਵਾਰੀ ਕੀ ਹੋਣੀ ਚਾਹੀਦੀ ਹੈ?",q18:"14. ਤੁਸੀਂ ਕਿਹੜੀ ਵਾਧੂ ਜ਼ਿੰਮੇਵਾਰੀ ਸੰਭਾਲ ਸਕਦੇ ਹੋ?",q19:"15. ਕੀ ਤੁਹਾਡੇ ਕੰਮ ਬਾਰੇ ਹੋਰ ਕੋਈ ਗੱਲ ਹੈ ਜੋ ਪ੍ਰਬੰਧਨ ਨੂੰ ਪਤਾ ਹੋਣੀ ਚਾਹੀਦੀ ਹੈ?",clear:"ਸਾਫ਼ ਕਰੋ",submit:"ਫਾਰਮ ਜਮ੍ਹਾਂ ਕਰੋ",protected:"ਸੁਰੱਖਿਅਤ ਡਾਟਾ",enterpass:"ਸੇਵ ਕੀਤੇ ਡਾਟਾ ਨੂੰ ਦੇਖਣ ਲਈ ਪਾਸਵਰਡ ਦਿਓ।",cancel:"ਰੱਦ ਕਰੋ",view:"ਡਾਟਾ ਵੇਖੋ",saved:"ਸੇਵ ਕੀਤੇ ਰਿਕਾਰਡ",activity:"ਕੰਮ",time:"ਕੰਮ ਦੇ ਸਮੇਂ ਦਾ ਲਗਭਗ %",instruction:"ਇਸ ਵਿਭਾਗ ਨਾਲ ਸਬੰਧਤ ਕੰਮ/ਹਦਾਇਤਾਂ ਤੁਹਾਨੂੰ ਕੌਣ ਦਿੰਦਾ ਹੈ?",depends:"ਇਸ ਵਿਭਾਗ ਵਿੱਚ ਕਿਸ ਦਾ ਕੰਮ ਤੁਹਾਡੇ ਉੱਤੇ ਨਿਰਭਰ ਕਰਦਾ ਹੈ?",add:"＋ ਇੱਕ ਹੋਰ ਕੰਮ ਸ਼ਾਮਲ ਕਰੋ",ph:"ਤੁਹਾਡੇ ਵੱਲੋਂ ਕੀਤਾ ਜਾਣ ਵਾਲਾ ਕੰਮ ਲਿਖੋ",select:"ਵਿਭਾਗ ਚੁਣੋ",success:"ਫਾਰਮ ਸਫਲਤਾਪੂਰਵਕ ਜਮ੍ਹਾਂ ਹੋ ਗਿਆ ਹੈ।",required:"ਕਿਰਪਾ ਕਰਕੇ ਨਾਮ, ਅਹੁਦਾ, ਰਿਪੋਰਟਿੰਗ ਵਿਅਕਤੀ ਅਤੇ ਘੱਟੋ-ਘੱਟ ਇੱਕ ਵਿਭਾਗ ਭਰੋ।",wrong:"ਗਲਤ ਪਾਸਵਰਡ।",saving:"ਸੇਵ ਹੋ ਰਿਹਾ ਹੈ…",loaderr:"ਸੇਵ ਕੀਤਾ ਡਾਟਾ ਲੋਡ ਨਹੀਂ ਹੋ ਸਕਿਆ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।"}
 };
 const departments=["Management / Administration","Sales & Marketing","Spare/Store","Yarn & Purchase","Yarn Dyeing / Yarn Dyeing Coordination","Knitting / Production","Grey Fabric Quality / Inspection","Fabric Dyeing / Dyeing Coordination","Dyed Fabric Quality / Inspection","Finishing","Collar & Rib Production","Collar & Rib Quality / Inspection","Packing & Dispatch","Accounts & Finance","Payment Collection / Receivables","HR / Personnel","Maintenance / Engineering","IT / Computer / Systems","General Office Support","Other"];
 const depNames={en:departments,hi:["प्रबंधन / प्रशासन","बिक्री एवं विपणन","स्पेयर/स्टोर","यार्न एवं खरीद","यार्न डाइंग / समन्वय","निटिंग / उत्पादन","ग्रे फैब्रिक गुणवत्ता / निरीक्षण","फैब्रिक डाइंग / समन्वय","डाइड फैब्रिक गुणवत्ता / निरीक्षण","फिनिशिंग","कॉलर एवं रिब उत्पादन","कॉलर एवं रिब गुणवत्ता / निरीक्षण","पैकिंग एवं डिस्पैच","लेखा एवं वित्त","भुगतान संग्रह / प्राप्तियां","एचआर / कार्मिक","रखरखाव / इंजीनियरिंग","आईटी / कंप्यूटर / सिस्टम","सामान्य कार्यालय सहायता","अन्य"],pa:["ਪ੍ਰਬੰਧਨ / ਪ੍ਰਸ਼ਾਸਨ","ਸੇਲਜ਼ ਅਤੇ ਮਾਰਕੀਟਿੰਗ","ਸਪੇਅਰ/ਸਟੋਰ","ਯਾਰਨ ਅਤੇ ਖਰੀਦ","ਯਾਰਨ ਡਾਇੰਗ / ਕੋਆਰਡੀਨੇਸ਼ਨ","ਨਿਟਿੰਗ / ਉਤਪਾਦਨ","ਗ੍ਰੇ ਫੈਬਰਿਕ ਗੁਣਵੱਤਾ / ਇੰਸਪੈਕਸ਼ਨ","ਫੈਬਰਿਕ ਡਾਇੰਗ / ਕੋਆਰਡੀਨੇਸ਼ਨ","ਡਾਇਡ ਫੈਬਰਿਕ ਗੁਣਵੱਤਾ / ਇੰਸਪੈਕਸ਼ਨ","ਫਿਨਿਸ਼ਿੰਗ","ਕਾਲਰ ਅਤੇ ਰਿਬ ਉਤਪਾਦਨ","ਕਾਲਰ ਅਤੇ ਰਿਬ ਗੁਣਵੱਤਾ / ਇੰਸਪੈਕਸ਼ਨ","ਪੈਕਿੰਗ ਅਤੇ ਡਿਸਪੈਚ","ਅਕਾਊਂਟਸ ਅਤੇ ਫਾਇਨੈਂਸ","ਪੇਮੈਂਟ ਕਲੈਕਸ਼ਨ / ਰਿਸੀਵੇਬਲਜ਼","HR / ਪਰਸੋਨਲ","ਮੇਨਟੇਨੈਂਸ / ਇੰਜੀਨੀਅਰਿੰਗ","IT / ਕੰਪਿਊਟਰ / ਸਿਸਟਮ","ਜਨਰਲ ਆਫਿਸ ਸਪੋਰਟ","ਹੋਰ"]};
@@ -132,8 +195,10 @@ const t=()=>T[lang];
 
 function selectLanguage(x){
   setLang(x);
-  const hint=document.getElementById('langHint');
-  if(hint) hint.classList.add('hide');
+  const overlay=document.getElementById('langOverlay');
+  if(overlay) overlay.classList.add('hide');
+  const callout=document.getElementById('langCallout');
+  if(callout) callout.classList.add('hide');
 }
 function setLang(x){lang=x;document.documentElement.lang=x==="en"?"en":x==="hi"?"hi":"pa";document.querySelectorAll(".langbar button").forEach(b=>b.classList.toggle("active",b.dataset.lang===x));document.querySelectorAll("[data-t]").forEach(e=>{if(t()[e.dataset.t])e.textContent=t()[e.dataset.t]});document.querySelectorAll("[data-ph]").forEach(e=>e.placeholder=t()[e.dataset.ph]||"");renderDepts();renderBlocks();}
 function renderDepts(){
@@ -259,8 +324,10 @@ window.addEventListener("DOMContentLoaded", function(){
   document.querySelectorAll("[data-ph]").forEach(e=>e.placeholder=t()[e.dataset.ph]||"");
   renderDepts();
   renderBlocks();
-  const hint=document.getElementById("langHint");
-  if(hint) hint.classList.remove("hide");
+  const overlay=document.getElementById("langOverlay");
+  if(overlay) overlay.classList.remove("hide");
+  const callout=document.getElementById("langCallout");
+  if(callout) callout.classList.remove("hide");
   const sectionB=document.getElementById("sectionB");
   if(sectionB) sectionB.classList.remove("hidden");
 });
