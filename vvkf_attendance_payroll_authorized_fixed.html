@@ -1,0 +1,1765 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Vijay Vallabh Attendance & Payroll — local PC edition">
+<title>Vijay Vallabh Attendance & Payroll</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   GLOBAL APPLICATION STYLES
+   ============================================================ */
+:root{
+--ink:#151a2c;--ink-soft:#3c4358;--muted:#68708a;--muted-soft:#9aa1b5;
+--canvas:#f1f2f7;--surface:#ffffff;--border:#e3e5ee;--border-soft:#edeef4;
+--navy:#0d1220;--navy-soft:#171f34;--navy-line:#262f48;
+--brass:#b3812f;--brass-soft:#f8efdc;--brass-line:#e7cd9c;--brass-dark:#8f6521;
+--blue:#2c4587;--blue-dark:#20335f;--blue-soft:#ebf0fb;--blue-line:#c9d5f2;
+--success:#0e8a53;--success-bg:#e7f8ef;--success-line:#b6e7cc;
+--danger:#c23b2e;--danger-bg:#fdecea;--danger-line:#f3c3bc;
+--amber:#a8730a;--amber-bg:#fdf3de;--amber-line:#f0d693;
+--violet:#6b3fa0;--violet-bg:#f3ecfb;--violet-line:#ddc2f2;
+--radius:10px;--radius-lg:14px;--radius-xl:18px;
+--shadow-sm:0 1px 2px rgba(15,20,35,.05),0 1px 1px rgba(15,20,35,.03);
+--shadow-md:0 12px 28px rgba(15,20,35,.09);
+--shadow-lg:0 24px 60px rgba(15,20,35,.16);
+--font-ui:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+--font-display:'Fraunces','Georgia',serif;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font-ui);color:var(--ink);background:var(--canvas);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+table,td,th,input,select{font-variant-numeric:tabular-nums}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#d3d7e2;border-radius:20px;border:2px solid var(--canvas)}
+::-webkit-scrollbar-thumb:hover{background:#b9bfd0}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+svg{display:block}
+
+/* ---------- Login ---------- */
+.login{min-height:100vh;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);background:var(--navy)}
+.loginart{position:relative;display:flex;flex-direction:column;justify-content:space-between;padding:56px 52px;overflow:hidden;
+background:
+ repeating-linear-gradient(115deg,rgba(179,129,47,.10) 0 1px,transparent 1px 26px),
+ radial-gradient(circle at 15% 12%,rgba(179,129,47,.18),transparent 45%),
+ radial-gradient(circle at 90% 85%,rgba(44,69,135,.22),transparent 50%),
+ linear-gradient(160deg,var(--navy) 0%,#0a0e1a 100%)}
+.loginart .seal{width:54px;height:54px;border-radius:50%;border:1px dashed var(--brass-line);display:grid;place-items:center;
+font-family:var(--font-display);font-weight:600;font-size:17px;color:var(--brass);letter-spacing:.5px;background:rgba(179,129,47,.08)}
+.loginart .tag{color:#8b96b3;font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;margin-top:16px;font-weight:600}
+.loginart h2{font-family:var(--font-display);font-weight:500;font-size:34px;line-height:1.26;color:#f4f5f9;max-width:400px;margin:0;letter-spacing:-.01em}
+.loginart .stitch{width:54px;height:1px;background:repeating-linear-gradient(90deg,var(--brass-line) 0 6px,transparent 6px 10px);margin:24px 0}
+.loginart .foot{color:#5c6685;font-size:12px;display:flex;align-items:center;gap:8px}
+.loginart .foot .dot{width:5px;height:5px;border-radius:50%;background:var(--success);box-shadow:0 0 0 3px rgba(14,138,83,.18)}
+.loginwrap{display:grid;place-items:center;background:var(--canvas);padding:20px}
+.loginbox{width:388px;background:var(--surface);padding:40px 36px;border-radius:var(--radius-xl);border:1px solid var(--border);box-shadow:var(--shadow-md)}
+.loginbox h1{margin:0;font-family:var(--font-display);font-weight:600;font-size:25px;letter-spacing:-.01em}
+.loginbox>p{color:var(--muted);font-size:13px;margin:6px 0 26px}
+.loginbox label{display:block;font-size:12px;font-weight:600;color:var(--ink-soft);margin-bottom:6px}
+.loginbox input{width:100%;padding:12px 13px;border:1px solid var(--border);border-radius:9px;margin:0 0 16px;background:#fbfbfd}
+.loginbox input:focus{border-color:var(--blue);background:#fff}
+.primary{background:var(--blue)!important;color:#fff!important;border-color:var(--blue)!important;font-weight:600}
+.primary:hover{background:var(--blue-dark)!important;border-color:var(--blue-dark)!important}
+.loginbox>p:last-of-type{color:var(--muted-soft);font-size:12px;margin-top:18px;padding-top:16px;border-top:1px dashed var(--border)}
+#err{color:var(--danger);font-size:12px;min-height:14px;margin-top:2px}
+
+/* ---------- App shell ---------- */
+.app{height:100vh;display:flex;overflow:hidden}
+.side{width:252px;background:var(--navy);color:#fff;display:flex;flex-direction:column;flex-shrink:0;border-right:1px solid var(--navy-line);transition:width .16s ease}
+.app.collapsed .side{width:72px}
+.app.collapsed .brand{justify-content:center;padding:20px 8px}
+.app.collapsed .brand b,.app.collapsed .brand small{display:none}
+.app.collapsed .nav button{justify-content:center;padding:11px 6px}
+.app.collapsed .nav button span:not(.ico){display:none}
+.app.collapsed .logout button span:last-child{display:none}
+.sidebar-toggle{padding:8px 11px;min-height:36px;font-size:14px;line-height:1}
+.btn-danger{color:var(--danger);border-color:var(--danger-line)}
+.btn-success{color:var(--success);border-color:var(--success-line)}
+.btn-danger:hover{background:var(--danger-bg)}
+.brand{padding:22px 22px 18px;border-bottom:1px solid var(--navy-line);display:flex;align-items:center;gap:12px}
+.brand .seal{width:38px;height:38px;flex-shrink:0;border-radius:50%;border:1px dashed var(--brass-line);display:grid;place-items:center;
+font-family:var(--font-display);font-weight:600;font-size:14px;color:var(--brass);background:rgba(179,129,47,.1)}
+.brand b{font-family:var(--font-display);font-weight:600;font-size:14.5px;line-height:1.35;letter-spacing:-.01em}
+.brand small{display:block;color:#8b96b3;margin-top:3px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+.nav{padding:16px 12px;flex:1;overflow:auto}
+.nav-label{padding:6px 12px 8px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#5c6685}
+.nav button{width:100%;padding:10.5px 12px;border:0;background:transparent;color:#b9c1d6;text-align:left;border-radius:9px;margin:2px 0;
+border-left:2px solid transparent;transition:background .12s,color .12s}
+.nav button:hover{background:var(--navy-soft);color:#fff}
+.nav .on{background:var(--navy-soft);color:#fff;border-left:2px solid var(--brass)}
+.nav button{display:flex;align-items:center;gap:12px;font-weight:500;font-size:13.5px}
+.nav .ico{width:20px;height:20px;flex-shrink:0;display:grid;place-items:center;color:#7c88a6}
+.nav .ico svg{width:17px;height:17px}
+.nav .on .ico{color:var(--brass)}
+.logout{margin:auto 12px 18px;padding-top:12px;border-top:1px solid var(--navy-line)}
+.logout button{width:100%;height:38px;border:1px solid var(--navy-line);border-radius:9px;background:transparent;color:#c3cade;font-size:13px;display:flex;align-items:center;justify-content:center;gap:8px}
+.logout button:hover{background:var(--navy-soft);color:#fff}
+
+.main{min-width:0;flex:1;display:flex;flex-direction:column;overflow:hidden}
+.top{height:64px;background:var(--surface);border-bottom:1px solid var(--border);padding:0 26px;display:flex;align-items:center;
+justify-content:space-between;flex-shrink:0;box-shadow:var(--shadow-sm)}
+.top>span:first-child{font-family:var(--font-display);font-weight:600;font-size:17px;letter-spacing:-.01em}
+.top-user{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;color:var(--ink-soft);background:var(--blue-soft);padding:6px 13px 6px 6px;border-radius:20px;
+border:1px solid var(--blue-line)}
+.top-user .av{width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;font-size:10.5px;font-weight:700}
+.content{overflow:auto;padding:26px 28px 40px;flex:1}
+.title{margin:0;font-family:var(--font-display);font-weight:600;font-size:25px;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:13px;margin:6px 0 22px}
+
+/* ---------- Cards / toolbars ---------- */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:visible;margin-bottom:18px;box-shadow:var(--shadow-sm)}
+.card>.head:first-child{border-radius:var(--radius-lg) var(--radius-lg) 0 0}
+.card>.wrap:last-child{border-radius:0 0 var(--radius-lg) var(--radius-lg)}
+.head{padding:15px 20px;min-height:60px;border-bottom:1px solid var(--border-soft);display:flex;align-items:center;justify-content:space-between;
+gap:10px;flex-wrap:wrap;background:linear-gradient(180deg,#fff,#fcfcfe)}
+.head>b{font-size:14.5px;font-weight:600;letter-spacing:-.005em;font-family:var(--font-display)}
+.toolbar{padding:12px 20px;border-bottom:1px solid var(--border-soft);display:flex;gap:9px;align-items:center;flex-wrap:wrap;background:#fbfbfd}
+.grow{flex:1;min-width:180px}
+
+.btn{padding:9px 14px;min-height:38px;background:#fff;border:1px solid var(--border);border-radius:9px;font-size:13px;font-weight:500;
+color:var(--ink-soft);transition:background .12s,border-color .12s,box-shadow .12s;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:#f6f7fb;border-color:#d3d7e2}
+.btn:active{box-shadow:inset 0 1px 2px rgba(15,20,35,.08)}
+.btn svg{width:14px;height:14px;flex-shrink:0}
+input,select{min-height:38px;padding:9px 11px;border:1px solid var(--border);border-radius:9px;background:#fff;color:var(--ink);font-size:13.5px}
+input:focus,select:focus{border-color:var(--blue)}
+input::placeholder{color:var(--muted-soft)}
+.check{width:auto;min-height:auto;accent-color:var(--blue)}
+
+/* ---------- Global table customization ---------- */
+.table-custom-hidden{display:none!important}
+.table-settings-grid{display:grid;grid-template-columns:minmax(150px,1.1fr) minmax(170px,1.4fr) 90px 82px 70px 92px;gap:8px;align-items:center}
+.table-settings-grid>div{font-size:12px;color:var(--ink-soft)}
+.table-settings-grid input[type=text],.table-settings-grid input[type=number]{min-height:34px;padding:7px 8px;width:100%;box-sizing:border-box}
+.table-settings-grid select{min-height:34px;padding:7px 8px;width:100%}
+.table-settings-grid .ts-check{display:flex;align-items:center;justify-content:center}
+.table-preview-wrap{overflow:auto;border:1px solid var(--border-soft);border-radius:10px;margin-top:14px}
+.table-preview{min-width:100%;width:max-content}
+.table-preview th{position:static;text-transform:none;letter-spacing:0;font-size:11px;white-space:normal}
+@media(max-width:900px){.table-settings-grid{grid-template-columns:1fr 1.2fr 80px 80px 70px 90px;font-size:11px}}
+
+/* ---------- Tables ---------- */
+.wrap{overflow:auto;max-height:calc(100vh - 285px);border-radius:0 0 var(--radius-lg) var(--radius-lg)}
+/* Compact amount columns and wrapped Monthly Summary headers */
+.attendance-table{table-layout:fixed;width:max-content}
+.attendance-table .s1{width:120px;min-width:120px;max-width:120px}
+.attendance-table .s2{width:105px;min-width:105px;max-width:105px}
+.attendance-table .s1,.attendance-table .s2{position:sticky;z-index:5;background:#fff}
+.attendance-table .s1{left:0}
+.attendance-table .s2{left:120px}
+.attendance-table thead .s1,.attendance-table thead .s2{z-index:8;background:#f7f8fc}
+.attendance-table .day{width:58px;min-width:58px;max-width:58px;text-align:center;padding-left:0;padding-right:0}
+.attendance-table .day .att-btn{display:flex;align-items:center;justify-content:center;margin:0 auto}
+.att-amount-col,.att-amount-cell{width:92px;min-width:92px;max-width:92px;white-space:nowrap}
+.att-amount-cell .att-btn{width:100%;min-width:0}
+.monthly-summary-table{table-layout:auto}
+.monthly-summary-table th:first-child,.monthly-summary-table td:first-child,.monthly-summary-table th:nth-child(2),.monthly-summary-table td:nth-child(2){position:sticky;z-index:5;background:#fff}
+.monthly-summary-table th:first-child,.monthly-summary-table td:first-child{left:0;min-width:140px}
+.monthly-summary-table th:nth-child(2),.monthly-summary-table td:nth-child(2){left:140px;min-width:120px}
+.monthly-summary-table thead th:first-child,.monthly-summary-table thead th:nth-child(2){z-index:8;background:#f7f8fc}
+.monthly-summary-table th{white-space:normal;line-height:1.25;text-align:center;min-width:62px}
+.monthly-summary-table th:first-child,.monthly-summary-table th:nth-child(2){text-align:left}
+.monthly-summary-table td{text-align:right}
+.monthly-summary-table td:first-child,.monthly-summary-table td:nth-child(2){text-align:left}
+.dashboard-toolbar{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin:-4px 0 18px}.dash-title{font-size:22px;font-weight:800;letter-spacing:-.02em}.dash-sub{color:var(--muted);font-size:13px;margin-top:4px}.dashboard-month{min-width:180px}.dashboard-month input{font-weight:700}.stat-alert{border-color:#efb4b0!important;background:#fff7f6!important}.stat-alert .stat-ico,.stat-alert b{color:#c23b2e!important}.filledby-chart{padding:14px 18px 18px}.filledby-row{padding:10px 0}.filledby-top{display:flex;justify-content:space-between;gap:14px;font-size:13px;font-weight:700;margin-bottom:6px}.filledby-top b{color:var(--muted)}.filledby-bar{height:10px;background:#eef1f6;border-radius:999px;overflow:hidden}.filledby-bar i{display:block;height:100%;border-radius:999px;min-width:0;transition:width .25s ease,background .25s ease}.filledby-bar i.fill-pending{background:#c23b2e}.filledby-bar i.fill-complete{background:#2e9d5b}.table-header-filterable{cursor:pointer;user-select:none;position:relative}.table-header-filterable:hover{background:#eef3fb!important;color:var(--blue)}.table-header-filterable::after{content:"⌄";font-size:10px;margin-left:5px;color:var(--muted);opacity:.7}.table-header-filterable.hf-active{color:var(--blue);background:#eef3fb!important}.header-filter-menu{position:fixed;z-index:1000;width:300px;max-width:calc(100vw - 24px);background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 14px 38px rgba(15,20,35,.18);padding:10px}.header-filter-menu .hf-title{font-weight:700;font-size:12px;color:var(--ink);padding:2px 3px 8px}.header-filter-menu .hf-search,.header-filter-menu .hf-select{width:100%;min-height:34px;padding:7px 9px;margin-bottom:7px}.header-filter-menu .hf-values{max-height:190px;overflow:auto;border:1px solid var(--border-soft);border-radius:8px;padding:4px}.header-filter-menu .hf-opt{display:flex;align-items:center;gap:8px;padding:6px 7px;border-radius:6px;font-size:12px;cursor:pointer}.header-filter-menu .hf-opt:hover{background:#f5f7fb}.header-filter-menu .hf-inputs{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:7px 0}.header-filter-menu .hf-foot{display:flex;justify-content:space-between;gap:7px;padding-top:9px;margin-top:8px;border-top:1px solid var(--border-soft)}.header-filter-menu .hf-foot .left,.header-filter-menu .hf-foot .right{display:flex;gap:6px}.header-filter-menu .hf-note{font-size:11px;color:var(--muted);padding:5px 2px}.setting-toggle{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px;border:1px solid var(--border-soft);border-radius:10px;background:#fbfbfd}.setting-toggle .setting-copy b{display:block;font-size:13px}.setting-toggle .setting-copy span{display:block;font-size:11.5px;color:var(--muted);margin-top:3px}.setting-switch{position:relative;width:44px;height:24px;flex:0 0 auto}.setting-switch input{opacity:0;width:0;height:0}.setting-switch span{position:absolute;inset:0;background:#cfd5e1;border-radius:999px;cursor:pointer;transition:.18s}.setting-switch span:before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.18);transition:.18s}.setting-switch input:checked+span{background:var(--blue)}.setting-switch input:checked+span:before{transform:translateX(20px)}.payroll-table{table-layout:auto;min-width:1500px}
+.payroll-table th{white-space:normal;line-height:1.25;text-align:center;min-width:72px}
+.payroll-table th:first-child,.payroll-table td:first-child,.payroll-table th:nth-child(2),.payroll-table td:nth-child(2){position:sticky;z-index:5;background:#fff}
+.payroll-table th:first-child,.payroll-table td:first-child{left:0;min-width:150px}
+.payroll-table th:nth-child(2),.payroll-table td:nth-child(2){left:150px;min-width:120px}
+.payroll-table thead th:first-child,.payroll-table thead th:nth-child(2){z-index:8;background:#f7f8fc}
+.payroll-table tfoot td,.monthly-summary-table tfoot td{font-weight:800;background:#f7f8fc;border-top:2px solid var(--border)}
+.payroll-table tfoot td:first-child,.payroll-table tfoot td:nth-child(2),.monthly-summary-table tfoot td:first-child,.monthly-summary-table tfoot td:nth-child(2){position:sticky;z-index:5;background:#f7f8fc}
+.payroll-table tfoot td:first-child{left:0}
+.payroll-table tfoot td:nth-child(2){left:150px}
+.monthly-summary-table tfoot td:first-child{left:0}
+.monthly-summary-table tfoot td:nth-child(2){left:140px}
+.payroll-table td{text-align:right;vertical-align:middle}
+.payroll-table td:first-child,.payroll-table td:nth-child(2){text-align:left}
+.payroll-table .pay-input{width:96px;min-width:80px;text-align:right;padding:7px 8px}
+.payroll-table .pay-cell-edit{width:100%;min-width:0;border:0;background:transparent;padding:0;margin:0;font:inherit;color:inherit;text-align:right;line-height:1.25;cursor:pointer}
+.payroll-table .pay-cell-edit:hover{color:var(--blue);text-decoration:underline}
+.payroll-table .att-amount-cell{text-align:center}
+.payroll-tabs{display:flex;gap:6px;border-bottom:1px solid var(--border);padding:0 14px}
+.payroll-tab{border:0;background:transparent;padding:11px 15px;font-weight:700;color:var(--muted);border-bottom:2px solid transparent}
+.payroll-tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.filter-clear.active{border-color:var(--blue);background:var(--blue-soft);color:var(--blue);font-weight:700}
+
+/* Remove browser spinner arrows from all numeric inputs */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button{
+  -webkit-appearance:none;
+  margin:0;
+}
+input[type="number"]{
+  -moz-appearance:textfield;
+  appearance:textfield;
+}
+
+table{border-collapse:separate;border-spacing:0;width:max-content;min-width:100%}
+th,td{padding:11px 13px;border-bottom:1px solid var(--border-soft);border-right:1px solid var(--border-soft);white-space:nowrap;font-size:13px;background:#fff}
+tbody tr:hover td{background:#f9fafc}
+th{background:#f7f8fc;position:sticky;top:0;z-index:4;text-align:left;font-size:11px;font-weight:700;letter-spacing:.05em;
+text-transform:uppercase;color:var(--muted)}
+.s1{position:sticky;left:0;z-index:5;background:#fff;min-width:120px;width:120px;box-sizing:border-box}
+.s2{position:sticky;left:120px;z-index:5;background:#fff;min-width:120px;width:120px;box-sizing:border-box}
+.stickyh{z-index:7!important;background:#f7f8fc}
+
+.status{padding:4px 11px;border-radius:20px;font-size:11.5px;font-weight:700;letter-spacing:.02em;display:inline-flex;align-items:center;gap:5px}
+.status::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
+.act{color:var(--success);background:var(--success-bg);border:1px solid var(--success-line)}
+.ina{color:var(--danger);background:var(--danger-bg);border:1px solid var(--danger-line)}
+
+/* ---------- Multi-select dropdown ---------- */
+.multi{position:relative;width:220px}
+.multibtn{width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.multibtn.active{border-color:var(--blue);background:var(--blue-soft);color:var(--blue);font-weight:600}
+.menu{display:none;position:absolute;z-index:20;top:44px;left:0;width:100%;max-height:280px;overflow:hidden;background:#fff;
+border:1px solid var(--border);border-radius:10px;padding:8px;box-shadow:var(--shadow-md);display:none;flex-direction:column}
+.menu.show{display:flex}
+.menu-search{width:100%;margin-bottom:6px;min-height:34px;font-size:12.5px;flex-shrink:0}
+.menu-list{overflow:auto;max-height:220px}
+.opt{display:flex;gap:8px;padding:8px;border-radius:7px;font-size:13px}
+.opt:hover{background:#f5f7fb}
+.opt input{min-height:auto;width:auto}
+.opt[data-all="1"]{font-weight:700;border-bottom:1px solid var(--border-soft);border-radius:0;margin-bottom:4px;padding-bottom:10px}
+
+
+/* ---------- Temporary filter dropdown ---------- */
+.temp-filter-wrap{position:relative;display:inline-flex}
+.temp-filter-menu{display:none;position:absolute;right:0;top:44px;z-index:50;width:230px;background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px;box-shadow:var(--shadow-md)}
+.temp-filter-menu.show{display:block}
+.temp-filter-menu .tf-title{padding:5px 8px 8px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border-soft);margin-bottom:4px}
+.temp-filter-menu .tf-opt{display:flex;align-items:center;gap:9px;padding:9px 8px;border-radius:7px;font-size:13px;color:var(--ink-soft);cursor:pointer}
+.temp-filter-menu .tf-opt:hover{background:#f5f7fb}
+.temp-filter-menu .tf-opt input{margin:0;accent-color:var(--blue)}
+.temp-filter-menu .tf-foot{display:flex;justify-content:flex-end;gap:6px;padding:8px 2px 2px;border-top:1px solid var(--border-soft);margin-top:4px}
+.temp-filter-menu .tf-foot button{min-height:32px;padding:6px 10px;font-size:12px}
+.temp-filter-hidden{display:none!important}
+
+/* ---------- Filter bar (BI-style) ---------- */
+.filterbar{padding:14px 20px;border-bottom:1px solid var(--border-soft);display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;background:#fbfbfd}
+.filter-field{display:flex;flex-direction:column;gap:6px}
+.filter-field label{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted-soft)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:disabled:hover{background:#fff}
+
+/* ---------- Modal ---------- */
+.modal{position:fixed;inset:0;background:rgba(13,18,32,.6);display:grid;place-items:center;padding:20px;z-index:100;backdrop-filter:blur(3px)}
+.box{width:min(700px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:16px;box-shadow:var(--shadow-lg)}
+.mhead,.mfoot{padding:16px 22px;border-bottom:1px solid var(--border-soft);display:flex;justify-content:space-between;align-items:center}
+.mhead b{font-family:var(--font-display);font-weight:600;font-size:16.5px}
+.mfoot{border-top:1px solid var(--border-soft);border-bottom:0;justify-content:flex-end;gap:8px;background:#fbfbfd}
+.mbody{padding:22px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field label{display:block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.field input,.field select{width:100%}
+
+/* ---------- Stats / notices ---------- */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:19px 20px;box-shadow:var(--shadow-sm);
+border-left:3px solid var(--brass);position:relative;overflow:hidden}
+.stat .stat-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.stat small{color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.stat .stat-ico{width:26px;height:26px;border-radius:7px;background:var(--brass-soft);color:var(--brass-dark);display:grid;place-items:center;flex-shrink:0}
+.stat .stat-ico svg{width:14px;height:14px}
+.stat b{display:block;font-family:var(--font-display);font-size:28px;margin-top:10px;font-weight:600;letter-spacing:-.01em}
+.stat .stat-note{font-size:11.5px;color:var(--muted-soft);margin-top:5px}
+.notice{padding:13px 15px;background:var(--amber-bg);border:1px solid var(--amber-line);border-radius:10px;color:#7a5806;font-size:13px;display:flex;gap:10px;align-items:flex-start}
+
+/* ---------- Dashboard extras ---------- */
+.dash-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:18px;align-items:start}
+@media(max-width:1050px){.dash-grid{grid-template-columns:1fr}}
+.quick-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;padding:18px 20px}
+.qa-btn{display:flex;flex-direction:column;gap:8px;align-items:flex-start;padding:14px;border:1px solid var(--border);border-radius:12px;background:#fff;text-align:left;transition:border-color .12s,box-shadow .12s}
+.qa-btn:hover{border-color:var(--blue-line);box-shadow:var(--shadow-sm)}
+.qa-btn .qa-ico{width:30px;height:30px;border-radius:8px;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center}
+.qa-btn .qa-ico svg{width:16px;height:16px}
+.qa-btn b{font-size:13px;font-weight:600}
+.dept-row{display:flex;align-items:center;gap:12px;padding:10px 20px}
+.dept-row .dept-name{width:100px;flex-shrink:0;font-size:12.5px;font-weight:600;color:var(--ink-soft)}
+.dept-bar{flex:1;height:8px;background:var(--canvas);border-radius:20px;overflow:hidden}
+.dept-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--brass));border-radius:20px}
+.dept-row .dept-count{width:34px;text-align:right;font-size:12.5px;font-weight:700;color:var(--muted)}
+.mini-list{padding:6px 0}
+.mini-row{display:flex;justify-content:space-between;align-items:center;padding:11px 20px;border-bottom:1px solid var(--border-soft);font-size:13px}
+.mini-row:last-child{border-bottom:0}
+.mini-row .m-name{font-weight:600;color:var(--ink-soft)}
+.m-sub{color:var(--muted-soft);font-size:11.5px}
+.qa-btn .m-sub{line-height:1.4}
+.empty-state{padding:36px 20px;text-align:center;color:var(--muted)}
+.empty-state .es-ico{font-size:26px;margin-bottom:10px;opacity:.5}
+
+/* ---------- Settings / list rows ---------- */
+.list-row{padding:12px 20px;border-bottom:1px solid var(--border-soft);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.list-row:last-child{border-bottom:0}
+.chip{display:inline-flex;align-items:center;padding:7px 13px;background:var(--canvas);border:1px solid var(--border);border-radius:20px;margin:4px;font-size:12.5px;font-weight:600;color:var(--ink-soft)}
+.settings-row{display:grid;grid-template-columns:1fr 180px;gap:12px;align-items:center;padding:6px 0}
+.settings-row label{font-weight:600;font-size:13px;color:var(--ink-soft)}
+
+/* ---------- Attendance ---------- */
+.attbar{padding:12px 20px;border-bottom:1px solid var(--border-soft);display:flex;justify-content:space-between;gap:10px;align-items:center;
+flex-wrap:wrap;background:#fbfbfd}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.day{min-width:58px;text-align:center}
+.weekend{background:#fff9ed!important}
+.pd{background:var(--blue-soft)!important}
+.pp{background:#fff4e5!important}
+.cell{min-width:48px;padding:5px}
+.att-btn{min-width:44px;height:32px;padding:3px 4px;border:1px solid var(--border);border-radius:8px;background:#fff;font-size:12px;font-weight:700;cursor:pointer}
+.att-btn:hover{border-color:var(--blue);background:var(--blue-soft)}
+.att-btn.att-P{background:var(--success-bg)!important;color:var(--success);border-color:var(--success-line)}
+.att-btn.att-A{background:var(--danger-bg)!important;color:var(--danger);border-color:var(--danger-line)}
+.att-btn.att-H{background:var(--amber-bg)!important;color:var(--amber);border-color:var(--amber-line)}
+.att-btn.att-PP{background:var(--blue-soft)!important;color:var(--blue);border-color:#c3d0f2}
+.att-btn.att-PD{background:var(--violet-bg)!important;color:var(--violet);border-color:var(--violet-line)}
+.att-btn.att-num{background:#eef1fa!important;color:var(--ink-soft)!important;border-color:#c7ccdb!important;font-size:11px}
+
+@media(max-width:850px){.side{width:200px}.content{padding:18px}.stats{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}
+.login{grid-template-columns:1fr}.loginart{display:none}}
+@media(max-width:600px){.side{width:65px}.brand{padding:18px 10px;justify-content:center}.brand b,.brand small{display:none}
+.nav button{font-size:0;text-align:center;justify-content:center}.nav-label{display:none}.content{padding:12px}.stats{grid-template-columns:1fr}
+.top-user span:not(.av){display:none}.top-user{padding:6px}}
+@media print{.side,.top,.no-print,.title,.sub{display:none!important}.main,.content{overflow:visible}.wrap{max-height:none;overflow:visible}.card{border:0;box-shadow:none}.print-hide-col{display:none!important}}
+.hidden{display:none!important}
+
+.att-select{font-weight:700;text-align:center;cursor:pointer;border-radius:8px;padding:7px 3px!important}
+.att-select{appearance:none;-webkit-appearance:none;background-image:none!important;width:34px;min-width:34px;padding:6px 2px!important;text-align:center}
+.att-select::-ms-expand{display:none}
+
+.att-P{background:var(--success-bg)!important;color:var(--success)!important;border-color:var(--success-line)!important}
+.att-A{background:var(--danger-bg)!important;color:var(--danger)!important;border-color:var(--danger-line)!important}
+.att-H{background:var(--amber-bg)!important;color:var(--amber)!important;border-color:var(--amber-line)!important}
+.att-PP{background:var(--blue-soft)!important;color:var(--blue)!important;border-color:#c3d0f2!important}
+.att-PD{background:var(--violet-bg)!important;color:var(--violet)!important;border-color:var(--violet-line)!important}
+.sunday{background:var(--brass-soft)!important}
+.sunday th{background:var(--brass-soft)!important;color:#8a5f16}
+.legend{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:11px 20px;border-bottom:1px solid var(--border-soft);background:#fbfbfd}
+.legend-toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;padding:11px 20px;border-bottom:1px solid var(--border-soft);background:#fbfbfd}
+.legend-left{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.legend-right{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-left:auto}
+.lnum{background:#eef1fa;color:var(--ink-soft);border-color:#c7ccdb}
+.legend span{font-size:11px;font-weight:700;padding:5px 10px;border-radius:14px;border:1px solid}
+.legend span.legend-clickable{cursor:pointer;user-select:none;transition:transform .08s,box-shadow .12s,filter .1s}
+.legend span.legend-clickable:hover{filter:brightness(.95);transform:translateY(-1px)}
+.legend span.legend-active{outline:2px solid var(--ink);outline-offset:1px;box-shadow:0 0 0 3px rgba(21,26,44,.1)}
+.legend .lS{cursor:default}
+.lP{background:var(--success-bg);color:var(--success);border-color:var(--success-line)}
+.lA{background:var(--danger-bg);color:var(--danger);border-color:var(--danger-line)}
+.lH{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-line)}
+.lPP{background:var(--blue-soft);color:var(--blue);border-color:#c3d0f2}
+.lPD{background:var(--violet-bg);color:var(--violet);border-color:var(--violet-line)}
+.lS{background:var(--brass-soft);color:#8a5f16;border-color:var(--brass-line)}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div id="login" class="login">
+<div class="loginart">
+<div><div class="seal">VV</div><div class="tag">Vijay Vallabh</div></div>
+<div><h2>Every shift, every rupee — stitched into one record.</h2><div class="stitch"></div><div class="foot"><span class="dot"></span>Supabase Authentication · Database connection will be added next</div></div>
+</div>
+<div class="loginwrap"><div class="loginbox">
+<h1>Sign in</h1><p>Enter your admin credentials to continue</p>
+<label>Email</label><input id="lu" type="email" placeholder="admin@example.com" autocomplete="username">
+<label>Password</label><input id="lp" type="password" placeholder="Enter your password" autocomplete="current-password">
+<button class="btn primary" style="width:100%;margin-top:15px" onclick="login()">Login</button>
+<p>Use the email and password created in Supabase Authentication.</p><div id="err"></div>
+</div></div></div>
+
+<div id="app" class="app hidden">
+<aside class="side"><div class="brand"><div class="seal">VV</div><div><b>VIJAY VALLABH<br>Attendance &amp; Payroll</b><small>Supabase Authentication</small></div></div>
+<div class="nav">
+<button data-p="dashboard" onclick="page('dashboard')"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></span><span>Dashboard</span></button>
+<button data-p="employees" onclick="page('employees')"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><circle cx="17.5" cy="8.5" r="2.4"/><path d="M15.7 14.2c2.6.3 4.3 2.3 4.3 5.3"/></svg></span><span>Employees</span></button>
+<button data-p="attendance" onclick="page('attendance')"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18"/><path d="M8 3v3M16 3v3"/><path d="M7.5 13.5l2 2 3.5-4"/></svg></span><span>Attendance</span></button>
+<button data-p="monthlySummary" onclick="page('monthlySummary')"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 10h16M4 15h16M4 20h16"/><path d="M8 3v18M16 3v18"/></svg></span><span id="monthlySummaryNav">Monthly Summary</span></button>
+<button data-p="payroll" onclick="page('payroll')"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 8h4a2.3 2.3 0 0 1 0 4.6H9m0-4.6v9m0-4.4h5.2M9 12.6v4.4h3.8"/></svg></span><span>Payroll</span></button>
+<button data-p="loans" onclick="page('loans')"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2.5-6 5 12L17 12h4"/></svg></span><span>Loans</span></button>
+<button data-p="settings" onclick="page('settings')"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V19.5a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H4.5a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.56-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H10a1.7 1.7 0 0 0 1-1.55V4.5a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V10a1.7 1.7 0 0 0 1.55 1H19.5a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.56 1z"/></svg></span><span>Settings</span></button>
+</div><div class="logout"><button onclick="logout()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg><span>Logout</span></button></div></aside>
+<main class="main"><header class="top"><div style="display:flex;align-items:center;gap:14px"><button class="btn sidebar-toggle" onclick="toggleSidebar()" title="Show/hide the side panel"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><span id="top">Dashboard</span></div><span class="top-user"><span class="av">A</span><span>Admin</span></span></header><section id="content" class="content"></section></main></div>
+<div id="modal" class="modal hidden"></div>
+<script>
+/* ============================================================
+   CORE
+   ============================================================ */
+// CORE — storage, utilities, navigation, authentication & UI helpers
+// ============================================================
+let db={employees:[],attendance:{},extraCols:{advance:{},cash:{},tea:{}},payroll:{},loans:[],loanAccounts:[],settings:{departments:['Mending','Staff','Knitting'],statuses:['Active','Inactive'],departmentHours:{Mending:8,Staff:10,Knitting:10},defaultHours:10,fields:['Employee ID','Employee Name','Department','Salary','Sunday Pay','Working Hours','Filled By','Status'],filledByUsers:[],headerFiltersEnabled:true,tableSettings:{}}};
+let current='dashboard',dirty=false;
+window.dashboardMonth=mon();window.attMonth=window.dashboardMonth;window.summaryMonth=window.dashboardMonth;window.payrollMonth=window.dashboardMonth;
+const $=id=>document.getElementById(id);
+function initRuntimeState(){
+  db.extraCols=db.extraCols||{advance:{},cash:{},tea:{}};
+  db.loanAccounts=db.loanAccounts||[];
+  db.extraCols.advance=db.extraCols.advance||{};db.extraCols.cash=db.extraCols.cash||{};db.extraCols.tea=db.extraCols.tea||{};
+  db.settings=Object.assign({departments:['Mending','Staff','Knitting'],statuses:['Active','Inactive'],departmentHours:{Mending:8,Staff:10,Knitting:10},defaultHours:10,fields:['Employee ID','Employee Name','Department','Salary','Sunday Pay','Working Hours','Filled By','Status'],filledByUsers:[],headerFiltersEnabled:true,tableSettings:{}},db.settings||{});
+  db.settings.departmentHours=db.settings.departmentHours||{};db.settings.filledByUsers=db.settings.filledByUsers||[];
+  if(!db.settings.fields.includes('Filled By'))db.settings.fields.splice(Math.max(0,db.settings.fields.indexOf('Status')),0,'Filled By');
+  if(db.settings.mendingHours!=null && db.settings.departmentHours.Mending==null)db.settings.departmentHours.Mending=Number(db.settings.mendingHours)||8;
+  db.settings.departments.forEach(d=>{if(db.settings.departmentHours[d]==null)db.settings.departmentHours[d]=Number(db.settings.defaultHours)||10});
+  db.settings.tableSettings=db.settings.tableSettings||{};
+  (db.employees||[]).forEach(e=>{if(!e.increments)e.increments=[];if(e.filledBy==null)e.filledBy='';if(!e.status||String(e.status).trim()==='')e.status='Active';else if(String(e.status).trim().toLowerCase()==='active')e.status='Active';else if(String(e.status).trim().toLowerCase()==='inactive')e.status='Inactive'});
+}
+function isActiveEmployee(e){let s=String(e?.status??'Active').trim().toLowerCase();return s!=='inactive'}
+let supabaseSyncTimer=null;
+let supabaseSyncBusy=false;
+let googleBackupTimer=null;
+let googleBackupBusy=false;
+const GOOGLE_BACKUP_WEB_APP_URL='https://script.google.com/macros/s/AKfycbxk8oBxRZKFzSqL8Z94yuEkkJYM13YPJQAtW_EqGz99xRo_FRqcwPYMs93LaGtE6Nvd/exec'; // Set this to your deployed Google Apps Script Web App URL. Google is write-only backup; the app never reads from Sheets.
+function save(){
+  dirty=false;
+  if(supabaseClient && authUser){
+    clearTimeout(supabaseSyncTimer);
+    supabaseSyncTimer=setTimeout(()=>syncDbToSupabase(),350);
+  }
+}
+function esc(x){return String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function money(x){return '₹'+Math.round(Number(x||0)).toLocaleString('en-IN')}
+function plainMoney(x){return Math.round(Number(x||0)).toLocaleString('en-IN')}
+function mon(){return new Date().toISOString().slice(0,7)}
+function dim(m){let [y,x]=m.split('-').map(Number);return new Date(y,x,0).getDate()}
+function key(m,id,d){return m+'|'+id+'|'+d}
+function page(p){
+  if(!allowedPage(p)){p=isAdmin()?'dashboard':'employees';}
+  current=p;let title=p==='monthlySummary'?monthLabel(window.summaryMonth||mon()):p[0].toUpperCase()+p.slice(1);$('top').textContent=title;
+  document.querySelectorAll('.nav button').forEach(b=>{b.classList.toggle('on',b.dataset.p===p);b.style.display=allowedPage(b.dataset.p)?'':'none'});
+  let routes={dashboard:dashboard,employees:employees,attendance:attendance,monthlySummary:monthlySummary,payroll:payroll,loans:loans,settings:settings};
+  if(typeof routes[p]==='function')routes[p]();setTimeout(applyAllTableSettings,0);
+}
+/* ---------- Supabase Authentication ---------- */
+const SUPABASE_URL='https://sqpfeylsrujtfpkmmylt.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY='sb_publishable_5CMgDifoy7rB91ZFdOLKvA_A6edReIS';
+const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+let authUser=null;
+let authProfile=null;
+
+function isAdmin(){return authProfile?.role==='admin' && authProfile?.active!==false}
+function canView(){return !!authProfile?.can_view && authProfile?.active!==false}
+function canAdd(){return isAdmin() || (authProfile?.can_add===true)}
+function canEdit(){return isAdmin() || (authProfile?.can_edit===true)}
+function canDelete(){return isAdmin() || (authProfile?.can_delete===true)}
+function assignedFilledBy(){return isAdmin()?'':String(authProfile?.filled_by||'').trim()}
+function allowedPage(p){return isAdmin()?true:['employees','attendance','monthlySummary'].includes(p)}
+async function loadAuthProfile(){
+  if(!authUser?.id) throw new Error('No authenticated user.');
+  const {data,error}=await supabaseClient.from('user_profiles').select('*').eq('id',authUser.id).maybeSingle();
+  if(error) throw error;
+  if(!data || data.active===false) throw new Error('Your account is not authorized to use this application.');
+  authProfile=data;
+  return data;
+}
+
+
+function setAuthUser(user){
+  authUser=user||null;
+  const email=user?.email||'Admin';
+  const topUser=document.querySelector('.top-user');
+  if(topUser){
+    const av=topUser.querySelector('.av');
+    const label=topUser.querySelector('span:last-child');
+    if(av)av.textContent=(email.charAt(0)||'A').toUpperCase();
+    if(label)label.textContent=email;
+  }
+}
+
+function showLogin(){
+  $('app').classList.add('hidden');
+  $('login').classList.remove('hidden');
+  if($('err'))$('err').textContent='';
+  if($('lp'))$('lp').value='';
+}
+
+async function login(){
+  const email=$('lu').value.trim();
+  const password=$('lp').value;
+  $('err').textContent='';
+  if(!email||!password){
+    $('err').textContent='Enter your email and password.';
+    return;
+  }
+  const btn=document.querySelector('#login button.primary');
+  if(btn){btn.disabled=true;btn.textContent='Signing in...';}
+  try{
+    const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
+    if(error)throw error;
+    setAuthUser(data.user);
+    openApp();
+  }catch(error){
+    $('err').textContent=error?.message||'Invalid email or password.';
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='Login';}
+  }
+}
+
+async function openApp(){
+  $('login').classList.add('hidden');
+  $('app').classList.remove('hidden');
+  $('app').classList.remove('collapsed');
+  try{
+    await loadAuthProfile();
+    await loadAllDataFromSupabase();
+    applyAuthorizationUI();
+  }catch(error){
+    console.error('Authorization/data bootstrap failed:',error);
+    appMessage(error?.message||'Unable to load your authorization.','Authorization Error','warning');
+    await supabaseClient.auth.signOut();
+    return;
+  }
+  page(isAdmin()?'dashboard':'employees');
+}
+
+function toggleSidebar(){$('app').classList.toggle('collapsed')}
+
+function applyAuthorizationUI(){
+  document.querySelectorAll('.nav button').forEach(b=>{
+    const p=b.dataset.p;b.style.display=allowedPage(p)?'':'none';
+  });
+  const userLabel=document.querySelector('.top-user span:last-child');
+  if(userLabel)userLabel.textContent=authProfile?.name || authUser?.email || '';
+}
+
+async function logout(){
+  const {error}=await supabaseClient.auth.signOut();
+  if(error){appMessage(error.message,'Logout Error','warning');return}
+  authUser=null;
+  authProfile=null;
+  showLogin();
+}
+window.onbeforeunload=e=>{if(dirty){e.preventDefault();e.returnValue=''}}
+
+// Restore an existing Supabase session when the page loads.
+(async function initSupabaseAuth(){
+  try{
+    const {data,error}=await supabaseClient.auth.getSession();
+    if(error)throw error;
+    if(data.session?.user){
+      setAuthUser(data.session.user);
+      openApp();
+    }else{
+      showLogin();
+    }
+    supabaseClient.auth.onAuthStateChange((_event,session)=>{
+      authUser=session?.user||null;
+      if(session?.user){setAuthUser(session.user);}
+    });
+  }catch(error){
+    console.error('Supabase Auth initialization failed:',error);
+    showLogin();
+    if($('err'))$('err').textContent='Supabase Auth could not be initialized. Check your connection.';
+  }
+})()
+function appMessage(message,title='Message',type='info'){
+  let icon=type==='success'?'✓':type==='warning'?'!':'i';
+  $('modal').innerHTML=`<div class="box" style="max-width:460px"><div class="mhead"><b>${esc(title)}</b><button class="btn" onclick="closeModal()">×</button></div><div class="mbody"><div style="display:flex;gap:14px;align-items:flex-start"><div style="width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:${type==='success'?'#e7f8ef':type==='warning'?'#fdf3de':'#eaeffb'};color:${type==='success'?'#0e8a53':type==='warning'?'#a8730a':'#2c4587'}">${icon}</div><div style="padding-top:7px;line-height:1.5;color:var(--ink-soft)">${esc(message)}</div></div></div><div class="mfoot"><button class="btn primary" onclick="closeModal()">OK</button></div></div>`;$('modal').classList.remove('hidden')
+}
+function closeModal(){$('modal').classList.add('hidden');$('modal').innerHTML=''}
+function appConfirm(message,onYes,opts={}){
+  let title=opts.title||'Please Confirm',yesLabel=opts.yesLabel||'Confirm',danger=!!opts.danger;
+  $('modal').innerHTML=`<div class="box" style="max-width:460px"><div class="mhead"><b>${esc(title)}</b><button class="btn" onclick="closeModal()">×</button></div><div class="mbody"><div style="display:flex;gap:14px;align-items:flex-start"><div style="width:34px;height:34px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;font-weight:700;background:${danger?'#fdecea':'#fdf3de'};color:${danger?'#c23b2e':'#a8730a'}">!</div><div style="padding-top:7px;line-height:1.5;color:var(--ink-soft);white-space:pre-line">${esc(message)}</div></div></div><div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn ${danger?'btn-danger':'primary'}" id="appConfirmYes">${esc(yesLabel)}</button></div></div>`;
+  $('modal').classList.remove('hidden');
+  $('appConfirmYes').onclick=()=>{closeModal();onYes()};
+}
+function appPrompt(message,onSubmit,opts={}){
+  let title=opts.title||'Enter Value',placeholder=opts.placeholder||'',def=opts.value||'',isNumber=opts.type==='number';
+  $('modal').innerHTML=`<div class="box" style="max-width:420px"><div class="mhead"><b>${esc(title)}</b><button class="btn" onclick="closeModal()">×</button></div><div class="mbody"><div style="color:var(--ink-soft);font-size:13px;margin-bottom:10px">${esc(message)}</div><input id="appPromptInput" type="${isNumber?'number':'text'}" style="width:100%" placeholder="${esc(placeholder)}" value="${esc(def)}"></div><div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" id="appPromptOk">OK</button></div></div>`;
+  $('modal').classList.remove('hidden');
+  let input=$('appPromptInput');input.focus();input.select();
+  let submit=()=>{let v=input.value;closeModal();onSubmit(v)};
+  $('appPromptOk').onclick=submit;
+  input.onkeydown=ev=>{if(ev.key==='Enter'){ev.preventDefault();submit()}};
+}
+function printTable(){window.print()}
+function printColumnModal(sel){
+  sel=sel||'.card table';
+  let table=document.querySelector(sel);
+  if(!table){window.print();return}
+  let old=document.getElementById('printPicker');if(old)old.remove();
+  let headRow=table.querySelector('thead tr')||table.querySelector('tr');
+  let ths=headRow?[...headRow.querySelectorAll('th')]:[];
+  if(!ths.length){window.print();return}
+  let overlay=document.createElement('div');overlay.id='printPicker';overlay.className='modal';
+  overlay.innerHTML=`<div class="box" style="max-width:420px"><div class="mhead"><b>Choose Columns to Print</b><button class="btn" onclick="document.getElementById('printPicker').remove()">×</button></div><div class="mbody"><p class="sub" style="margin:0 0 14px">Untick any column you'd like to hide on the printed page.</p><div style="display:grid;gap:2px;max-height:50vh;overflow:auto">${ths.map((th,i)=>`<label class="opt"><input type="checkbox" class="check ppcol" data-i="${i}" checked> ${esc(th.textContent.trim())}</label>`).join('')}</div></div><div class="mfoot"><button class="btn" onclick="document.getElementById('printPicker').remove()">Cancel</button><button class="btn primary" onclick="applyPrintColumns('${sel.replace(/'/g,"\\'")}')">Print</button></div></div>`;
+  document.body.appendChild(overlay);
+}
+function applyPrintColumns(sel){
+  let table=document.querySelector(sel);
+  document.querySelectorAll('.print-hide-col').forEach(el=>el.classList.remove('print-hide-col'));
+  if(table){[...document.querySelectorAll('.ppcol')].forEach((b,i)=>{if(!b.checked)table.querySelectorAll('tr').forEach(tr=>{let cell=tr.children[i];if(cell)cell.classList.add('print-hide-col')})})}
+  let picker=document.getElementById('printPicker');if(picker)picker.remove();
+  window.print();
+}
+window.addEventListener('afterprint',()=>{document.querySelectorAll('.print-hide-col').forEach(el=>el.classList.remove('print-hide-col'))});
+function download(){let t=document.querySelector('.card table');if(!t){appMessage('No table available');return}let s=[...t.rows].map(r=>[...r.cells].map(c=>'"'+c.innerText.replace(/"/g,'""')+'"').join(',')).join('\\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([s],{type:'text/csv'}));a.download=current+'_'+new Date().toISOString().slice(0,10)+'.csv';a.click()}
+const ICO={
+ users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><circle cx="17.5" cy="8.5" r="2.4"/><path d="M15.7 14.2c2.6.3 4.3 2.3 4.3 5.3"/></svg>',
+ check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18"/><path d="M7.5 13.5l2 2 3.5-4"/></svg>',
+ money:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 8h4a2.3 2.3 0 0 1 0 4.6H9m0-4.6v9m0-4.4h5.2M9 12.6v4.4h3.8"/></svg>',
+ clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/></svg>',
+ plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M2.5 20c0-3.3 2.6-5.7 6.5-5.7s6.5 2.4 6.5 5.7"/><path d="M18.5 8v5M16 10.5h5"/></svg>',
+ loan:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2.5-6 5 12L17 12h4"/></svg>'
+};
+
+
+/* ============================================================
+   DASHBOARD
+   ============================================================ */
+// DASHBOARD
+// ============================================================
+function getDashboardMonth(){return window.dashboardMonth||mon()}
+function setDashboardMonth(v){
+  if(!v)return;
+  window.dashboardMonth=v;
+  window.attMonth=v;window.summaryMonth=v;window.payrollMonth=v;
+  dashboard();
+}
+function syncDashboardMonth(){
+  let m=getDashboardMonth();
+  ['am','sm','pm'].forEach(id=>{if($(id))$(id).value=m});
+}
+
+function dashboard(){
+  let m=getDashboardMonth();
+  window.dashboardMonth=m;window.attMonth=m;window.summaryMonth=m;window.payrollMonth=m;
+  let active=db.employees.filter(x=>isActiveEmployee(x)),inactive=db.employees.filter(x=>x.status!=='Active');
+  let a=active.length,n=dim(m),payRows=Object.values(db.payroll).filter(x=>x.month===m);
+  let totalRequired=a*n,filled=0;
+  active.forEach(e=>{for(let d=1;d<=n;d++){let v=db.attendance[key(m,e.id,d)];if(v!==null&&v!==undefined&&String(v).trim()!=='')filled++}});
+  let attendanceFilledPct=totalRequired?Math.round(filled/totalRequired*100):0;
+  let payTotal=active.reduce((s,e)=>s+Number(calc(e,m).earned||0),0);
+  let pending=payRows.filter(x=>!x.approved).length;
+  let deptCounts={};active.forEach(e=>{deptCounts[e.dept]=(deptCounts[e.dept]||0)+1});
+  let maxDept=Math.max(1,...Object.values(deptCounts));
+  let deptRows=Object.keys(deptCounts).length?Object.entries(deptCounts).map(([d,c])=>`<div class="dept-row"><span class="dept-name">${esc(d)}</span><div class="dept-bar"><i style="width:${Math.round(c/maxDept*100)}%"></i></div><span class="dept-count">${c}</span></div>`).join(''):'<div class="empty-state"><div class="es-ico">▤</div>No active employees yet.</div>';
+  let recentEmp=active.slice(-5).reverse();
+  let recentRows=recentEmp.length?recentEmp.map(e=>`<div class="mini-row"><div><div class="m-name">${esc(e.name)}</div><div class="m-sub">${esc(e.id)} · ${esc(e.dept)}</div></div><span class="status act">Active</span></div>`).join(''):'<div class="empty-state"><div class="es-ico">◇</div>No employees added yet.</div>';
+
+  let fbMap={};
+  active.forEach(e=>{let fb=(e.filledBy||'Unassigned').trim()||'Unassigned';if(!fbMap[fb])fbMap[fb]={required:0,filled:0};fbMap[fb].required+=n;for(let d=1;d<=n;d++){let v=db.attendance[key(m,e.id,d)];if(v!==null&&v!==undefined&&String(v).trim()!=='')fbMap[fb].filled++}});
+  let fbRows=Object.entries(fbMap).map(([name,x])=>{let fillPct=x.required?Math.round(x.filled/x.required*100):0;return {name,fillPct}}).sort((a,b)=>b.fillPct-a.fillPct);
+  let filledByRows=fbRows.length?fbRows.map(x=>`<div class="filledby-row"><div class="filledby-top"><span>${esc(x.name)}</span><b>${x.fillPct}%</b></div><div class="filledby-bar"><i class="${x.fillPct>=100?'fill-complete':'fill-pending'}" style="width:${Math.min(100,x.fillPct)}%"></i></div></div>`).join(''): '<div class="empty-state"><div class="es-ico">✓</div>No Filled By assignments found.</div>';
+
+  $('content').innerHTML=`
+  <div class="dashboard-toolbar"><div><div class="dash-title">Dashboard Overview</div><div class="dash-sub">Attendance and payroll overview for the selected month.</div></div><div class="filter-field dashboard-month"><label>Dashboard Month</label><input id="dashboardMonth" type="month" value="${m}" onchange="setDashboardMonth(this.value)"></div></div>
+  <div class="stats">
+    <div class="stat"><div class="stat-top"><small>Active Employees</small><span class="stat-ico">${ICO.users}</span></div><b>${a}</b><div class="stat-note">Current active employees</div></div>
+    <div class="stat"><div class="stat-top"><small>Attendance Filled</small><span class="stat-ico">${ICO.check}</span></div><b>${attendanceFilledPct}%</b><div class="stat-note">${filled.toLocaleString()} of ${totalRequired.toLocaleString()} attendance cells filled</div></div>
+    <div class="stat"><div class="stat-top"><small>Payable This Month</small><span class="stat-ico">${ICO.money}</span></div><b>${money(payTotal)}</b><div class="stat-note">Total Pay from Monthly Summary</div></div>
+    <div class="stat ${pending>0?'stat-alert':''}"><div class="stat-top"><small>Pending Approval</small><span class="stat-ico">${ICO.clock}</span></div><b>${pending}</b><div class="stat-note">${pending>0?'Payroll rows awaiting sign-off':'All payroll rows approved'}</div></div>
+  </div>
+  <div class="card" style="margin-top:18px"><div class="head"><div><b>Attendance Fill % by Filled By</b><div class="m-sub">Attendance filled percentage for ${esc(monthLabel(m).replace(' Summary',''))}</div></div></div><div class="filledby-chart">${filledByRows}</div></div>
+  <div class="dash-grid" style="margin-top:18px">
+    <div>
+      <div class="card"><div class="head"><b>Quick Actions</b></div><div class="quick-actions">
+        <button class="qa-btn" onclick="page('attendance')"><span class="qa-ico">${ICO.check}</span><b>Mark Attendance</b><span class="m-sub">Fill attendance</span></button>
+        <button class="qa-btn" onclick="page('employees');setTimeout(empModal,0)"><span class="qa-ico">${ICO.plus}</span><b>Add Employee</b><span class="m-sub">New team member</span></button>
+        <button class="qa-btn" onclick="page('payroll')"><span class="qa-ico">${ICO.money}</span><b>Run Payroll</b><span class="m-sub">Review this month</span></button>
+        <button class="qa-btn" onclick="page('loans');setTimeout(loanModal,0)"><span class="qa-ico">${ICO.loan}</span><b>Add Recovery</b><span class="m-sub">Log a loan deduction</span></button>
+      </div></div>
+      <div class="card"><div class="head"><b>Workforce by Department</b></div><div style="padding:10px 0 16px">${deptRows}</div></div>
+    </div>
+    <div>
+      <div class="card"><div class="head"><b>Recently Added</b></div><div class="mini-list">${recentRows}</div></div>
+      <div class="card"><div class="head"><b>System</b></div><div style="padding:18px"><div class="notice">Employee master data is stored in Supabase. Attendance, payroll, loans and settings are being migrated next.</div></div></div>
+    </div>
+  </div>`;
+}
+
+
+/* ============================================================
+   EMPLOYEE MASTER
+   ============================================================ */
+// EMPLOYEE MASTER
+// ============================================================
+function employees(){
+$('content').innerHTML=`<div class="card"><div class="head"><b>Employees</b><div class="no-print"><button class="btn primary" id="addEmployeeBtn" onclick="empModal()">+ Add Employee</button> <button class="btn" onclick="printPayrollCurrent()">Print</button> <button class="btn" onclick="download()">Download</button></div></div>
+<div class="filterbar no-print">
+  <div class="filter-field grow" style="min-width:200px"><label>Search</label><input id="es" placeholder="Search by name or ID" oninput="renderEmp()"></div>
+  <div class="filter-field"><label>Department</label><div class="multi"><button class="btn multibtn" onclick="toggleMenu('dm')"><span id="dt">All Departments</span>${CHEV}</button><div id="dm" class="menu"></div></div></div>
+  <div class="filter-field"><label>Filled By</label><div class="multi"><button class="btn multibtn" onclick="toggleMenu('efbm')"><span id="eft">All Filled By</span>${CHEV}</button><div id="efbm" class="menu"></div></div></div>
+  <div class="filter-field"><label>Status</label><select id="ef" onchange="renderEmp()"><option value="">All Status</option>${db.settings.statuses.map(x=>`<option>${esc(x)}</option>`).join('')}</select></div>
+  <button class="btn" onclick="clearEmpFilters()" style="margin-bottom:1px">Clear Filters</button>
+</div>
+<div class="wrap"><table data-table-key="employees"><thead><tr><th>Employee ID</th><th>Employee Name</th><th>Department</th><th>Salary</th><th>Sunday Pay</th><th>Working Hours</th><th>Filled By</th><th>Account Type</th><th>Status</th><th>Action</th></tr></thead><tbody id="er"></tbody></table></div></div>`;
+if($('addEmployeeBtn'))$('addEmployeeBtn').style.display=canAdd()?'':'none';
+$('dm').innerHTML=menuSearchBar('dm')+`<div class="menu-list"><label class="opt" data-all="1"><input type="checkbox" class="check" id="allD" checked onchange="allDept(this)">All Departments</label>`+db.settings.departments.map(x=>`<label class="opt"><input type="checkbox" class="check dc" value="${esc(x)}" onchange="deptChange()"> ${esc(x)}</label>`).join('')+'</div>';
+let filledByNames=[...new Set(db.employees.map(e=>e.filledBy).filter(Boolean))];
+$('efbm').innerHTML=menuSearchBar('efbm')+`<div class="menu-list"><label class="opt" data-all="1"><input type="checkbox" class="check" id="allEFB" checked onchange="allEmpFilledBy(this)">All Filled By</label>`+filledByNames.map(x=>`<label class="opt"><input type="checkbox" class="check efbc" value="${esc(x)}" onchange="empFilledByChange()"> ${esc(x)}</label>`).join('')+'</div>';
+renderEmp()
+}
+function selDept(){return [...document.querySelectorAll('.dc:checked')].map(x=>x.value)}
+function allDept(c){
+  document.querySelectorAll('.dc').forEach(x=>x.checked=false);
+  c.checked=true;
+  $('dt').textContent='All Departments';
+  syncEmpFilterStyles();renderEmp();
+}
+function deptChange(){
+  let a=selDept();
+  $('allD').checked=!a.length;
+  $('dt').textContent=!a.length?'All Departments':a.length===1?a[0]:a.length+' Departments Selected';
+  syncEmpFilterStyles();renderEmp();
+}
+function empSelFilledBy(){return [...document.querySelectorAll('.efbc:checked')].map(x=>x.value)}
+function allEmpFilledBy(c){
+  document.querySelectorAll('.efbc').forEach(x=>x.checked=false);
+  c.checked=true;
+  $('eft').textContent='All Filled By';
+  syncEmpFilterStyles();renderEmp();
+}
+function empFilledByChange(){
+  let a=empSelFilledBy();
+  $('allEFB').checked=!a.length;
+  $('eft').textContent=!a.length?'All Filled By':a.length===1?a[0]:a.length+' Selected';
+  syncEmpFilterStyles();renderEmp();
+}
+function syncEmpFilterStyles(){
+  document.querySelectorAll('.multi').forEach(box=>{let btn=box.querySelector('.multibtn'),menu=box.querySelector('.menu');if(!btn||!menu)return;let all=menu.querySelector('[id^="all"]');btn.classList.toggle('active',all&&!all.checked)});
+}
+function closeDeptMenuOnOutside(e){
+  document.querySelectorAll('.menu.show').forEach(menu=>{let btn=menu.parentElement;if(btn&&!btn.contains(e.target))menu.classList.remove('show')});
+}
+document.addEventListener('click',closeDeptMenuOnOutside);
+function clearEmpFilters(){
+  if($('es'))$('es').value='';
+  document.querySelectorAll('.dc').forEach(x=>x.checked=false);
+  if($('allD'))$('allD').checked=true;
+  if($('dt'))$('dt').textContent='All Departments';
+  document.querySelectorAll('.efbc').forEach(x=>x.checked=false);
+  if($('allEFB'))$('allEFB').checked=true;
+  if($('eft'))$('eft').textContent='All Filled By';
+  if($('ef'))$('ef').value='';
+  syncEmpFilterStyles();renderEmp();
+}
+async function loadAllDataFromSupabase(){
+  if(!supabaseClient||!authUser||!authProfile)return;
+  const requests=[
+    supabaseClient.from('employees').select('*').order('id',{ascending:true}),
+    supabaseClient.from('attendance').select('*').order('attendance_date',{ascending:true}),
+    supabaseClient.from('settings').select('*').order('setting_key',{ascending:true})
+  ];
+  if(isAdmin()){
+    requests.push(supabaseClient.from('payroll').select('*').order('payroll_month',{ascending:true}));
+    requests.push(supabaseClient.from('loans').select('*').order('loan_date',{ascending:true}));
+    requests.push(supabaseClient.from('payroll_adjustments').select('*').order('adjustment_date',{ascending:true}));
+  }
+  const res=await Promise.all(requests);
+  for(const r of res)if(r.error)throw r.error;
+  const empRes=res[0],attRes=res[1],setRes=res[2];
+  const payRes=isAdmin()?res[3]:{data:[]},loanRes=isAdmin()?res[4]:{data:[]},adjRes=isAdmin()?res[5]:{data:[]};
+
+  db.employees=(empRes.data||[]).map(x=>({
+    id:x.id,name:x.name,dept:x.department,salary:Number(x.salary||0),
+    sundayType:x.sunday_type||'',sundayPay:Number(x.sunday_pay||0),hours:Number(x.hours||0),
+    status:x.status||'Active',accountType:x.account_type||'',filledBy:x.filled_by||'',
+    increments:Array.isArray(x.increments)?x.increments:[]
+  }));
+  db.attendance={};
+  (attRes.data||[]).forEach(x=>{const m=String(x.attendance_date||'').slice(0,7),d=Number(String(x.attendance_date||'').slice(8,10));if(m&&d)db.attendance[key(m,x.employee_id,d)]=x.status||'';});
+  db.payroll={};
+  (payRes.data||[]).forEach(x=>{const m=String(x.payroll_month||'').slice(0,7),k=m+'|'+x.employee_id;db.payroll[k]={month:m,empId:x.employee_id,salary:Number(x.salary||0),sundayPay:Number(x.sunday_pay||0),pay:Number(x.pay||0),advance:Number(x.advance||0),advance_cash:Number(x.advance_cash||0),tea:Number(x.tea||0),pfesi:Number(x.pf_esi||0),late:Number(x.late_deduction||0),loanRecovery:Number(x.loan_recovery||0),prev:Number(x.previous_pending||0),total:Number(x.total_payable||0),paid:Number(x.amount_paid||0),remaining:Number(x.remaining_balance||0),paymentStatus:x.payment_status||'Pending',approved:!!x.approved,_supabaseId:x.id};});
+  db.loanAccounts=[];db.loans=[];
+  (loanRes.data||[]).forEach(x=>{const remarks=String(x.remarks||'');if(remarks.startsWith('RECOVERY|')){const parts=remarks.split('|');db.loans.push({id:x.id,month:String(x.loan_date||'').slice(0,7),empId:x.employee_id,amount:Number(x.paid_amount||0),date:x.loan_date,source:parts[1]||'Payroll'});}else{db.loanAccounts.push({id:x.id,empId:x.employee_id,amount:Number(x.loan_amount||0),date:x.loan_date,remarks:x.remarks||''});}});
+  db.extraCols={advance:{},cash:{},tea:{}};
+  (adjRes.data||[]).forEach(x=>{const m=String(x.adjustment_date||'').slice(0,7);const type=x.adjustment_type==='advance_cash'?'cash':x.adjustment_type;if(db.extraCols[type])db.extraCols[type][m+'|'+x.employee_id]=Number(x.amount||0);});
+  const base={departments:['Mending','Staff','Knitting'],statuses:['Active','Inactive'],departmentHours:{Mending:8,Staff:10,Knitting:10},defaultHours:10,fields:['Employee ID','Employee Name','Department','Salary','Sunday Pay','Working Hours','Filled By','Status'],filledByUsers:[],headerFiltersEnabled:false,tableSettings:{}};
+  let remoteSettings={};(setRes.data||[]).forEach(x=>{remoteSettings[x.setting_key]=x.setting_value;});
+  if(Array.isArray(remoteSettings.departments))base.departments=remoteSettings.departments;
+  if(remoteSettings.working_hours&&typeof remoteSettings.working_hours==='object'){base.departmentHours=remoteSettings.working_hours.departmentHours||remoteSettings.working_hours||base.departmentHours;base.defaultHours=Number(remoteSettings.working_hours.defaultHours||base.defaultHours);}
+  if(typeof remoteSettings.header_filters_enabled==='boolean')base.headerFiltersEnabled=remoteSettings.header_filters_enabled;
+  if(remoteSettings.table_settings&&typeof remoteSettings.table_settings==='object')base.tableSettings=remoteSettings.table_settings;
+  if(Array.isArray(remoteSettings.filled_by_users))base.filledByUsers=remoteSettings.filled_by_users;
+  if(Array.isArray(remoteSettings.statuses))base.statuses=remoteSettings.statuses;
+  db.settings=Object.assign(base,remoteSettings.app_settings||{});db.settings.users=[];db.settings.departmentHours=db.settings.departmentHours||{};db.settings.filledByUsers=db.settings.filledByUsers||[];db.settings.tableSettings=db.settings.tableSettings||{};
+  db.settings.departments.forEach(d=>{if(db.settings.departmentHours[d]==null)db.settings.departmentHours[d]=Number(db.settings.defaultHours)||10;});
+  initRuntimeState();
+}
+
+function scheduleGoogleBackup(){
+  if(!GOOGLE_BACKUP_WEB_APP_URL||!authUser)return;
+  clearTimeout(googleBackupTimer);
+  googleBackupTimer=setTimeout(()=>backupToGoogleSheets(),1200);
+}
+async function backupToGoogleSheets(){
+  if(googleBackupBusy||!GOOGLE_BACKUP_WEB_APP_URL||!authUser)return;
+  googleBackupBusy=true;
+  try{
+    const payload={
+      source:'VVKF Attendance & Payroll',
+      backed_up_at:new Date().toISOString(),
+      user_email:authUser.email||'',
+      employees:db.employees||[],
+      attendance:db.attendance||{},
+      payroll:db.payroll||{},
+      loanAccounts:db.loanAccounts||[],
+      loans:db.loans||[],
+      adjustments:db.extraCols||{},
+      settings:db.settings||{}
+    };
+    await fetch(GOOGLE_BACKUP_WEB_APP_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
+  }catch(error){
+    console.warn('Google backup failed:',error);
+  }finally{googleBackupBusy=false;}
+}
+
+// Backward-compatible name used by the Employee page.
+async function loadEmployeesFromSupabase(){return loadAllDataFromSupabase()}
+
+function renderEmp(){let q=($('es')?.value||'').toLowerCase(),f=$('ef')?.value||'',d=selDept(),fb=empSelFilledBy(),r=db.employees.filter(e=>(!q||`${e.id} ${e.name}`.toLowerCase().includes(q))&&(!f||e.status===f)&&(!d.length||d.includes(e.dept))&&(!fb.length||fb.includes(e.filledBy)));$('er').innerHTML=r.map(e=>`<tr><td>${esc(e.id)}</td><td>${esc(e.name)}</td><td>${esc(e.dept)}</td><td>${money(e.salary)}</td><td>${!e.sundayType?'':e.sundayType==='half'?'½ of P':e.sundayType==='double'?'2 × P':money(e.sundayPay)}</td><td>${e.hours}</td><td>${esc(e.filledBy||'')}</td><td>${esc(e.accountType||'')}</td><td><span class="status ${e.status==='Active'?'act':'ina'}">${esc(e.status)}</span></td><td style="display:flex;gap:6px">${canEdit()?`<button class="btn" onclick="empModal('${e.id}')">Edit</button>`:''}${canDelete()?`<button class="btn btn-danger" onclick="delEmp('${e.id}')">Delete</button>`:''}</td></tr>`).join('')||'<tr><td colspan="10">No employees found</td></tr>'}
+
+function nextId(dept){let pre=dept.slice(0,3).toUpperCase(),n=db.employees.filter(e=>e.dept===dept).map(e=>parseInt(e.id.slice(3))||0);return pre+String(Math.max(0,...n)+1).padStart(3,'0')}
+function delEmp(id){
+  if(!canDelete()){appMessage('You do not have permission to delete employees.','Permission','warning');return}
+  let e=db.employees.find(x=>x.id===id);
+  if(!e)return;
+  appConfirm('Are you sure you want to delete '+e.name+' ('+e.id+')?\n\nWith the current Supabase schema, related attendance, payroll and loan records may also be removed because of foreign-key cascade.',async()=>{
+    const {error}=await supabaseClient.from('employees').delete().eq('id',id);
+    if(error){appMessage('Delete failed: '+error.message,'Supabase Error','warning');return}
+    // Remove the employee and all related runtime rows from memory so a later
+    // Supabase sync cannot re-create child records for the deleted employee.
+    db.employees=db.employees.filter(x=>x.id!==id);
+    Object.keys(db.attendance||{}).forEach(k=>{if(k.split('|')[1]===id)delete db.attendance[k]});
+    Object.keys(db.payroll||{}).forEach(k=>{if(k.split('|')[1]===id)delete db.payroll[k]});
+    db.loans=(db.loans||[]).filter(x=>x.empId!==id);
+    db.loanAccounts=(db.loanAccounts||[]).filter(x=>x.empId!==id);
+    ['advance','cash','tea'].forEach(type=>{Object.keys(db.extraCols?.[type]||{}).forEach(k=>{if(k.split('|')[1]===id)delete db.extraCols[type][k]})});
+    closeModal();
+    renderEmp();
+    scheduleGoogleBackup();
+  },{title:'Delete Employee',yesLabel:'Delete',danger:true});
+}
+function empModal(id=''){let e=db.employees.find(x=>x.id===id)||{id:'',name:'',dept:'',salary:'',sundayType:'',sundayPay:'',hours:'',status:'Active',accountType:'',filledBy:'',increments:[]};$('modal').innerHTML=`<div class="box"><div class="mhead"><b>${id?'Edit Employee':'Add Employee'}</b><button class="btn" onclick="closeModal()">×</button></div><div class="mbody"><input id="fi" value="${esc(e.id)}" type="hidden"><div class="grid"><div class="field"><label>Employee Name *</label><input id="fn" value="${esc(e.name)}"></div><div class="field"><label>Department *</label><select id="fd" onchange="hoursRule()"><option value="" ${!e.dept?'selected':''}></option>${db.settings.departments.map(x=>`<option value="${esc(x)}" ${x===e.dept?'selected':''}>${esc(x)}</option>`).join('')}</select></div><div class="field"><label>Salary *</label><input id="fs" type="number" value="${e.salary}"></div><div class="field"><label>Sunday Pay</label><select id="ft" onchange="sunRule()"><option value="" ${!e.sundayType?'selected':''}></option><option value="half" ${e.sundayType==='half'?'selected':''}>½ of P</option><option value="double" ${e.sundayType==='double'?'selected':''}>2 × P</option><option value="manual" ${e.sundayType==='manual'?'selected':''}>Manual Amount</option></select></div><div class="field" id="fpwrap"><label>Manual Sunday Amount</label><input id="fp" type="number" value="${e.sundayPay||''}"></div><div class="field"><label>Working Hours</label><input id="fh" type="number" step="1" value="${e.hours}"></div><div class="field"><label>Filled By</label>${isAdmin()?`<select id="ffb"><option value="" ${!e.filledBy?'selected':''}></option>${db.settings.filledByUsers.map(x=>`<option value="${esc(x)}" ${x===e.filledBy?'selected':''}>${esc(x)}</option>`).join('')}</select>`:`<input id="ffb" value="${esc(assignedFilledBy()||e.filledBy||'')}" readonly></div>`}<div class="field"><label>Account Type</label><select id="fat"><option value="" ${!e.accountType?'selected':''}></option><option value="Online" ${e.accountType==='Online'?'selected':''}>Online</option><option value="Cash" ${e.accountType==='Cash'?'selected':''}>Cash</option></select></div>${id?`<div class="field"><label>Status</label><select id="fst">${db.settings.statuses.map(x=>`<option ${x===e.status?'selected':''}>${esc(x)}</option>`).join('')}</select></div>`:''}</div>${id?`<div class="card" style="margin-top:18px"><div class="head"><b>Salary Increment / Reduction</b><button class="btn" onclick="increment('${esc(e.id)}')">+ Add</button></div><div style="padding:12px;font-size:13px">${(e.increments||[]).map(x=>`${x.date} • ${x.type==='+'?'+':'-'}${money(x.amount)} • New salary ${money(x.newSalary)}`).join('<br>')||'No increments recorded.'}</div></div>`:''}</div><div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveEmp('${esc(e.id)}')">Save Employee</button></div></div>`;$('modal').classList.remove('hidden');sunRule();hoursRule()}
+function sunRule(){let manual=$('ft').value==='manual';$('fpwrap').style.display=manual?'':'none';$('fp').disabled=!manual}
+function hoursRule(){
+  let dept=$('fd').value;
+  if(!dept){$('fh').value='';$('fh').readOnly=true;return}
+  let h=Number(db.settings.departmentHours?.[dept] ?? db.settings.defaultHours);
+  $('fh').value=h>0?h:'';
+  $('fh').readOnly=true;
+}
+function saveEmp(old){if(!canAdd()&&!old){appMessage('You do not have permission to add employees.','Permission','warning');return}if(old&&!canEdit()){appMessage('You do not have permission to edit employees.','Permission','warning');return}let name=$('fn').value.trim(),dept=$('fd').value,sal=Number($('fs').value);if(!name||!dept||!sal){appMessage('Employee Name, Department and Salary are compulsory.');return}let e=db.employees.find(x=>x.id===old),id=old;if(e&&e.dept!==dept){id=nextId(dept);migrateEmpId(old,id)}else if(!old){id=nextId(dept)}let o={id,name,dept,salary:sal,sundayType:$('ft').value,sundayPay:$('ft').value==='manual'?Number($('fp').value||0):0,hours:Number(db.settings.departmentHours?.[dept] ?? db.settings.defaultHours),status:$('fst')?$('fst').value:(e?.status||'Active'),accountType:$('fat').value,filledBy:(isAdmin()?$('ffb').value:assignedFilledBy()),increments:e?.increments||[]};if(e)Object.assign(e,o);else db.employees.push(o);save();closeModal();employees()}
+function migrateEmpId(oldId,newId){Object.keys(db.attendance).forEach(k=>{let p=k.split('|');if(p[1]===oldId){p[1]=newId;db.attendance[p.join('|')]=db.attendance[k];delete db.attendance[k]}});Object.keys(db.payroll).forEach(k=>{let p=k.split('|');if(p[1]===oldId){p[1]=newId;db.payroll[p.join('|')]=db.payroll[k];delete db.payroll[k]}});db.loans.forEach(l=>{if(l.empId===oldId)l.empId=newId})}
+function increment(id){
+  let e=db.employees.find(x=>x.id===id);
+  if(!e)return;
+  if(!e.increments)e.increments=[];
+  $('modal').innerHTML=`<div class="box" style="max-width:480px">
+    <div class="mhead"><b>Salary Increment / Reduction</b><button class="btn" onclick="closeModal()">×</button></div>
+    <div class="mbody">
+      <div class="notice">Current Salary: <b>${money(e.salary)}</b></div>
+      <div class="grid" style="margin-top:14px">
+        <div class="field"><label>Type</label><select id="incType"><option value="+">Increment (+)</option><option value="-">Reduction (-)</option></select></div>
+        <div class="field"><label>Change Amount</label><input id="incAmt" type="number" min="1" step="1" value="0"></div>
+        <div class="field"><label>Effective Date</label><input id="incDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+      </div>
+      <div id="incPreview" class="notice" style="margin-top:14px"></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" onclick="saveIncrement('${esc(id)}')">Save Salary Change</button>
+    </div>
+  </div>`;
+  $('modal').classList.remove('hidden');
+  updateIncrementPreview('${esc(id)}');
+  $('incType').onchange=()=>updateIncrementPreview(id);
+  $('incAmt').oninput=()=>updateIncrementPreview(id);
+}
+function updateIncrementPreview(id){
+  let e=db.employees.find(x=>x.id===id);if(!e)return;
+  let amount=Number($('incAmt')?.value||0),type=$('incType')?.value||'+';
+  let next=type==='+'?Number(e.salary||0)+amount:Number(e.salary||0)-amount;
+  if($('incPreview'))$('incPreview').innerHTML=`Change: <b>${money(amount)}</b> &nbsp; → &nbsp; New Salary: <b>${money(next)}</b>`;
+}
+function saveIncrement(id){
+  let e=db.employees.find(x=>x.id===id);if(!e)return;
+  let type=$('incType').value,amount=Number($('incAmt').value),date=$('incDate').value;
+  if(!date||!amount||amount<=0){appMessage('Enter a valid change amount and effective date.');return}
+  let oldSalary=Number(e.salary||0),newSalary=type==='+'?oldSalary+amount:oldSalary-amount;
+  if(newSalary<0){appMessage('Salary cannot become negative.');return}
+  e.salary=newSalary;
+  e.increments=e.increments||[];
+  e.increments.push({date,type,amount,newSalary,oldSalary});
+  save();
+  closeModal();
+  empModal(id);
+}
+
+
+/* ============================================================
+   ATTENDANCE
+   ============================================================ */
+// ATTENDANCE
+// ============================================================
+function attendance(){
+  let m=window.dashboardMonth||$('am')?.value||mon(),n=dim(m),oldDept=Array.isArray(window.attDept)?window.attDept:[],oldEmp=Array.isArray(window.attEmp)?window.attEmp:[],oldFB=Array.isArray(window.attFilledBy)?window.attFilledBy:[],oldSearch=$('aes')?.value||'';
+  let showCols=!!window.showExtraCols;
+
+  $('content').innerHTML=`<div class="card">
+    <div class="head"><b>Monthly Attendance</b><div class="actions no-print">
+      <button class="btn" onclick="summary()">${ICO.check} Summary</button>
+      <button class="btn ${showCols?'primary':''}" onclick="toggleExtraCols()">${showCols?'Hide Advance/Tea':'Advance/Tea'}</button>
+      <button class="btn" onclick="printColumnModal()">Print</button>
+      <button class="btn" onclick="download()">Download</button>
+    </div></div>
+    <div class="filterbar no-print">
+      <div class="filter-field"><label>Month</label><input id="am" type="month" value="${m}" onchange="attendanceMonthChange(this.value)"></div>
+      <div class="filter-field grow" style="min-width:180px"><label>Search Employee</label><input id="aes" placeholder="Search by name or ID" value="${esc(oldSearch)}" oninput="renderAtt()"></div>
+      <div class="filter-field"><label>Filled By</label><div class="multi"><button class="btn multibtn" onclick="toggleMenu('afbm')"><span id="afbt">All Filled By</span>${CHEV}</button><div id="afbm" class="menu"></div></div></div>
+      <div class="filter-field"><label>Department</label><div class="multi"><button class="btn multibtn" onclick="toggleMenu('adm')"><span id="adt">All Departments</span>${CHEV}</button><div id="adm" class="menu"></div></div></div>
+      <div class="filter-field"><label>Employee</label><div class="multi"><button class="btn multibtn" onclick="toggleMenu('aem')"><span id="aet">All Employees</span>${CHEV}</button><div id="aem" class="menu"></div></div></div>
+    </div>
+    <div class="legend-toolbar no-print">
+      <div class="legend-left legend" style="border:0;padding:0;background:transparent">${showCols?'':`
+        <span class="lP legend-clickable" title="Click, then tap cells to fill with P" onclick="legendPaint('P')">P Present</span>
+        <span class="lA legend-clickable" title="Click, then tap cells to fill with A" onclick="legendPaint('A')">A Absent</span>
+        <span class="lH legend-clickable" title="Click, then tap cells to fill with H" onclick="legendPaint('H')">H Half</span>
+        <span class="lPP legend-clickable" title="Click, then tap cells to fill with PP" onclick="legendPaint('PP')">PP Holiday</span>
+        <span class="lPD legend-clickable" title="Click, then tap cells to fill with PD" onclick="legendPaint('PD')">PD Double</span>
+        <span class="lnum legend-clickable" title="Click to set an hours value, then tap cells to fill" onclick="legendPaint('num')">123 Hours entered</span>
+        <span class="lS">Sunday</span>`}
+      </div>
+      <div class="legend-right">
+        <button id="attClearFilters" class="btn filter-clear" onclick="clearAttFilters()">Clear Filters</button>
+        ${showCols?'':'<button class="btn primary" onclick="bulk()">Bulk Fill</button>'}
+      </div>
+    </div>
+    <div class="wrap"><table class="attendance-table" data-table-key="attendance"><thead><tr><th class="s1 stickyh">Employee</th><th class="s2 stickyh">Department</th>${showCols?'':Array.from({length:n},(_,i)=>{let d=i+1,w=new Date(m+'-'+String(d).padStart(2,'0')+'T00:00:00').getDay();return `<th class="day ${w===0?'sunday':''}">${String(d).padStart(2,'0')}<small style="display:block;font-size:9px">${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][w]}</small></th>`}).join('')}${showCols?'<th class="att-amount-col">ADVANCE</th><th class="att-amount-col">ADVANCE CASH</th><th class="att-amount-col">TEA</th>':''}</tr></thead><tbody id="ar"></tbody></table></div>
+  </div>`;
+
+  let depts=Array.isArray(db.settings.departments)?db.settings.departments:[],active=(db.employees||[]).filter(e=>isActiveEmployee(e));
+  $('adm').innerHTML=menuSearchBar('adm')+`<div class="menu-list"><label class="opt" data-all="1"><input type="checkbox" class="check" id="allAD" onchange="allAttDept(this)">All Departments</label>`+depts.map(x=>`<label class="opt"><input type="checkbox" class="check adc" value="${esc(x)}" ${!oldDept.length||oldDept.includes(x)?'checked':''} onchange="attDeptChange()"> ${esc(x)}</label>`).join('')+'</div>';
+  $('aem').innerHTML=menuSearchBar('aem')+`<div class="menu-list"><label class="opt" data-all="1"><input type="checkbox" class="check" id="allAE" onchange="allAttEmp(this)">All Employees</label>`+active.map(e=>`<label class="opt"><input type="checkbox" class="check aec" value="${esc(e.id)}" ${!oldEmp.length||oldEmp.includes(e.id)?'checked':''} onchange="attEmpChange()"> ${esc(e.id)} - ${esc(e.name)}</label>`).join('')+'</div>';
+  let filledByNames=[...new Set(active.map(e=>e.filledBy).filter(Boolean))];
+  $('afbm').innerHTML=menuSearchBar('afbm')+`<div class="menu-list"><label class="opt" data-all="1"><input type="checkbox" class="check" id="allAFB" onchange="allAttFilledBy(this)">All Filled By</label>`+filledByNames.map(x=>`<label class="opt"><input type="checkbox" class="check afbc" value="${esc(x)}" ${!oldFB.length||oldFB.includes(x)?'checked':''} onchange="attFilledByChange()"> ${esc(x)}</label>`).join('')+'</div>';
+  syncAttFilterLabels();renderAtt();syncLegendActive();
+}
+function toggleExtraCols(){window.showExtraCols=!window.showExtraCols;attendance()}
+const CHEV='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+function menuSearchBar(id){return `<input class="menu-search" placeholder="Search…" oninput="filterMenuOptions(this,'${id}')">`}
+function filterMenuOptions(input,menuId){let q=input.value.trim().toLowerCase();document.querySelectorAll('#'+menuId+' .opt').forEach(o=>{if(o.dataset.all==='1')return;o.style.display=o.textContent.toLowerCase().includes(q)?'':'none'})}
+function toggleMenu(id){document.querySelectorAll('.menu.show').forEach(m=>{if(m.id!==id)m.classList.remove('show')});$(id).classList.toggle('show')}
+
+function attSelDept(){return [...document.querySelectorAll('.adc:checked')].map(x=>x.value)}
+function attSelEmp(){return [...document.querySelectorAll('.aec:checked')].map(x=>x.value)}
+function attSelFilledBy(){return [...document.querySelectorAll('.afbc:checked')].map(x=>x.value)}
+function syncAttFilterLabels(){
+  let ds=attSelDept(),es=attSelEmp(),fbs=attSelFilledBy(),dt=document.querySelectorAll('.adc').length,et=document.querySelectorAll('.aec').length,ft=document.querySelectorAll('.afbc').length;
+  if($('allAD'))$('allAD').checked=dt===0||ds.length===dt;if($('allAE'))$('allAE').checked=et===0||es.length===et;if($('allAFB'))$('allAFB').checked=ft===0||fbs.length===ft;
+  if($('adt'))$('adt').textContent=dt===0||ds.length===dt?'All Departments':ds.length===0?'No selection':ds.length===1?ds[0]:ds.length+' Selected';
+  if($('aet'))$('aet').textContent=et===0||es.length===et?'All Employees':es.length===0?'No selection':es.length===1?(db.employees.find(e=>e.id===es[0])?.name||es[0]):es.length+' Selected';
+  if($('afbt'))$('afbt').textContent=ft===0||fbs.length===ft?'All Filled By':fbs.length===0?'No selection':fbs.length===1?fbs[0]:fbs.length+' Selected';
+  document.querySelectorAll('.multi').forEach(box=>{let btn=box.querySelector('.multibtn'),menu=box.querySelector('.menu');if(!btn||!menu)return;let all=menu.querySelector('[id^="all"]');btn.classList.toggle('active',all&&!all.checked)});
+  let q=($('aes')?.value||'').trim();
+  if($('attClearFilters'))$('attClearFilters').classList.toggle('active',!!q || (dt>0&&ds.length<dt) || (et>0&&es.length<et) || (ft>0&&fbs.length<ft));
+}
+function allAttEmp(c){let a=[...document.querySelectorAll('.aec')],makeAll=!!c.checked;a.forEach(x=>x.checked=makeAll);window.attEmp=makeAll?a.map(x=>x.value):[];syncAttFilterLabels();renderAtt()}
+function allAttFilledBy(c){let a=[...document.querySelectorAll('.afbc')],makeAll=!!c.checked;a.forEach(x=>x.checked=makeAll);window.attFilledBy=makeAll?a.map(x=>x.value):[];syncAttFilterLabels();renderAtt()}
+function allAttDept(c){let a=[...document.querySelectorAll('.adc')],makeAll=!!c.checked;a.forEach(x=>x.checked=makeAll);window.attDept=makeAll?a.map(x=>x.value):[];syncAttFilterLabels();renderAtt()}
+function attEmpChange(){window.attEmp=attSelEmp();syncAttFilterLabels();renderAtt()}
+function attFilledByChange(){window.attFilledBy=attSelFilledBy();syncAttFilterLabels();renderAtt()}
+function attDeptChange(){window.attDept=attSelDept();syncAttFilterLabels();renderAtt()}
+function clearAttFilters(){document.querySelectorAll('.adc,.aec,.afbc').forEach(x=>x.checked=true);if($('aes'))$('aes').value='';window.attDept=[];window.attEmp=[];window.attFilledBy=[];syncAttFilterLabels();renderAtt()}
+
+function isNum(v){return v!==''&&v!=null&&!isNaN(v)&&/^\d+(\.\d+)?$/.test(String(v))}
+function renderAtt(){
+  let m=$('am').value,n=dim(m),ds=attSelDept(),es=attSelEmp(),fbs=attSelFilledBy(),q=($('aes')?.value||'').trim().toLowerCase(),showCols=!!window.showExtraCols;if($('attClearFilters'))$('attClearFilters').classList.toggle('active',!!q || (document.querySelectorAll('.adc').length&&ds.length<document.querySelectorAll('.adc').length) || (document.querySelectorAll('.aec').length&&es.length<document.querySelectorAll('.aec').length) || (document.querySelectorAll('.afbc').length&&fbs.length<document.querySelectorAll('.afbc').length));
+  let rows=db.employees.filter(e=>isActiveEmployee(e)&&(!ds.length||ds.includes(e.dept))&&(!es.length||es.includes(e.id))&&(!fbs.length||fbs.includes(e.filledBy))&&(!q||`${e.id} ${e.name}`.toLowerCase().includes(q)));
+  db.extraCols=db.extraCols||{advance:{},cash:{},tea:{}};db.loanAccounts=db.loanAccounts||[];db.extraCols.advance=db.extraCols.advance||{};db.extraCols.cash=db.extraCols.cash||{};db.extraCols.tea=db.extraCols.tea||{};
+  $('ar').innerHTML=rows.map(e=>`<tr><td class="s1" style="cursor:pointer" title="Click to change employee status" onclick="attendanceEmpMenu(event,'${e.id}')">${esc(e.name)}</td><td class="s2">${esc(e.dept)}</td>${showCols?'':Array.from({length:n},(_,i)=>{let d=i+1,v=db.attendance[key(m,e.id,d)]||'',w=new Date(m+'-'+String(d).padStart(2,'0')+'T00:00:00').getDay(),cls=v?(isNum(v)?'att-num':'att-'+v):'';return `<td class="day ${w===0?'sunday':''}"><button class="att-btn ${cls}" title="${v||'Empty'}" onclick="cellAttMenu(event,'${m}','${e.id}',${d})">${v||'—'}</button></td>`}).join('')}${showCols?['advance','cash','tea'].map(type=>{let v=db.extraCols[type][m+'|'+e.id]||'';return `<td class="att-amount-cell"><button class="att-btn ${v?'att-num':''}" title="${v||'Empty'}" onclick="cellColMenu(event,'${type}','${m}','${e.id}')">${v||'—'}</button></td>`}).join(''):''}</tr>`).join('')||`<tr><td colspan="${showCols?5:n+2}" style="text-align:center;padding:20px">No employees match the selected filters.</td></tr>`;
+}
+function attendanceEmpMenu(ev,id){
+  ev.stopPropagation();
+  let old=document.getElementById('attendanceEmpMenu');
+  if(old)old.remove();
+  let e=db.employees.find(x=>x.id===id);
+  if(!e)return;
+  let menu=document.createElement('div');
+  menu.id='attendanceEmpMenu';
+  menu.style.cssText='position:fixed;z-index:300;background:#fff;border:1px solid #e2e4ec;border-radius:10px;box-shadow:0 8px 24px rgba(15,20,35,.16);padding:8px;min-width:190px';
+  let title=document.createElement('div');
+  title.style.cssText='font-size:12px;font-weight:700;padding:5px 8px 8px;color:var(--muted)';
+  title.textContent=e.name;
+  menu.appendChild(title);
+  let b=document.createElement('button');
+  b.className='btn btn-danger';
+  b.style.cssText='width:100%;text-align:left;min-height:34px';
+  b.textContent='Mark Inactive';
+  b.onclick=()=>{
+    menu.remove();
+    appConfirm('Mark '+e.name+' as Inactive? Existing attendance and payroll history will remain.',()=>{
+      e.status='Inactive';
+      save();
+      attendance();
+    },{title:'Mark Inactive',yesLabel:'Mark Inactive',danger:true});
+  };
+  menu.appendChild(b);
+  let cancel=document.createElement('button');
+  cancel.className='btn';
+  cancel.style.cssText='width:100%;text-align:left;margin-top:5px;min-height:34px';
+  cancel.textContent='Cancel';
+  cancel.onclick=()=>menu.remove();
+  menu.appendChild(cancel);
+  document.body.appendChild(menu);
+  let r=ev.currentTarget.getBoundingClientRect();
+  menu.style.left=Math.min(r.left,window.innerWidth-205)+'px';
+  menu.style.top=Math.min(r.bottom+4,window.innerHeight-125)+'px';
+}
+function legendPaint(v){
+  if(v==='num'){
+    appPrompt('Enter the number of hours to fill (e.g. 6 or 7.5):',val=>{
+      val=(val||'').trim();
+      if(!isNum(val)){appMessage('Please enter a valid number of hours.','Invalid Value','warning');return}
+      legendPaintApply(val);
+    },{title:'Fill Hours',placeholder:'e.g. 7.5'});
+    return;
+  }
+  legendPaintApply(v);
+}
+function legendPaintApply(v){
+  let same=window.attPasteMode&&String(window.attClipboard)===String(v);
+  if(same){exitPasteMode()}else{window.attClipboard=v;window.attPasteMode=true;showPasteBanner()}
+  syncLegendActive();
+}
+function syncLegendActive(){
+  document.querySelectorAll('.legend .legend-clickable').forEach(el=>el.classList.remove('legend-active'));
+  if(window.attPasteMode){
+    let v=window.attClipboard,sel=isNum(v)?'.lnum':'.l'+v,el=document.querySelector('.legend '+sel);
+    if(el)el.classList.add('legend-active');
+  }
+}
+function cellAttMenu(ev,m,id,d){
+  ev.stopPropagation();
+  if(window.attPasteMode&&window.attClipboard!=null){setAttValue(m,id,d,window.attClipboard);return}
+  let old=document.getElementById('cellStatusMenu');if(old)old.remove();
+  let cur=db.attendance[key(m,id,d)]||'';
+  let menu=document.createElement('div');menu.id='cellStatusMenu';
+  menu.style.cssText='position:fixed;z-index:300;background:#fff;border:1px solid #e2e4ec;border-radius:10px;box-shadow:0 8px 24px rgba(15,20,35,.16);padding:8px;display:flex;flex-wrap:wrap;gap:5px;max-width:280px;align-items:center';
+  ['P','A','H','PP','PD'].forEach(v=>{let b=document.createElement('button');b.className='btn';b.style.cssText='min-height:32px;padding:6px 10px';b.textContent=v;b.onclick=()=>{menu.remove();setAttValue(m,id,d,v)};menu.appendChild(b)});
+  let sep=document.createElement('div');sep.style.cssText='width:100%;height:1px;background:var(--border-soft);margin:2px 0';menu.appendChild(sep);
+  let inputWrap=document.createElement('div');inputWrap.style.cssText='display:flex;gap:5px;align-items:center;flex:1';
+  let input=document.createElement('input');input.type='number';input.min='0';input.step='0.5';input.placeholder='Hours';input.style.cssText='width:70px;min-height:32px;padding:5px 7px';
+  if(isNum(cur))input.value=cur;
+  input.onkeydown=e2=>{if(e2.key==='Enter'&&input.value!==''){setAttValue(m,id,d,input.value);menu.remove()}};
+  let okBtn=document.createElement('button');okBtn.className='btn primary';okBtn.style.cssText='min-height:32px;padding:6px 12px';okBtn.textContent='Set';
+  okBtn.onclick=()=>{if(input.value!==''){setAttValue(m,id,d,input.value);menu.remove()}};
+  inputWrap.appendChild(input);inputWrap.appendChild(okBtn);menu.appendChild(inputWrap);
+  let sep2=document.createElement('div');sep2.style.cssText='width:100%;height:1px;background:var(--border-soft);margin:2px 0';menu.appendChild(sep2);
+  let copyBtn=document.createElement('button');copyBtn.className='btn';copyBtn.style.cssText='min-height:32px;padding:6px 10px';copyBtn.textContent='Copy';
+  copyBtn.disabled=!cur;copyBtn.onclick=()=>{window.attClipboard=cur;window.attPasteMode=true;menu.remove();showPasteBanner();syncLegendActive()};
+  menu.appendChild(copyBtn);
+  if(window.attClipboard!=null){let pasteBtn=document.createElement('button');pasteBtn.className='btn';pasteBtn.style.cssText='min-height:32px;padding:6px 10px';pasteBtn.textContent='Paste here';pasteBtn.onclick=()=>{setAttValue(m,id,d,window.attClipboard);menu.remove()};menu.appendChild(pasteBtn)}
+  let clearBtn=document.createElement('button');clearBtn.className='btn btn-danger';clearBtn.style.cssText='min-height:32px;padding:6px 10px;margin-left:auto';clearBtn.textContent='Clear';
+  clearBtn.onclick=()=>{setAttValue(m,id,d,'');menu.remove()};menu.appendChild(clearBtn);
+  document.body.appendChild(menu);let r=ev.currentTarget.getBoundingClientRect();
+  menu.style.left=Math.min(r.left,window.innerWidth-290)+'px';menu.style.top=Math.min(r.bottom+4,window.innerHeight-140)+'px';
+  input.focus();
+}
+function cellColMenu(ev,type,m,id){
+  ev.stopPropagation();
+  let old=document.getElementById('cellStatusMenu');if(old)old.remove();
+  db.extraCols=db.extraCols||{advance:{},cash:{},tea:{}};db.loanAccounts=db.loanAccounts||[];db.extraCols[type]=db.extraCols[type]||{};
+  let store=db.extraCols[type],k=m+'|'+id,cur=store[k]||'';
+  let menu=document.createElement('div');menu.id='cellStatusMenu';
+  menu.style.cssText='position:fixed;z-index:300;background:#fff;border:1px solid #e2e4ec;border-radius:10px;box-shadow:0 8px 24px rgba(15,20,35,.16);padding:8px;display:flex;flex-wrap:wrap;gap:5px;max-width:250px;align-items:center';
+  let label=document.createElement('div');label.style.cssText='width:100%;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em';
+  label.textContent=type==='advance'?'Advance':type==='cash'?'Advance Cash (₹)':'Tea Amount';menu.appendChild(label);
+  let inputWrap=document.createElement('div');inputWrap.style.cssText='display:flex;gap:5px;align-items:center;flex:1';
+  let input=document.createElement('input');input.type='number';input.min='0';input.step='1';input.placeholder='Amount';input.style.cssText='width:90px;min-height:32px;padding:5px 7px';
+  if(cur)input.value=cur;
+  input.onkeydown=e2=>{
+    if(e2.key==='Enter'&&input.value!==''){
+      e2.preventDefault();
+      store[k]=input.value;save();menu.remove();renderAtt();
+      setTimeout(()=>{
+        let rows=[...document.querySelectorAll('#ar tr')],idx=rows.findIndex(tr=>tr.querySelector(`button[onclick*="cellColMenu(event,'${type}','${m}','${id}')"]`));
+        let next=idx>=0?rows[idx+1]:null;
+        if(next){let b=next.querySelector(`button[onclick*="cellColMenu(event,'${type}','${m}'"]`);if(b)b.click()}
+      },30);
+    }
+  };
+  let okBtn=document.createElement('button');okBtn.className='btn primary';okBtn.style.cssText='min-height:32px;padding:6px 12px';okBtn.textContent='Set';
+  okBtn.onclick=()=>{if(input.value!==''){store[k]=input.value;save();renderAtt();menu.remove()}};
+  inputWrap.appendChild(input);inputWrap.appendChild(okBtn);menu.appendChild(inputWrap);
+  let clearBtn=document.createElement('button');clearBtn.className='btn btn-danger';clearBtn.style.cssText='min-height:32px;padding:6px 10px;margin-left:auto';clearBtn.textContent='Clear';
+  clearBtn.onclick=()=>{delete store[k];save();renderAtt();menu.remove()};menu.appendChild(clearBtn);
+  document.body.appendChild(menu);let r=ev.currentTarget.getBoundingClientRect();
+  menu.style.left=Math.min(r.left,window.innerWidth-260)+'px';menu.style.top=Math.min(r.bottom+4,window.innerHeight-110)+'px';
+  input.focus();
+}
+document.addEventListener('click',e=>{let m=document.getElementById('cellStatusMenu');if(m&&!m.contains(e.target))m.remove()});
+function showPasteBanner(){
+  let old=document.getElementById('pasteBanner');if(old)old.remove();
+  let bar=document.createElement('div');bar.id='pasteBanner';
+  bar.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:26px;z-index:400;background:var(--navy);color:#fff;padding:11px 10px 11px 18px;border-radius:30px;box-shadow:var(--shadow-lg);display:flex;gap:14px;align-items:center;font-size:13px';
+  bar.innerHTML=`<span>Fill mode — click any cell to set <b>${esc(window.attClipboard)}</b></span>`;
+  let doneBtn=document.createElement('button');doneBtn.className='btn primary';doneBtn.style.cssText='min-height:30px;padding:5px 14px';doneBtn.textContent='Done';
+  doneBtn.onclick=exitPasteMode;bar.appendChild(doneBtn);document.body.appendChild(bar);
+}
+function exitPasteMode(){window.attPasteMode=false;let b=document.getElementById('pasteBanner');if(b)b.remove();syncLegendActive()}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')exitPasteMode()});
+function setAttValue(m,id,d,v){if(v!=='')db.attendance[key(m,id,d)]=v;else delete db.attendance[key(m,id,d)];save();renderAtt()}
+function attendanceMonthChange(v){if(v){window.dashboardMonth=v;window.attMonth=v;updateMonthlySummaryNav(v);attendance()}}
+function monthLabel(m){if(!m)return 'Monthly Summary';let [y,mo]=m.split('-').map(Number);return new Date(y,mo-1,1).toLocaleString('en-US',{month:'long'})+' Summary'}
+function updateMonthlySummaryNav(m){let el=$('monthlySummaryNav');if(el)el.textContent=monthLabel(m)}
+function pdModal(m,id){let n=dim(m);$('modal').innerHTML=`<div class="box" style="max-width:430px"><div class="mhead"><b>PD – Select 2 Dates</b><button class="btn" onclick="closeModal()">×</button></div><div class="mbody"><div class="field"><label>Date 1</label><input id="p1" type="date" min="${m}-01" max="${m}-${String(n).padStart(2,'0')}"></div><div class="field" style="margin-top:12px"><label>Date 2</label><input id="p2" type="date" min="${m}-01" max="${m}-${String(n).padStart(2,'0')}"></div></div><div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="savePD('${m}','${id}')">Done</button></div></div>`;$('modal').classList.remove('hidden')}
+function savePD(m,id){let a=$('p1').value,b=$('p2').value;if(!a||!b||a===b){appMessage('Select two different dates.','Invalid Dates','warning');return}db.attendance[key(m,id,+a.slice(-2))]='PD';db.attendance[key(m,id,+b.slice(-2))]='PD';save();closeModal();renderAtt()}
+function bulk(){
+  let m=$('am').value,n=dim(m);
+  $('modal').innerHTML=`<div class="box"><div class="mhead"><b>Bulk Fill — Attendance</b><button class="btn" onclick="closeModal()">×</button></div><div class="mbody"><div class="notice" style="margin-bottom:14px">Bulk Fill applies only to employees currently visible under the filters.</div><div class="grid"><div class="field"><label>Value</label><select id="bv"><option>P</option><option>A</option><option>H</option><option>PP</option></select></div><div class="field"><label>From</label><input id="b1" type="number" min="1" max="${n}" value="1"></div><div class="field"><label>To</label><input id="b2" type="number" min="1" max="${n}" value="${n}"></div></div></div><div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="doBulk()">Fill Visible Employees</button></div></div>`;$('modal').classList.remove('hidden')}
+function doBulk(){
+  let m=$('am').value,v=$('bv').value,a=+$('b1').value,b=+$('b2').value,ds=attSelDept(),es=attSelEmp(),fbs=attSelFilledBy(),q=($('aes')?.value||'').trim().toLowerCase();
+  if(a>b)return appMessage('From date cannot be greater than To date.','Invalid Date Range','warning');
+  let targets=db.employees.filter(e=>isActiveEmployee(e)&&(!ds.length||ds.includes(e.dept))&&(!es.length||es.includes(e.id))&&(!fbs.length||fbs.includes(e.filledBy))&&(!q||`${e.id} ${e.name}`.toLowerCase().includes(q)));
+  if(!targets.length)return appMessage('No employees are currently visible under the selected filters.','No Employees','warning');
+  targets.forEach(e=>{for(let x=a;x<=b;x++)db.attendance[key(m,e.id,x)]=v});
+  save();closeModal();renderAtt();
+}
+
+
+/* ============================================================
+   MONTHLY SUMMARY
+   ============================================================ */
+// MONTHLY SUMMARY
+// ============================================================
+function summary(){
+  let m=$('am').value,n=dim(m),ds=attSelDept(),es=attSelEmp(),fbs=attSelFilledBy();
+  db.extraCols=db.extraCols||{advance:{},cash:{},tea:{}};db.loanAccounts=db.loanAccounts||[];db.extraCols.advance=db.extraCols.advance||{};db.extraCols.cash=db.extraCols.cash||{};db.extraCols.tea=db.extraCols.tea||{};
+  let totAdv=0,totCash=0,totTea=0;
+  let rows=db.employees.filter(e=>isActiveEmployee(e)&&(!ds.length||ds.includes(e.dept))&&(!es.length||es.includes(e.id))&&(!fbs.length||fbs.includes(e.filledBy))).map(e=>{
+    let c={P:0,A:0,H:0,PP:0,PD:0,PH:0},hoursSum=0,hoursEntryCount=0;
+    for(let d=1;d<=n;d++){let v=db.attendance[key(m,e.id,d)];if(isNum(v)){hoursSum+=Number(v);hoursEntryCount++}else if(c[v]!=null)c[v]++}
+    let present=c.P+c.PP+c.PD+c.PH+hoursEntryCount+(c.H/2),absent=c.A+(c.H/2);
+    let adv=Number(db.extraCols.advance[m+'|'+e.id]||0),cash=Number(db.extraCols.cash[m+'|'+e.id]||0),tea=Number(db.extraCols.tea[m+'|'+e.id]||0);
+    totAdv+=adv;totCash+=cash;totTea+=tea;
+    return[e.name,e.dept,present,absent,c.PP,c.PD,hoursSum,adv,cash,tea];
+  });
+  let totalsRow=rows.length?`<tr style="font-weight:700;background:#f7f8fc"><td>Total</td><td></td><td></td><td></td><td></td><td></td><td></td><td>${money(totAdv)}</td><td>${money(totCash)}</td><td>${money(totTea)}</td></tr>`:'';
+  $('modal').innerHTML=`<div class="box" style="width:min(1050px,100%)"><div class="mhead"><b>Attendance Summary</b><button class="btn" onclick="closeModal()">×</button></div><div class="mbody"><div class="wrap" style="max-height:60vh"><table data-table-key="attendanceModalSummary"><tr><th>Employee</th><th>Department</th><th>Present</th><th>Absent</th><th>Holiday</th><th>Double Shift</th><th>Total Hours</th><th>Advance</th><th>Advance Cash</th><th>Tea</th></tr>${rows.map(r=>`<tr>${r.map((x,i)=>`<td>${typeof x==='number'?((i===2||i===3)?(Number.isInteger(x)?x:x.toFixed(1)):Math.round(x)):esc(x)}</td>`).join('')}</tr>`).join('')||'<tr><td colspan="10" style="text-align:center;padding:20px">No employees match the selected filters.</td></tr>'}${totalsRow}</table></div></div><div class="mfoot"><button class="btn" onclick="printColumnModal('#modal table')">Print</button><button class="btn" onclick="closeModal()">Close</button></div></div>`;$('modal').classList.remove('hidden');
+}
+
+
+function tempFilterState(type){
+  let prop='temp'+(type==='payroll'?'Payroll':'Summary')+'Filters';
+  if(!Array.isArray(window[prop])) window[prop]=['month','search','filledBy','department','employee'];
+  return window[prop];
+}
+function toggleTempFilterMenu(id){
+  let menu=$(id);if(!menu)return;
+  document.querySelectorAll('.temp-filter-menu.show').forEach(x=>{if(x!==menu)x.classList.remove('show')});
+  menu.classList.toggle('show');
+}
+function closeTempFilterMenus(ev){
+  if(!ev.target.closest('.temp-filter-wrap'))document.querySelectorAll('.temp-filter-menu.show').forEach(x=>x.classList.remove('show'));
+}
+document.addEventListener('click',closeTempFilterMenus);
+function setTempFilter(type,field,checked){
+  let key=type==='payroll'?'payroll':'summary';
+  let prop=type==='payroll'?'tempPayrollFilters':'tempSummaryFilters';
+  let arr=[...tempFilterState(type)];
+  if(checked&&!arr.includes(field))arr.push(field);
+  if(!checked)arr=arr.filter(x=>x!==field);
+  window[prop]=arr;
+  applyTempFilterVisibility(type);
+}
+function applyTempFilterVisibility(type){
+  let prefix=type==='payroll'?'p':'s';
+  let arr=tempFilterState(type);
+  let map={month:prefix==='p'?'pm':'sm',search:prefix==='p'?'pes':'ses',filledBy:prefix==='p'?'pfbm':'sfbm',department:prefix==='p'?'pdm':'sdm',employee:prefix==='p'?'pem':'sem'};
+  Object.entries(map).forEach(([field,id])=>{
+    let el=$(id)?.closest('.filter-field');
+    if(el)el.classList.toggle('temp-filter-hidden',!arr.includes(field));
+  });
+}
+function tempFilterDropdown(type){
+  let id=type==='payroll'?'payrollTempFilterMenu':'summaryTempFilterMenu';
+  let headers=type==='payroll'
+    ? ['Employee Name','Department','Salary','Sunday Pay','Pay','ADVANCE','ADVANCE (CASH)','TEA','PF/ESI','Late Deduction','Loan Recovery','Previous Pending','Total Payable','Amount Paid','Remaining Balance','Payment Status','Approved']
+    : ['Employee','Department','Present','Absent','Holiday','Double Shift','Total Hrs','Salary','Sunday Pay','Pay','ADVANCE','ADVANCE (CASH)','TEA','PF/ESI','Total Payable'];
+  return `<div class="temp-filter-wrap">
+    <button class="btn" type="button" onclick="toggleTempFilterMenu('${id}')">Temporary Filter ▾</button>
+    <div id="${id}" class="temp-filter-menu">
+      ${headers.map((h,i)=>`<label class="tf-opt"><input type="checkbox" checked data-table-header="${esc(h)}" onchange="setTempTableFilter('${type}',${i},this.checked)"> ${esc(h)}</label>`).join('')}
+    </div>
+  </div>`;
+}
+
+function setTempTableFilter(type,index,checked){
+  let key=type==='payroll'?'payroll':'summary';
+  window.tempTableFilters=window.tempTableFilters||{};
+  window.tempTableFilters[key]=window.tempTableFilters[key]||{};
+  window.tempTableFilters[key][index]=checked;
+}
+
+/* ============================================================
+   TEMPORARY SPREADSHEET-STYLE HEADER FILTERS
+   ============================================================ */
+window.tempHeaderFilters=window.tempHeaderFilters||{};
+function resetTempHeaderFilters(key){window.tempHeaderFilters[key]={};closeHeaderFilterMenu()}
+function headerFilterValue(cell){
+  if(!cell)return '';
+  let clone=cell.cloneNode(true);clone.querySelectorAll('input,button,select').forEach(x=>x.remove());
+  return (clone.textContent||'').replace(/₹/g,'').replace(/,/g,'').trim();
+}
+function headerFilterIsNumeric(v){return v!=='' && isFinite(Number(String(v).replace(/₹/g,'').replace(/,/g,'')))}
+function headerFilterRows(table){return [...table.querySelectorAll(':scope > tbody > tr')].filter(tr=>tr.children.length>1)}
+function headerFilterGetValues(table,index){
+  let vals=headerFilterRows(table).map(tr=>headerFilterValue(tr.querySelector(`[data-col-index="${index}"]`)));
+  return [...new Set(vals)].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true,sensitivity:'base'}));
+}
+function headerFilterCompare(value,op,a,b){
+  let numeric=headerFilterIsNumeric(value)&&((a===''||headerFilterIsNumeric(a))&&(b===''||headerFilterIsNumeric(b)));
+  if(numeric){let v=Number(value.replace(/,/g,'')),x=Number(a.replace(/,/g,'')),y=b===''?0:Number(b.replace(/,/g,''));if(op==='eq')return v===x;if(op==='neq')return v!==x;if(op==='gt')return v>x;if(op==='gte')return v>=x;if(op==='lt')return v<x;if(op==='lte')return v<=x;if(op==='between')return v>=x&&v<=y;}
+  let v=String(value).toLowerCase(),x=String(a).toLowerCase();if(op==='eq')return v===x;if(op==='neq')return v!==x;if(op==='contains')return v.includes(x);if(op==='starts')return v.startsWith(x);if(op==='ends')return v.endsWith(x);return true;
+}
+function headerFilterState(key,index){return (window.tempHeaderFilters[key]||{})[index]||{mode:'values',values:null,op:'eq',a:'',b:''}}
+function openHeaderFilter(ev,tableKey,index){
+  if(db.settings.headerFiltersEnabled===false)return;
+  ev.stopPropagation();closeHeaderFilterMenu();
+  let table=document.querySelector(`table[data-table-key="${tableKey}"]`);if(!table)return;
+  let th=ev.currentTarget,vals=headerFilterGetValues(table,index),state=headerFilterState(tableKey,index),menu=document.createElement('div');menu.id='headerFilterMenu';menu.className='header-filter-menu';
+  let title=th.textContent.trim().replace(/⌄$/,'').trim();
+  let numeric=vals.filter(v=>v!=='').length>0&&vals.filter(v=>v!=='').every(headerFilterIsNumeric);
+  let ops=numeric?[['eq','Equals'],['neq','Not equals'],['gt','Greater than'],['gte','Greater than or equal'],['lt','Less than'],['lte','Less than or equal'],['between','Between']]:[['eq','Equals'],['neq','Not equals'],['contains','Contains'],['starts','Starts with'],['ends','Ends with']];
+  menu.innerHTML=`<div class="hf-title">Filter: ${esc(title)}</div><input class="hf-search" id="hfSearch" placeholder="Search values..."><select class="hf-select" id="hfMode"><option value="values">Select values</option><option value="condition">Condition</option></select><div id="hfValues"></div><div id="hfCondition" style="display:none"><select class="hf-select" id="hfOp">${ops.map(x=>`<option value="${x[0]}" ${state.op===x[0]?'selected':''}>${x[1]}</option>`).join('')}</select><div class="hf-inputs"><input id="hfA" placeholder="Value" value="${esc(state.a||'')}"><input id="hfB" placeholder="To" value="${esc(state.b||'')}" style="display:${state.op==='between'?'':'none'}"></div><div class="hf-note">Condition filters are temporary.</div></div><div class="hf-foot"><div class="left"><button class="btn" id="hfAll">Select All</button><button class="btn" id="hfClear">Clear</button></div><div class="right"><button class="btn" id="hfCancel">Cancel</button><button class="btn primary" id="hfApply">Apply</button></div></div>`;
+  document.body.appendChild(menu);
+  let valueBox=menu.querySelector('#hfValues'),selected=new Set(state.values===null?vals:state.values);
+  function renderValues(){let q=(menu.querySelector('#hfSearch').value||'').toLowerCase();valueBox.innerHTML=`<div class="hf-values">${vals.filter(v=>v.toLowerCase().includes(q)).map(v=>`<label class="hf-opt"><input type="checkbox" data-hfv value="${esc(v)}" ${selected.has(v)?'checked':''}><span>${esc(v||'(Blank)')}</span></label>`).join('')||'<div class="hf-note">No values found.</div>'}</div>`}
+  renderValues();menu.querySelector('#hfSearch').oninput=renderValues;
+  menu.querySelector('#hfMode').value=state.mode||'values';
+  function syncMode(){let c=menu.querySelector('#hfMode').value==='condition';menu.querySelector('#hfValues').style.display=c?'none':'';menu.querySelector('#hfSearch').style.display=c?'none':'';menu.querySelector('#hfCondition').style.display=c?'':'none'}
+  menu.querySelector('#hfMode').onchange=syncMode;syncMode();menu.querySelector('#hfOp').onchange=()=>menu.querySelector('#hfB').style.display=menu.querySelector('#hfOp').value==='between'?'':'none';
+  menu.querySelector('#hfAll').onclick=()=>{selected=new Set(vals);renderValues()};menu.querySelector('#hfClear').onclick=()=>{selected.clear();renderValues()};menu.querySelector('#hfCancel').onclick=closeHeaderFilterMenu;
+  menu.querySelector('#hfApply').onclick=()=>{let mode=menu.querySelector('#hfMode').value;if(mode==='values'){selected=new Set([...menu.querySelectorAll('[data-hfv]:checked')].map(x=>x.value));window.tempHeaderFilters[tableKey][index]={mode,values:[...selected]}}else{window.tempHeaderFilters[tableKey][index]={mode,values:null,op:menu.querySelector('#hfOp').value,a:menu.querySelector('#hfA').value.trim(),b:menu.querySelector('#hfB').value.trim()}}closeHeaderFilterMenu();applyHeaderFiltersToTable(tableKey)};
+  let r=th.getBoundingClientRect(),mw=300,left=Math.min(r.left,window.innerWidth-mw-12),top=Math.min(r.bottom+6,window.innerHeight-390);menu.style.left=Math.max(12,left)+'px';menu.style.top=Math.max(12,top)+'px';
+}
+function closeHeaderFilterMenu(){let m=$('headerFilterMenu');if(m)m.remove()}
+function closeHeaderFilterOnOutside(ev){let m=$('headerFilterMenu');if(m&&!m.contains(ev.target)&&!ev.target.closest('.table-header-filterable'))closeHeaderFilterMenu()}
+document.addEventListener('click',closeHeaderFilterOnOutside);
+function applyHeaderFiltersToTable(tableKey){
+  let table=document.querySelector(`table[data-table-key="${tableKey}"]`);if(!table)return;let filters=window.tempHeaderFilters[tableKey]||{};
+  headerFilterRows(table).forEach(tr=>{let show=true;for(let [idx,st] of Object.entries(filters)){let cell=tr.querySelector(`[data-col-index="${idx}"]`),v=headerFilterValue(cell);if(st.mode==='values'&&Array.isArray(st.values)&&!st.values.includes(v)){show=false;break}if(st.mode==='condition'&&st.a!==''&&!headerFilterCompare(v,st.op,st.a,st.b)){show=false;break}}tr.style.display=show?'':'none'});
+  table.querySelectorAll('thead th[data-col-index]').forEach(th=>th.classList.toggle('hf-active',!!filters[th.dataset.colIndex]));
+}
+function initHeaderFilterHeaders(table){
+  if(!table||!table.dataset.tableKey)return;let enabled=db.settings.headerFiltersEnabled!==false;
+  table.querySelectorAll(':scope > thead > tr:first-child > th').forEach(th=>{th.classList.toggle('table-header-filterable',enabled);th.onclick=enabled?function(ev){openHeaderFilter(ev,table.dataset.tableKey,Number(th.dataset.colIndex))}:null;th.title=enabled?'Click to filter':''});
+}
+function monthlySummary(){
+  resetTempHeaderFilters('monthlySummary');
+  let m=window.dashboardMonth||window.summaryMonth||mon();
+  updateMonthlySummaryNav(m);
+  let oldDept=Array.isArray(window.attDept)?window.attDept:[],oldEmp=Array.isArray(window.attEmp)?window.attEmp:[],oldFB=Array.isArray(window.attFilledBy)?window.attFilledBy:[],oldSearch='';
+  $('content').innerHTML=`<div class="card"><div class="head"><b>${esc(monthLabel(m))}</b><div class="actions no-print"><button id="monthlyClearFilters" class="btn filter-clear" onclick="clearMonthlySummaryFilters()">Clear Filters</button><button class="btn" onclick="printColumnModal()">Print</button><button class="btn" onclick="download()">Download</button></div></div>
+  <div class="filterbar no-print">
+    <div class="filter-field temp-summary-month"><label>Month</label><input id="sm" type="month" value="${m}" onchange="summaryMonthChange(this.value)"></div>
+    <div class="filter-field grow temp-summary-search" style="min-width:180px"><label>Search Employee</label><input id="ses" placeholder="Search by name or ID" value="${esc(oldSearch)}" oninput="syncMonthlyFilters()"></div>
+    <div class="filter-field temp-summary-filledby"><label>Filled By</label><div class="multi"><button class="btn multibtn" onclick="toggleMenu('sfbm')"><span id="sfbt">All Filled By</span>${CHEV}</button><div id="sfbm" class="menu"></div></div></div>
+    <div class="filter-field temp-summary-department"><label>Department</label><div class="multi"><button class="btn multibtn" onclick="toggleMenu('sdm')"><span id="sdt">All Departments</span>${CHEV}</button><div id="sdm" class="menu"></div></div></div>
+    <div class="filter-field temp-summary-employee"><label>Employee</label><div class="multi"><button class="btn multibtn" onclick="toggleMenu('sem')"><span id="set">All Employees</span>${CHEV}</button><div id="sem" class="menu"></div></div></div>
+  </div>
+  <div class="wrap"><table class="monthly-summary-table" data-table-key="monthlySummary"><thead><tr><th>Employee</th><th>Department</th><th>Present</th><th>Absent</th><th>Holiday</th><th>Double Shift</th><th>Total Hrs</th><th>Salary</th><th>Sunday Pay</th><th>Pay</th><th>ADVANCE</th><th>ADVANCE (CASH)</th><th>TEA</th><th>PF/ESI</th><th>Total Payable</th></tr></thead><tbody id="msr"></tbody></table></div></div>`;
+  let active=db.employees.filter(e=>isActiveEmployee(e)),depts=Array.isArray(db.settings.departments)?db.settings.departments:[],filled=[...new Set(active.map(e=>e.filledBy).filter(Boolean))];
+  $('sdm').innerHTML=menuSearchBar('sdm')+`<div class="menu-list"><label class="opt" data-all="1"><input type="checkbox" class="check" id="allSD" onchange="allMonthlyDept(this)">All Departments</label>`+depts.map(x=>`<label class="opt"><input type="checkbox" class="check sdc" value="${esc(x)}" ${!oldDept.length||oldDept.includes(x)?'checked':''} onchange="syncMonthlyFilters()"> ${esc(x)}</label>`).join('')+'</div>';
+  $('sem').innerHTML=menuSearchBar('sem')+`<div class="menu-list"><label class="opt" data-all="1"><input type="checkbox" class="check" id="allSE" onchange="allMonthlyEmp(this)">All Employees</label>`+active.map(e=>`<label class="opt"><input type="checkbox" class="check sec" value="${esc(e.id)}" ${!oldEmp.length||oldEmp.includes(e.id)?'checked':''} onchange="syncMonthlyFilters()"> ${esc(e.id)} - ${esc(e.name)}</label>`).join('')+'</div>';
+  $('sfbm').innerHTML=menuSearchBar('sfbm')+`<div class="menu-list"><label class="opt" data-all="1"><input type="checkbox" class="check" id="allSFB" onchange="allMonthlyFilledBy(this)">All Filled By</label>`+filled.map(x=>`<label class="opt"><input type="checkbox" class="check sfbc" value="${esc(x)}" ${!oldFB.length||oldFB.includes(x)?'checked':''} onchange="syncMonthlyFilters()"> ${esc(x)}</label>`).join('')+'</div>';
+  syncMonthlyFilters();
+}
+function summaryMonthChange(v){if(v){window.dashboardMonth=v;window.summaryMonth=v;window.attMonth=v;window.payrollMonth=v;updateMonthlySummaryNav(v);if($('top'))$('top').textContent=monthLabel(v);monthlySummary()}}
+function monthlyDept(){return [...document.querySelectorAll('.sdc:checked')].map(x=>x.value)}
+function monthlyEmp(){return [...document.querySelectorAll('.sec:checked')].map(x=>x.value)}
+function monthlyFB(){return [...document.querySelectorAll('.sfbc:checked')].map(x=>x.value)}
+function allMonthlyDept(c){let a=[...document.querySelectorAll('.sdc')],makeAll=!!c.checked;a.forEach(x=>x.checked=makeAll);syncMonthlyFilters()}
+function allMonthlyEmp(c){let a=[...document.querySelectorAll('.sec')],makeAll=!!c.checked;a.forEach(x=>x.checked=makeAll);syncMonthlyFilters()}
+function allMonthlyFilledBy(c){let a=[...document.querySelectorAll('.sfbc')],makeAll=!!c.checked;a.forEach(x=>x.checked=makeAll);syncMonthlyFilters()}
+function syncMonthlyFilters(){
+  let ds=monthlyDept(),es=monthlyEmp(),fs=monthlyFB(),d=document.querySelectorAll('.sdc').length,e=document.querySelectorAll('.sec').length,f=document.querySelectorAll('.sfbc').length;
+  if($('allSD'))$('allSD').checked=d===0||ds.length===d;if($('allSE'))$('allSE').checked=e===0||es.length===e;if($('allSFB'))$('allSFB').checked=f===0||fs.length===f;
+  if($('sdt'))$('sdt').textContent=d===0||ds.length===d?'All Departments':ds.length===0?'No selection':ds.length===1?ds[0]:ds.length+' Selected';
+  if($('set'))$('set').textContent=e===0||es.length===e?'All Employees':es.length===0?'No selection':es.length===1?(db.employees.find(x=>x.id===es[0])?.name||es[0]):es.length+' Selected';
+  if($('sfbt'))$('sfbt').textContent=f===0||fs.length===f?'All Filled By':fs.length===0?'No selection':fs.length===1?fs[0]:fs.length+' Selected';
+  document.querySelectorAll('#content .multi').forEach(box=>{let btn=box.querySelector('.multibtn'),menu=box.querySelector('.menu');if(!btn||!menu)return;let all=menu.querySelector('[id^="all"]');btn.classList.toggle('active',all&&!all.checked)});
+  let q=($('ses')?.value||'').trim();
+  if($('monthlyClearFilters'))$('monthlyClearFilters').classList.toggle('active',!!q || (d>0&&ds.length<d) || (e>0&&es.length<e) || (f>0&&fs.length<f));
+  renderMonthlySummary();
+  
+}
+function clearMonthlySummaryFilters(){document.querySelectorAll('.sdc,.sec,.sfbc').forEach(x=>x.checked=true);if($('allSD'))$('allSD').checked=true;if($('allSE'))$('allSE').checked=true;if($('allSFB'))$('allSFB').checked=true;if($('ses'))$('ses').value='';syncMonthlyFilters()}
+function renderMonthlySummary(){
+  if(!$('msr'))return;
+  let m=$('sm').value,ds=monthlyDept(),es=monthlyEmp(),fs=monthlyFB(),q=($('ses')?.value||'').trim().toLowerCase();
+  let rows=db.employees.filter(e=>isActiveEmployee(e)&&(!ds.length||ds.includes(e.dept))&&(!es.length||es.includes(e.id))&&(!fs.length||fs.includes(e.filledBy))&&(!q||`${e.id} ${e.name}`.toLowerCase().includes(q)));
+  let t={pay:0,adv:0,cash:0,tea:0,pf:0,total:0};
+  let html=rows.map(e=>{
+    let c=calc(e,m);
+    // Calculate attendance counts directly from stored attendance values so summary counts
+    // cannot inherit any invalid/undefined numeric value from payroll calculations.
+    let ac={P:0,A:0,H:0,PP:0,PD:0,PH:0},hoursEntryCount=0;
+    for(let d=1;d<=dim(m);d++){let v=db.attendance[key(m,e.id,d)];if(isNum(v)){hoursEntryCount++;}else if(Object.prototype.hasOwnProperty.call(ac,v))ac[v]++;}
+    let present=(Number(ac.P)||0)+(Number(ac.PP)||0)+(Number(ac.PD)||0)+(Number(ac.PH)||0)+hoursEntryCount+((Number(ac.H)||0)*0.5);
+    let absent=(Number(ac.A)||0)+((Number(ac.H)||0)*0.5);
+    let adv=Number(db.extraCols?.advance?.[m+'|'+e.id]||0),cash=Number(db.extraCols?.cash?.[m+'|'+e.id]||0),tea=Number(db.extraCols?.tea?.[m+'|'+e.id]||0);
+    let pfesi=Number(db.payroll?.[m+'|'+e.id]?.pfesi||0);
+    // Tea is always added; Advance, Cash Advance and PF/ESI are deducted.
+    let payable=c.earned+c.prev-c.loan-adv-cash+tea-pfesi;
+    Object.assign(t,{pay:t.pay+c.earned,adv:t.adv+adv,cash:t.cash+cash,tea:t.tea+tea,pf:t.pf+pfesi,total:t.total+payable});
+    return `<tr><td>${esc(e.name)}</td><td>${esc(e.dept)}</td><td>${Number.isInteger(present)?present:present.toFixed(1)}</td><td>${Number.isInteger(absent)?absent:absent.toFixed(1)}</td><td>${Math.round(c.PP)}</td><td>${Math.round(c.PD)}</td><td>${Math.round(c.hours)}</td><td>${Math.round(Number(e.salary||0))}</td><td>${Math.round(c.sundayBonus)}</td><td>${Math.round(c.earned)}</td><td>${Math.round(adv)}</td><td>${Math.round(cash)}</td><td>${Math.round(tea)}</td><td>${Math.round(pfesi)}</td><td>${Math.round(payable)}</td></tr>`;
+  }).join('');
+  let totalRow=rows.length?`<tr style="font-weight:700;background:#f7f8fc"><td>Total</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>${money(t.pay)}</td><td>${money(t.adv)}</td><td>${money(t.cash)}</td><td>${money(t.tea)}</td><td>${money(t.pf)}</td><td>${money(t.total)}</td></tr>`:'';
+  $('msr').innerHTML=html+totalRow||`<tr><td colspan="15" style="text-align:center;padding:20px">No employees match the selected filters.</td></tr>`;
+}
+function calc(e,m){
+  let n=dim(m),codeP=0,A=0,H=0,PP=0,PD=0,PH=0,numCount=0,hoursSum=0,stdH=Number(e.hours)||0;
+  for(let d=1;d<=n;d++){
+    let v=db.attendance[key(m,e.id,d)];
+    if(v==='P')codeP++;
+    else if(v==='A')A++;
+    else if(v==='H')H++;
+    else if(v==='PP')PP++;
+    else if(v==='PD')PD++;
+    else if(v==='PH')PH++;
+    else if(isNum(v)){numCount++;hoursSum+=Number(v)}
+  }
+  let P=codeP+numCount;
+  let daily=Number(e.salary||0)/n;
+  let sun=e.sundayType==='half'?daily*.5:e.sundayType==='double'?daily*2:Number(e.sundayPay||0);
+  let numPay=stdH>0?(hoursSum/stdH)*daily:0;
+  let payBase=(codeP+numCount+PH+H*.5)*daily+PP*daily+PD*2*daily+numPay;
+  let sundayBonus=PP*sun;
+  let earned=payBase+sundayBonus;
+  let hours=hoursSum;
+  let prev=prevPending(e.id,m),loan=db.loans.filter(x=>x.month===m&&x.empId===e.id).reduce((s,x)=>s+Number(x.amount||0),0);
+  let pfesi=Number(db.payroll?.[m+'|'+e.id]?.pfesi||0);
+  let total=earned+prev-loan-pfesi;
+  return{P,A,H,PP,PD,PH,sun,sundayBonus,payBase,earned,hours,prev,loan,pfesi,total};
+}
+
+
+/* ============================================================
+   PAYROLL
+   ============================================================ */
+// PAYROLL
+// ============================================================
+function payroll(){
+  if(!isAdmin()){page('employees');return}
+  resetTempHeaderFilters('payroll');
+  resetTempHeaderFilters('payrollSummary');
+  let m=window.dashboardMonth||window.payrollMonth||window.summaryMonth||mon();
+  window.payrollMonth=m;
+  window.summaryMonth=m;
+  if($('top'))$('top').textContent=monthLabel(m).replace(' Summary',' Payroll');
+  let oldDept=Array.isArray(window.payDept)?window.payDept:[],oldEmp=Array.isArray(window.payEmp)?window.payEmp:[],oldFB=Array.isArray(window.payFilledBy)?window.payFilledBy:[],oldSearch='';
+  $('content').innerHTML=`<div class="card"><div class="head"><b>${esc(monthLabel(m).replace(' Summary',' Payroll'))}</b><div class="actions no-print"><button id="payClearFilters" class="btn filter-clear" onclick="clearPayrollFilters()">Clear Filters</button><button class="btn" onclick="printPayrollCurrent()">Print</button><button class="btn" onclick="download()">Download</button></div></div>
+  <div class="filterbar no-print">
+    <div class="filter-field temp-payroll-month"><label>Month</label><input id="pm" type="month" value="${m}" onchange="payrollMonthChange(this.value)"></div>
+    <div class="filter-field grow temp-payroll-search" style="min-width:180px"><label>Search Employee</label><input id="pes" placeholder="Search by name or ID" value="${esc(oldSearch)}" oninput="syncPayrollFilters()"></div>
+    <div class="filter-field temp-payroll-filledby"><label>Filled By</label><div class="multi"><button class="btn multibtn" onclick="toggleMenu('pfbm')"><span id="pfbt">All Filled By</span>${CHEV}</button><div id="pfbm" class="menu"></div></div></div>
+    <div class="filter-field temp-payroll-department"><label>Department</label><div class="multi"><button class="btn multibtn" onclick="toggleMenu('pdm')"><span id="pdt">All Departments</span>${CHEV}</button><div id="pdm" class="menu"></div></div></div>
+    <div class="filter-field temp-payroll-employee"><label>Employee</label><div class="multi"><button class="btn multibtn" onclick="toggleMenu('pem')"><span id="pet">All Employees</span>${CHEV}</button><div id="pem" class="menu"></div></div></div>
+  </div>
+  <div class="payroll-tabs no-print"><button id="payTab" class="payroll-tab active" onclick="switchPayrollTab('payroll')">Payroll</button><button id="paySummaryTab" class="payroll-tab" onclick="switchPayrollTab('summary')">Summary</button></div>
+  <div id="payrollPane"><div class="wrap"><table class="payroll-table" data-table-key="payroll"><thead><tr><th>Employee Name</th><th>Department</th><th>Salary</th><th>Sunday Pay</th><th>Pay</th><th>ADVANCE</th><th>ADVANCE (CASH)</th><th>TEA</th><th>PF/ESI</th><th>Late Deduction</th><th>Loan Recovery</th><th>Previous Pending</th><th>Total Payable</th><th>Amount Paid</th><th>Remaining Balance</th><th>Payment Status</th><th>Approved</th></tr></thead><tbody id="pr"></tbody><tfoot id="prt"></tfoot></table></div></div>
+  <div id="paySummaryPane" style="display:none"><div class="wrap"><table class="monthly-summary-table" data-table-key="payrollSummary"><thead><tr><th>Employee</th><th>Department</th><th>Present</th><th>Absent</th><th>Holiday</th><th>Double Shift</th><th>Total Hrs</th><th>Salary</th><th>Sunday Pay</th><th>Pay</th><th>ADVANCE</th><th>ADVANCE (CASH)</th><th>TEA</th><th>PF/ESI</th><th>Total Payable</th><th>Amount Paid</th><th>Remaining Balance</th></tr></thead><tbody id="prs"></tbody><tfoot id="prst"></tfoot></table></div></div></div>`;
+  let active=db.employees.filter(e=>isActiveEmployee(e)),depts=Array.isArray(db.settings.departments)?db.settings.departments:[],filled=[...new Set(active.map(e=>e.filledBy).filter(Boolean))];
+  $('pdm').innerHTML=menuSearchBar('pdm')+`<div class="menu-list"><label class="opt"><input type="checkbox" class="check" id="allPD" onchange="allPayrollDept(this)">All Departments</label>`+depts.map(x=>`<label class="opt"><input type="checkbox" class="check pdc" value="${esc(x)}" ${!oldDept.length||oldDept.includes(x)?'checked':''} onchange="syncPayrollFilters()"> ${esc(x)}</label>`).join('')+'</div>';
+  $('pem').innerHTML=menuSearchBar('pem')+`<div class="menu-list"><label class="opt"><input type="checkbox" class="check" id="allPE" onchange="allPayrollEmp(this)">All Employees</label>`+active.map(e=>`<label class="opt"><input type="checkbox" class="check pec" value="${esc(e.id)}" ${!oldEmp.length||oldEmp.includes(e.id)?'checked':''} onchange="syncPayrollFilters()"> ${esc(e.id)} - ${esc(e.name)}</label>`).join('')+'</div>';
+  $('pfbm').innerHTML=menuSearchBar('pfbm')+`<div class="menu-list"><label class="opt"><input type="checkbox" class="check" id="allPFB" onchange="allPayrollFilledBy(this)">All Filled By</label>`+filled.map(x=>`<label class="opt"><input type="checkbox" class="check pfc" value="${esc(x)}" ${!oldFB.length||oldFB.includes(x)?'checked':''} onchange="syncPayrollFilters()"> ${esc(x)}</label>`).join('')+'</div>';
+  syncPayrollFilters();
+  
+}
+function printPayrollCurrent(){
+  let sel=$('paySummaryPane')?.style.display!=='none'?'#paySummaryPane table':'#payrollPane table';
+  printColumnModal(sel);
+}
+function payrollMonthChange(v){if(v){window.dashboardMonth=v;window.payrollMonth=v;window.summaryMonth=v;window.attMonth=v;payroll()}}
+function payrollDept(){return [...document.querySelectorAll('.pdc:checked')].map(x=>x.value)}
+function payrollEmp(){return [...document.querySelectorAll('.pec:checked')].map(x=>x.value)}
+function payrollFB(){return [...document.querySelectorAll('.pfc:checked')].map(x=>x.value)}
+function allPayrollDept(c){[...document.querySelectorAll('.pdc')].forEach(x=>x.checked=!!c.checked);syncPayrollFilters()}
+function allPayrollEmp(c){[...document.querySelectorAll('.pec')].forEach(x=>x.checked=!!c.checked);syncPayrollFilters()}
+function allPayrollFilledBy(c){[...document.querySelectorAll('.pfc')].forEach(x=>x.checked=!!c.checked);syncPayrollFilters()}
+function syncPayrollFilters(){
+  let ds=payrollDept(),es=payrollEmp(),fs=payrollFB(),d=document.querySelectorAll('.pdc').length,e=document.querySelectorAll('.pec').length,f=document.querySelectorAll('.pfc').length;
+  if($('allPD'))$('allPD').checked=d===0||ds.length===d;if($('allPE'))$('allPE').checked=e===0||es.length===e;if($('allPFB'))$('allPFB').checked=f===0||fs.length===f;
+  if($('pdt'))$('pdt').textContent=d===0||ds.length===d?'All Departments':ds.length===0?'No selection':ds.length===1?ds[0]:ds.length+' Selected';
+  if($('pet'))$('pet').textContent=e===0||es.length===e?'All Employees':es.length===0?'No selection':es.length===1?(db.employees.find(x=>x.id===es[0])?.name||es[0]):es.length+' Selected';
+  if($('pfbt'))$('pfbt').textContent=f===0||fs.length===f?'All Filled By':fs.length===0?'No selection':fs.length===1?fs[0]:fs.length+' Selected';
+  document.querySelectorAll('#content .multi').forEach(box=>{let btn=box.querySelector('.multibtn'),menu=box.querySelector('.menu');if(!btn||!menu)return;let all=menu.querySelector('[id^="all"]');btn.classList.toggle('active',all&&!all.checked)});
+  let q=($('pes')?.value||'').trim();if($('payClearFilters'))$('payClearFilters').classList.toggle('active',!!q||(d>0&&ds.length<d)||(e>0&&es.length<e)||(f>0&&fs.length<f));
+  renderPay();if($('paySummaryPane')?.style.display!=='none')renderPayrollSummary();
+}
+function clearPayrollFilters(){document.querySelectorAll('.pdc,.pec,.pfc').forEach(x=>x.checked=true);if($('allPD'))$('allPD').checked=true;if($('allPE'))$('allPE').checked=true;if($('allPFB'))$('allPFB').checked=true;if($('pes'))$('pes').value='';syncPayrollFilters()}
+function switchPayrollTab(tab){let p=tab==='payroll';$('payrollPane').style.display=p?'':'none';$('paySummaryPane').style.display=p?'none':'';$('payTab').classList.toggle('active',p);$('paySummaryTab').classList.toggle('active',!p);if(!p)renderPayrollSummary()}
+function payrollRows(m){let ds=payrollDept(),es=payrollEmp(),fs=payrollFB(),q=($('pes')?.value||'').trim().toLowerCase();return db.employees.filter(e=>isActiveEmployee(e)&&(!ds.length||ds.includes(e.dept))&&(!es.length||es.includes(e.id))&&(!fs.length||fs.includes(e.filledBy))&&(!q||`${e.id} ${e.name}`.toLowerCase().includes(q)))}
+function prevPending(id,m){let d=new Date(m+'-01T00:00:00');d.setMonth(d.getMonth()-1);let pm=d.toISOString().slice(0,7),p=db.payroll[pm+'|'+id];return p?Number(p.remaining||0):0}
+function payrollCalc(e,m,p){
+  let c=calc(e,m),k=m+'|'+e.id; p=p||db.payroll[k]||{};
+  let prev=prevPending(e.id,m),adv=Number(db.extraCols?.advance?.[k]||0),cash=Number(db.extraCols?.cash?.[k]||0),tea=Number(db.extraCols?.tea?.[k]||0),pfesi=Number(p.pfesi||0),late=Number(p.late||0),loan=Number(p.loanRecovery||0);
+  let total=c.earned+prev-adv-cash+tea-pfesi-late-loan;
+  let paid=Number(p.paid||0),remaining=p.approved?0:Math.max(0,total-paid);
+  return{...c,prev,adv,cash,tea,pfesi,late,loanRecovery:loan,total,paid,remaining,approved:!!p.approved};
+}
+function renderPay(){
+  let m=$('pm')?.value||window.payrollMonth||window.summaryMonth||mon();
+  window.payrollMonth=m;window.summaryMonth=m;
+  if($('top'))$('top').textContent=monthLabel(m).replace(' Summary',' Payroll');
+  let rows=payrollRows(m);
+  let totals={pay:0,adv:0,cash:0,tea:0,pfesi:0,late:0,loan:0,prev:0,total:0,paid:0,remaining:0};
+  $('pr').innerHTML=rows.map(e=>{
+    let k=m+'|'+e.id,p=db.payroll[k]||{},c=payrollCalc(e,m,p);
+    db.payroll[k]={...p,month:m,empId:e.id,total:c.total,paid:c.paid,remaining:c.remaining,approved:c.approved,pfesi:c.pfesi,late:c.late,loanRecovery:c.loanRecovery};
+    totals.pay+=Number(c.earned||0);totals.adv+=Number(c.adv||0);totals.cash+=Number(c.cash||0);totals.tea+=Number(c.tea||0);totals.pfesi+=Number(c.pfesi||0);totals.late+=Number(c.late||0);totals.loan+=Number(c.loanRecovery||0);totals.prev+=Number(c.prev||0);totals.total+=Number(c.total||0);totals.paid+=Number(c.paid||0);totals.remaining+=Number(c.remaining||0);
+    return `<tr><td>${esc(e.name)}</td><td>${esc(e.dept)}</td><td>${plainMoney(e.salary)}</td><td>${plainMoney(c.sundayBonus)}</td><td>${plainMoney(c.earned)}</td><td class="att-amount-cell"><button class="att-btn ${Number(c.adv)?'att-num':''}" onclick="payrollCellMenu(event,'advance','${m}','${e.id}',${Number(c.adv)||0})">${Number(c.adv)?plainMoney(c.adv):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.cash)?'att-num':''}" onclick="payrollCellMenu(event,'cash','${m}','${e.id}',${Number(c.cash)||0})">${Number(c.cash)?plainMoney(c.cash):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.tea)?'att-num':''}" onclick="payrollCellMenu(event,'tea','${m}','${e.id}',${Number(c.tea)||0})">${Number(c.tea)?plainMoney(c.tea):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.pfesi)?'att-num':''}" onclick="payrollCellMenu(event,'pfesi','${m}','${e.id}',${Number(c.pfesi)||0})">${Number(c.pfesi)?plainMoney(c.pfesi):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.late)?'att-num':''}" onclick="payrollCellMenu(event,'late','${m}','${e.id}',${Number(c.late)||0})">${Number(c.late)?plainMoney(c.late):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.loanRecovery)?'att-num':''}" onclick="payrollCellMenu(event,'loanRecovery','${m}','${e.id}',${Number(c.loanRecovery)||0})">${Number(c.loanRecovery)?plainMoney(c.loanRecovery):'—'}</button></td><td>${plainMoney(c.prev)}</td><td>${money(c.total)}</td><td class="att-amount-cell"><button class="att-btn ${Number(c.paid)?'att-num':''}" onclick="payrollCellMenu(event,'paid','${m}','${e.id}',${Number(c.paid)||0})">${Number(c.paid)?plainMoney(c.paid):'—'}</button></td><td>${plainMoney(c.remaining)}</td><td>${c.approved?'Paid':'Pending'}</td><td><input class="check" type="checkbox" ${c.approved?'checked':''} onchange="approve('${m}','${e.id}',this.checked)"></td></tr>`;
+  }).join('')||'<tr><td colspan="17" style="text-align:center;padding:20px">No employees match the selected filters.</td></tr>';
+  if($('prt'))$('prt').innerHTML=rows.length?`<tr><td>Totals</td><td></td><td></td><td></td><td>${plainMoney(totals.pay)}</td><td>${plainMoney(totals.adv)}</td><td>${plainMoney(totals.cash)}</td><td>${plainMoney(totals.tea)}</td><td>${plainMoney(totals.pfesi)}</td><td>${plainMoney(totals.late)}</td><td>${plainMoney(totals.loan)}</td><td>${plainMoney(totals.prev)}</td><td>${money(totals.total)}</td><td>${plainMoney(totals.paid)}</td><td>${plainMoney(totals.remaining)}</td><td></td><td></td></tr>`:'';
+  save();
+}
+function payrollCellMenu(ev,field,m,id,current){
+  ev.stopPropagation();
+  let old=document.getElementById('cellStatusMenu');if(old)old.remove();
+  let labels={advance:'Advance',cash:'Advance Cash (₹)',tea:'Tea Amount',pfesi:'PF/ESI',late:'Late Deduction',loanRecovery:'Loan Recovery',paid:'Amount Paid'};
+  let menu=document.createElement('div');menu.id='cellStatusMenu';
+  menu.style.cssText='position:fixed;z-index:300;background:#fff;border:1px solid #e2e4ec;border-radius:10px;box-shadow:0 8px 24px rgba(15,20,35,.16);padding:8px;display:flex;flex-wrap:wrap;gap:5px;max-width:250px;align-items:center';
+  let label=document.createElement('div');label.style.cssText='width:100%;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em';
+  label.textContent=labels[field]||field;menu.appendChild(label);
+  let inputWrap=document.createElement('div');inputWrap.style.cssText='display:flex;gap:5px;align-items:center;flex:1';
+  let input=document.createElement('input');input.type='number';input.min='0';input.step='1';input.placeholder='Amount';input.style.cssText='width:90px;min-height:32px;padding:5px 7px';
+  if(Number(current))input.value=Number(current);
+  let apply=v=>{
+    v=Math.max(0,Math.round(Number(v)||0));
+    if(field==='advance'||field==='cash'||field==='tea'){
+      db.extraCols=db.extraCols||{advance:{},cash:{},tea:{}};db.extraCols[field]=db.extraCols[field]||{};
+      if(v)db.extraCols[field][m+'|'+id]=v;else delete db.extraCols[field][m+'|'+id];
+      save();
+    }else if(field==='paid'){paid(m,id,v);return}
+    else{payInput(field,m,id,v);return}
+    renderPay();if($('paySummaryPane')?.style.display!=='none')renderPayrollSummary();
+  };
+  input.onkeydown=e2=>{
+    if(e2.key==='Escape'){menu.remove();return}
+    if(e2.key==='Enter'&&input.value!==''){
+      e2.preventDefault();
+      apply(input.value);menu.remove();
+      setTimeout(()=>{
+        let rows=[...document.querySelectorAll('#pr tr')],sel=`button[onclick*="payrollCellMenu(event,'${field}','${m}'"]`;
+        let idx=rows.findIndex(tr=>tr.querySelector(`button[onclick*="payrollCellMenu(event,'${field}','${m}','${id}'"]`));
+        let next=idx>=0?rows[idx+1]:null;
+        if(next){let b=next.querySelector(sel);if(b)b.click()}
+      },30);
+    }
+  };
+  let okBtn=document.createElement('button');okBtn.className='btn primary';okBtn.style.cssText='min-height:32px;padding:6px 12px';okBtn.textContent='Set';
+  okBtn.onclick=()=>{if(input.value!==''){apply(input.value);menu.remove()}};
+  inputWrap.appendChild(input);inputWrap.appendChild(okBtn);menu.appendChild(inputWrap);
+  let clearBtn=document.createElement('button');clearBtn.className='btn btn-danger';clearBtn.style.cssText='min-height:32px;padding:6px 10px;margin-left:auto';clearBtn.textContent='Clear';
+  clearBtn.onclick=()=>{apply(0);menu.remove()};menu.appendChild(clearBtn);
+  document.body.appendChild(menu);let r=ev.currentTarget.getBoundingClientRect();
+  menu.style.left=Math.min(r.left,window.innerWidth-260)+'px';menu.style.top=Math.min(r.bottom+4,window.innerHeight-110)+'px';
+  input.focus();
+}
+function payInput(field,m,id,v){let val=Math.max(0,Math.round(Number(v)||0));if(field==='loanRecovery'){setLoanRecovery(m,id,val,'Payroll');return}let k=m+'|'+id;db.payroll[k]=db.payroll[k]||{};db.payroll[k][field]=val;save();renderPay();if($('paySummaryPane')?.style.display!=='none')renderPayrollSummary()}
+function paid(m,id,v){let k=m+'|'+id;db.payroll[k]=db.payroll[k]||{};db.payroll[k].paid=Math.max(0,Math.round(Number(v)||0));save();renderPay();if($('paySummaryPane')?.style.display!=='none')renderPayrollSummary()}
+function approve(m,id,v){let k=m+'|'+id;db.payroll[k]=db.payroll[k]||{};db.payroll[k].approved=!!v;let e=db.employees.find(x=>x.id===id),c=payrollCalc(e,m,db.payroll[k]);db.payroll[k].remaining=v?0:Math.max(0,c.total-Number(db.payroll[k].paid||0));db.payroll[k].total=c.total;save();renderPay();if($('paySummaryPane')?.style.display!=='none')renderPayrollSummary()}
+function bulkApprove(){let m=$('pm').value;appConfirm('Approve all active employees for this month?',()=>{payrollRows(m).forEach(e=>{let k=m+'|'+e.id;db.payroll[k]=db.payroll[k]||{};db.payroll[k].approved=true;db.payroll[k].remaining=0});save();renderPay();if($('paySummaryPane')?.style.display!=='none')renderPayrollSummary()},{title:'Approve Payroll',yesLabel:'Approve All'})}
+function renderPayrollSummary(){
+  if(!$('prs'))return;
+  let m=$('pm')?.value||window.payrollMonth||window.summaryMonth||mon();
+  window.payrollMonth=m;window.summaryMonth=m;
+  let rows=payrollRows(m);
+  let totals={pay:0,adv:0,cash:0,tea:0,pfesi:0,total:0,paid:0,remaining:0};
+  let html=rows.map(e=>{
+    let c=calc(e,m),k=m+'|'+e.id,p=db.payroll[k]||{},pc=payrollCalc(e,m,p);
+    let ac={P:0,A:0,H:0,PP:0,PD:0,PH:0},hoursEntryCount=0;
+    for(let d=1;d<=dim(m);d++){let v=db.attendance[key(m,e.id,d)];if(isNum(v))hoursEntryCount++;else if(Object.prototype.hasOwnProperty.call(ac,v))ac[v]++;}
+    let present=ac.P+ac.PP+ac.PD+ac.PH+hoursEntryCount+ac.H*.5,absent=ac.A+ac.H*.5;
+    let summaryPayable=c.earned+c.prev-c.loan-pc.adv-pc.cash+pc.tea-pc.pfesi;
+    totals.pay+=Number(c.earned||0);totals.adv+=Number(pc.adv||0);totals.cash+=Number(pc.cash||0);totals.tea+=Number(pc.tea||0);totals.pfesi+=Number(pc.pfesi||0);totals.total+=Number(summaryPayable||0);totals.paid+=Number(pc.paid||0);totals.remaining+=Number(pc.remaining||0);
+    return `<tr><td>${esc(e.name)}</td><td>${esc(e.dept)}</td><td>${Number.isInteger(present)?present:present.toFixed(1)}</td><td>${Number.isInteger(absent)?absent:absent.toFixed(1)}</td><td>${Math.round(c.PP)}</td><td>${Math.round(c.PD)}</td><td>${Math.round(c.hours)}</td><td>${plainMoney(e.salary)}</td><td>${plainMoney(c.sundayBonus)}</td><td>${plainMoney(c.earned)}</td><td>${plainMoney(pc.adv)}</td><td>${plainMoney(pc.cash)}</td><td>${plainMoney(pc.tea)}</td><td>${plainMoney(pc.pfesi)}</td><td>${money(summaryPayable)}</td><td>${plainMoney(pc.paid)}</td><td>${plainMoney(pc.remaining)}</td></tr>`;
+  }).join('');
+  $('prs').innerHTML=html||'<tr><td colspan="17" style="text-align:center;padding:20px">No employees match the selected filters.</td></tr>';
+  if($('prst'))$('prst').innerHTML=rows.length?`<tr><td>Totals</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>${money(totals.pay)}</td><td>${money(totals.adv)}</td><td>${money(totals.cash)}</td><td>${money(totals.tea)}</td><td>${money(totals.pfesi)}</td><td>${money(totals.total)}</td><td>${money(totals.paid)}</td><td>${money(totals.remaining)}</td></tr>`:'';
+}
+
+
+/* ============================================================
+   LOANS & RECOVERY
+   ============================================================ */
+// LOANS & RECOVERY
+// ============================================================
+function loanAccounts(){return db.loanAccounts||[]}
+function loanAccount(empId){return loanAccounts().find(x=>x.empId===empId&&x.status!=='Closed')||null}
+function loanRecoveries(empId){return (db.loans||[]).filter(x=>x.empId===empId)}
+function loanRecoveredTotal(empId){return loanRecoveries(empId).reduce((s,x)=>s+Number(x.amount||0),0)}
+function loanBalance(account){return Math.max(0,Number(account?.amount||0)-loanRecoveredTotal(account?.empId||''))}
+function currentLoanRecovery(m,id){return (db.loans||[]).find(x=>x.month===m&&x.empId===id)||null}
+function setLoanRecovery(m,id,amount,source){
+  amount=Math.max(0,Math.round(Number(amount)||0));let acc=loanAccount(id),bal=loanBalance(acc);
+  if(acc&&amount>bal)return appMessage('Recovery amount cannot be greater than remaining loan balance');
+  let idx=(db.loans||[]).findIndex(x=>x.month===m&&x.empId===id);
+  if(amount===0){if(idx>=0)db.loans.splice(idx,1)}else{let rec={month:m,empId:id,amount,date:new Date().toISOString(),source:source||'Payroll'};if(idx>=0)db.loans[idx]={...db.loans[idx],...rec};else db.loans.push(rec)}
+  let k=m+'|'+id;db.payroll[k]=db.payroll[k]||{};db.payroll[k].loanRecovery=amount;save();renderPay();if($('paySummaryPane')?.style.display!=='none')renderPayrollSummary();if(current==='loans')loans();
+}
+function loanDateDisplay(v){let s=String(v||'');if(/^\d{4}-\d{2}-\d{2}$/.test(s)){let [y,m,d]=s.split('-');return d+'/'+m+'/'+y.slice(2)}return s}
+function loans(){
+  if(!isAdmin()){page('employees');return}
+  let accounts=loanAccounts(),totalLoan=accounts.reduce((s,x)=>s+Number(x.amount||0),0),totalPaid=accounts.reduce((s,x)=>s+loanRecoveredTotal(x.empId),0),outstanding=Math.max(0,totalLoan-totalPaid);
+  $('content').innerHTML=`<div class="card"><div class="head"><b>Loan Details</b><div class="no-print"><button class="btn primary" onclick="loanModal()">${ICO.plus} Add Loan</button></div></div>${accounts.length?`<div class="wrap"><table data-table-key="loans"><thead><tr><th>Employee Name</th><th>Department</th><th>Date</th><th>Loan Amount</th><th>Remaining Balance</th><th>Pay</th><th>View</th></tr></thead><tbody>${accounts.map(x=>{let e=db.employees.find(y=>y.id===x.empId),bal=loanBalance(x);return `<tr><td>${esc(e?.name||x.empId)}</td><td>${esc(e?.dept||'')}</td><td>${loanDateDisplay(x.date)}</td><td>${money(x.amount)}</td><td>${money(bal)}</td><td><button class="btn" onclick="loanPayModal('${esc(x.empId)}')">Set / Clear</button></td><td><button class="btn" title="View payment history" onclick="loanView('${esc(x.empId)}')">👁</button></td></tr>`}).join('')}</tbody></table></div>`:`<div class="empty-state"><div class="es-ico">◇</div>No loans yet. Add a loan to start tracking recovery.</div>`}</div>${accounts.length?`<div class="card"><div class="head"><b>Loan Summary</b><div style="display:flex;gap:24px;flex-wrap:wrap"><span>Loan Amount <b>${money(totalLoan)}</b></span><span>Total Paid <b>${money(totalPaid)}</b></span><span>Outstanding <b>${money(outstanding)}</b></span></div></div></div>`:''}`;tableSettingsInit();applyTableSettings();
+}
+function loanModal(){let active=db.employees.filter(isActiveEmployee);$('modal').innerHTML=`<div class="box"><div class="mhead"><b>Add Loan</b><button class="btn" onclick="closeModal()">×</button></div><div class="mbody"><div class="grid"><div class="field"><label>Employee ID</label><select id="loanEmp" onchange="loanEmployeeChanged()">${active.map(e=>`<option value="${esc(e.id)}">${esc(e.id)}</option>`).join('')}</select></div><div class="field"><label>Employee Name</label><input id="loanName" readonly></div><div class="field"><label>Department</label><input id="loanDept" readonly></div><div class="field"><label>Date</label><input id="loanDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div class="field"><label>Loan Amount</label><input id="loanAmount" type="number" min="0" step="1"></div></div></div><div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveLoanAccount()">Save</button></div></div>`;$('modal').classList.remove('hidden');loanEmployeeChanged()}
+function loanEmployeeChanged(){let e=db.employees.find(x=>x.id===$('loanEmp')?.value);if($('loanName'))$('loanName').value=e?.name||'';if($('loanDept'))$('loanDept').value=e?.dept||''}
+function saveLoanAccount(){let id=$('loanEmp')?.value,e=db.employees.find(x=>x.id===id),amount=Math.max(0,Math.round(Number($('loanAmount')?.value)||0)),date=$('loanDate')?.value;if(!id||!e||!date||amount<=0)return appMessage('Enter employee, date and loan amount');if(loanAccount(id))return appMessage('This employee already has an active loan');db.loanAccounts.push({empId:id,amount,date,status:'Active'});save();closeModal();loans()}
+function loanPayModal(id){let e=db.employees.find(x=>x.id===id),m=mon(),bal=loanBalance(loanAccount(id));$('modal').innerHTML=`<div class="box"><div class="mhead"><b>Loan Payment - ${esc(e?.name||id)}</b><button class="btn" onclick="closeModal()">×</button></div><div class="mbody"><div class="grid"><div class="field"><label>Month</label><input id="loanPayMonth" type="month" value="${m}"></div><div class="field"><label>Remaining Balance</label><input value="${Math.round(bal)}" readonly></div><div class="field"><label>Pay Amount</label><input id="loanPayAmount" type="number" min="0" max="${Math.round(bal)}" step="1"></div></div></div><div class="mfoot"><button class="btn" onclick="$('loanPayAmount').value=''">Clear</button><button class="btn primary" onclick="setLoanPaymentFromModal('${esc(id)}')">Set</button></div></div>`;$('modal').classList.remove('hidden')}
+function setLoanPaymentFromModal(id){let m=$('loanPayMonth')?.value||mon(),a=Math.max(0,Math.round(Number($('loanPayAmount')?.value)||0));if(a<=0)return appMessage('Enter payment amount');setLoanRecovery(m,id,a,'Loan');closeModal()}
+function loanView(id){let e=db.employees.find(x=>x.id===id),acc=loanAccount(id),rows=loanRecoveries(id).slice().sort((a,b)=>String(a.date||a.month).localeCompare(String(b.date||b.month))),running=0,total=rows.reduce((s,x)=>s+Number(x.amount||0),0),bal=Math.max(0,Number(acc?.amount||0)-total);$('modal').innerHTML=`<div class="box"><div class="mhead"><b>Loan Payment History - ${esc(e?.name||id)}</b><button class="btn" onclick="closeModal()">×</button></div><div class="mbody"><div style="display:flex;gap:22px;flex-wrap:wrap;margin-bottom:16px"><span>Loan Amount: <b>${money(acc?.amount||0)}</b></span><span>Amount Paid: <b>${money(total)}</b></span><span>Remaining: <b>${money(bal)}</b></span></div>${rows.length?`<div class="wrap"><table><thead><tr><th>Date</th><th>Amount Paid</th><th>Remaining Balance</th></tr></thead><tbody>${rows.map(r=>{running+=Number(r.amount||0);return `<tr><td>${loanDateDisplay(r.month||String(r.date||'').slice(0,10))}</td><td>${money(r.amount)}</td><td>${money(Math.max(0,Number(acc?.amount||0)-running))}</td></tr>`}).join('')}</tbody></table></div>`:`<div class="empty-state">No payment history yet.</div>`}</div><div class="mfoot"><button class="btn" onclick="closeModal()">Close</button></div></div>`;$('modal').classList.remove('hidden')}
+function delLoan(i){appConfirm('Delete this recovery entry?',()=>{db.loans.splice(i,1);save();loans()},{title:'Delete Recovery',yesLabel:'Delete',danger:true})}
+
+
+/* ============================================================
+   REPORTS
+   ============================================================ */
+// REPORTS
+// ============================================================
+function reports(){
+  let items=[
+    {t:'Employee Master',d:'Full roster with department, salary and status.',p:'employees'},
+    {t:'Attendance',d:'Monthly day-by-day attendance grid, ready to print or export.',p:'attendance'},
+    {t:'Payroll',d:'Payable, deductions and payment status for the month.',p:'payroll'},
+    {t:'Loan Recovery',d:'Every recovery entry logged against an employee.',p:'loans'}
+  ];
+  $('content').innerHTML=`<div class="card"><div class="head"><b>Reports</b></div><p class="sub" style="padding:0 20px;margin:14px 0 0">Open a section below, then use Print or Download from its toolbar to export.</p><div class="quick-actions" style="padding-bottom:20px">${items.map(x=>`<button class="qa-btn" onclick="page('${x.p}')"><span class="qa-ico">${ICO.check}</span><b>${x.t}</b><span class="m-sub">${x.d}</span></button>`).join('')}</div></div>`;
+}
+const TABLE_SETTING_NAMES={employees:'Employee Master',attendance:'Monthly Attendance',attendanceModalSummary:'Attendance Summary Popup',monthlySummary:'Monthly Summary',payroll:'Monthly Payroll',payrollSummary:'Payroll Summary / Status',loans:'Loan Recovery'};
+const TABLE_SETTING_DEFAULTS={employees:['Employee ID','Employee Name','Department','Salary','Sunday Pay','Working Hours','Filled By','Account Type','Status','Action'],attendance:['Employee','Department',...Array.from({length:31},(_,i)=>String(i+1).padStart(2,'0')),'ADVANCE','ADVANCE CASH','TEA'],attendanceModalSummary:['Employee','Department','Present','Absent','Holiday','Double Shift','Total Hours','Advance','Advance Cash','Tea'],monthlySummary:['Employee','Department','Present','Absent','Holiday','Double Shift','Total Hrs','Salary','Sunday Pay','Pay','ADVANCE','ADVANCE (CASH)','TEA','PF/ESI','Total Payable'],payroll:['Employee Name','Department','Salary','Sunday Pay','Pay','ADVANCE','ADVANCE (CASH)','TEA','PF/ESI','Late Deduction','Loan Recovery','Previous Pending','Total Payable','Amount Paid','Remaining Balance','Payment Status','Approved'],payrollSummary:['Employee','Department','Present','Absent','Holiday','Double Shift','Total Hrs','Salary','Sunday Pay','Pay','ADVANCE','ADVANCE (CASH)','TEA','PF/ESI','Total Payable','Amount Paid','Remaining Balance'],loans:['Employee Name','Department','Date','Loan Amount','Remaining Balance','Pay','View']};
+
+
+/* ============================================================
+   TABLE SETTINGS
+   ============================================================ */
+// TABLE SETTINGS / COLUMN CUSTOMIZATION
+// ============================================================
+function tableSettingsInit(){
+  db.settings.tableSettings=db.settings.tableSettings||{};
+  Object.entries(TABLE_SETTING_DEFAULTS).forEach(([key,names])=>ensureTableSetting(key,null,names));
+  document.querySelectorAll('#content table[data-table-key]').forEach(t=>ensureTableSetting(t.dataset.tableKey,t));
+}
+function ensureTableSetting(key,table,names){
+  if(!key)return null;
+  db.settings.tableSettings=db.settings.tableSettings||{};
+  if(!names){
+    let headers=[...table.querySelectorAll(':scope > thead > tr:first-child > th')];
+    if(!headers.length)headers=[...table.querySelectorAll(':scope > tr:first-child > th')];
+    names=headers.map(h=>h.textContent.trim());
+  }
+  let cfg=db.settings.tableSettings[key];
+  if(!cfg||!Array.isArray(cfg.columns)){
+    cfg={columns:names.map((name,i)=>({index:i,name,defaultName:name,width:'',wrap:true,visible:true})),order:names.map((_,i)=>i)};
+    db.settings.tableSettings[key]=cfg;
+  }else{
+    cfg.order=Array.isArray(cfg.order)?cfg.order:[];
+    names.forEach((name,i)=>{
+      let c=cfg.columns.find(x=>Number(x.index)===i);
+      if(!c)cfg.columns.push({index:i,name,defaultName:name,width:'',wrap:true,visible:true});
+      else if(c.defaultName==null)c.defaultName=name;
+    });
+    let n=names.length;cfg.columns=cfg.columns.filter(c=>Number(c.index)<n);
+    let valid=new Set(cfg.columns.map(c=>Number(c.index)));cfg.order=cfg.order.filter(i=>valid.has(Number(i)));for(let i=0;i<n;i++)if(!cfg.order.includes(i))cfg.order.push(i);
+  }
+  return cfg;
+}
+function applyTableSettings(table){
+  if(!table||!table.dataset.tableKey)return;
+  let key=table.dataset.tableKey,cfg=ensureTableSetting(key,table);if(!cfg)return;
+  let heads=[...table.querySelectorAll(':scope > thead > tr:first-child > th')];
+  if(!heads.length)heads=[...table.querySelectorAll(':scope > tr:first-child > th')];
+  let n=heads.length;
+  // Tag header cells with their original column index. This survives reordering.
+  heads.forEach((h,i)=>{if(h.dataset.colIndex==null)h.dataset.colIndex=String(i)});
+  let currentOrder=heads.map(h=>Number(h.dataset.colIndex));
+  let desired=cfg.order.map(Number).filter(i=>i<n);
+  if(desired.length!==n)desired=[...Array(n).keys()];
+  // Tag body/footer cells according to original order when they are newly rendered.
+  table.querySelectorAll(':scope > tbody > tr, :scope > tfoot > tr').forEach(tr=>{
+    let cells=[...tr.children];
+    if(cells.length!==n)return;
+    let hasTags=cells.every(c=>c.dataset.colIndex!=null);
+    if(!hasTags)cells.forEach((c,i)=>c.dataset.colIndex=String(i));
+  });
+  // Reorder all rows to match the configured order.
+  if(currentOrder.join(',')!==desired.join(',')){
+    let by=Object.fromEntries(heads.map(h=>[h.dataset.colIndex,h]));
+    let parent=heads[0]?.parentElement;if(parent)desired.forEach(i=>{if(by[i])parent.appendChild(by[i])});
+    table.querySelectorAll(':scope > tbody > tr, :scope > tfoot > tr').forEach(tr=>{
+      let cells=[...tr.children];let byc=Object.fromEntries(cells.map(c=>[c.dataset.colIndex,c]));
+      desired.forEach(i=>{if(byc[i])tr.appendChild(byc[i])});
+    });
+  }
+  // Apply display names, width, wrap and visibility to all cells using original index.
+  cfg.columns.forEach(c=>{
+    let i=Number(c.index),name=c.name||'',width=String(c.width||'').trim(),visible=c.visible!==false,wrap=c.wrap!==false;
+    table.querySelectorAll(`[data-col-index="${i}"]`).forEach(cell=>{
+      cell.style.width=width?(Math.max(40,Number(width)||40)+'px'):'';
+      cell.style.minWidth=width?(Math.max(40,Number(width)||40)+'px'):'';
+      cell.style.maxWidth=width?(Math.max(40,Number(width)||40)+'px'):'';
+      cell.style.whiteSpace=wrap?'normal':'nowrap';
+      cell.classList.toggle('table-custom-hidden',!visible);
+      if(cell.tagName==='TH' && name && name!==c.defaultName)cell.textContent=name;
+    });
+  });
+  if(typeof initHeaderFilterHeaders==='function'){initHeaderFilterHeaders(table);applyHeaderFiltersToTable(key);}
+}
+let tableSettingsObserver=null;
+function observeTableSettings(){
+  if(tableSettingsObserver)tableSettingsObserver.disconnect();
+  let root=$('content');if(!root)return;
+  tableSettingsObserver=new MutationObserver(()=>{
+    root.querySelectorAll('table[data-table-key]').forEach(applyTableSettings);
+  });
+  tableSettingsObserver.observe(root,{childList:true,subtree:true});
+  root.querySelectorAll('table[data-table-key]').forEach(applyTableSettings);
+}
+function applyAllTableSettings(){tableSettingsInit();observeTableSettings()}
+function tableSettingColumnLabel(c,i){return c.name||('Column '+(i+1))}
+function renderTableSettings(){
+  let key=$('tsTable')?.value||'employees',cfg=db.settings.tableSettings?.[key],table=document.querySelector(`table[data-table-key="${key}"]`);
+  if(!cfg){tableSettingsInit();cfg=db.settings.tableSettings[key]}
+  let cols=[...(cfg?.columns||[])].sort((a,b)=>Number(a.index)-Number(b.index));
+  if(!cols.length){$('tsRows').innerHTML='<div class="empty-state">No columns found.</div>';return}
+  $('tsRows').innerHTML=cols.map((c,i)=>`<div class="table-settings-grid" data-ts-index="${c.index}" style="padding:7px 0;border-bottom:1px solid var(--border-soft)">
+    <div><b>${esc(c.name||('Column '+(i+1)))}</b><div style="font-size:10px;color:var(--muted)">Original: ${esc(c.defaultName||c.name||'')}</div></div>
+    <input type="text" data-ts-name value="${esc(c.name||'')}">
+    <input type="number" min="40" max="500" data-ts-width value="${c.width||''}" placeholder="Auto">
+    <select data-ts-wrap><option value="1" ${c.wrap!==false?'selected':''}>Wrap</option><option value="0" ${c.wrap===false?'selected':''}>No Wrap</option></select>
+    <div class="ts-check"><input class="check" type="checkbox" data-ts-visible ${c.visible!==false?'checked':''} title="Show column"></div>
+    <div class="ts-check"><button class="btn" type="button" onclick="moveTableColumn('${key}',${c.index},-1)">↑</button> <button class="btn" type="button" onclick="moveTableColumn('${key}',${c.index},1)">↓</button></div>
+  </div>`).join('');
+  refreshTableSettingsPreview(key);
+  document.querySelectorAll('#tsRows [data-ts-name],#tsRows [data-ts-width],#tsRows [data-ts-wrap],#tsRows [data-ts-visible]').forEach(el=>el.oninput=el.onchange=()=>updateTableSettingsLive(key));
+}
+function refreshTableSettingsPreview(key){
+  let cfg=db.settings.tableSettings?.[key],preview=$('tsPreview');if(!cfg||!preview)return;
+  let cols=[...cfg.columns],by=Object.fromEntries(cols.map(c=>[Number(c.index),c])),order=(cfg.order||[]).map(Number),po=order.map(i=>by[i]).filter(Boolean);
+  preview.innerHTML=`<div class="table-preview-wrap"><table class="table-preview"><thead><tr>${po.map(c=>`<th style="width:${Number(c.width)||100}px;white-space:${c.wrap===false?'nowrap':'normal'};display:${c.visible===false?'none':''}">${esc(c.name)}</th>`).join('')}</tr></thead><tbody><tr>${po.map(c=>`<td style="width:${Number(c.width)||100}px;display:${c.visible===false?'none':''}">Sample Data</td>`).join('')}</tr></tbody></table></div>`;
+}
+function updateTableSettingsLive(key){
+  let cfg=db.settings.tableSettings[key];if(!cfg)return;
+  document.querySelectorAll('#tsRows [data-ts-index]').forEach(row=>{let i=Number(row.dataset.tsIndex),c=cfg.columns.find(x=>Number(x.index)===i);if(!c)return;c.name=row.querySelector('[data-ts-name]')?.value||c.name;c.width=row.querySelector('[data-ts-width]')?.value||'';c.wrap=row.querySelector('[data-ts-wrap]')?.value!=='0';c.visible=!!row.querySelector('[data-ts-visible]')?.checked});
+  save();applyTableSettings(document.querySelector(`table[data-table-key="${key}"]`));refreshTableSettingsPreview(key);
+}
+function moveTableColumn(key,index,dir){let cfg=db.settings.tableSettings[key];if(!cfg)return;let order=cfg.order.map(Number),p=order.indexOf(Number(index)),q=p+dir;if(p<0||q<0||q>=order.length)return;[order[p],order[q]]=[order[q],order[p]];cfg.order=order;save();renderTableSettings();applyTableSettings(document.querySelector(`table[data-table-key="${key}"]`))}
+function resetTableSettings(key){let names=TABLE_SETTING_DEFAULTS[key]||[];db.settings.tableSettings[key]={columns:names.map((name,i)=>({index:i,name,defaultName:name,width:'',wrap:true,visible:true})),order:names.map((_,i)=>i)};save();renderTableSettings();applyTableSettings(document.querySelector(`table[data-table-key="${key}"]`))}
+function resetAllTableSettings(){appConfirm('Reset all table column settings to default?',()=>{db.settings.tableSettings={};tableSettingsInit();save();renderTableSettings();document.querySelectorAll('#content table[data-table-key]').forEach(applyTableSettings)},{title:'Reset Table Settings',yesLabel:'Reset All'})}
+
+
+/* ============================================================
+   SYSTEM SETTINGS
+   ============================================================ */
+// SYSTEM SETTINGS & ADMINISTRATION
+// ============================================================
+function settings(){
+  if(!isAdmin()){page('employees');return}
+  db.settings.departmentHours=db.settings.departmentHours||{};db.settings.filledByUsers=db.settings.filledByUsers||[];if(!db.settings.fields.includes('Filled By'))db.settings.fields.splice(Math.max(0,db.settings.fields.indexOf('Status')),0,'Filled By');
+  db.settings.departments.forEach(d=>{if(db.settings.departmentHours[d]==null)db.settings.departmentHours[d]=Number(db.settings.defaultHours)||10});
+  $('content').innerHTML=`<div class="card"><div class="head"><b>Department Setup</b><button class="btn primary" onclick="addDept()">${ICO.plus} Department</button></div>
+  <div>${db.settings.departments.map((x,i)=>`<div class="list-row">${esc(x)}<button class="btn btn-danger" onclick="removeDept(${i})">Remove</button></div>`).join('')||'<div class="empty-state">No departments yet.</div>'}</div></div>
+  <div class="card"><div class="head"><b>Field Setup</b></div><div style="padding:18px"><div class="notice">Field Setup is reserved for adding/customising fields later. Core payroll fields are protected.</div><div style="margin-top:6px">${db.settings.fields.map(x=>`<span class="chip">${esc(x)}</span>`).join('')}</div></div></div>
+  <div class="card"><div class="head"><b>Global Table & Column Settings</b><div class="actions"><button class="btn" onclick="resetTableSettings($('tsTable').value)">Reset This Table</button><button class="btn" onclick="resetAllTableSettings()">Reset All Tables</button></div></div><div style="padding:18px">
+  <div class="grid"><div class="field"><label>Select Table</label><select id="tsTable" onchange="tableSettingsInit();renderTableSettings()">${Object.entries(TABLE_SETTING_NAMES).map(([k,v])=>`<option value="${k}">${esc(v)}</option>`).join('')}</select></div></div>
+  <div style="margin-top:16px;display:grid;grid-template-columns:minmax(150px,1.1fr) minmax(170px,1.4fr) 90px 82px 70px 92px;gap:8px;padding:8px 0;border-bottom:2px solid var(--border)"><b>Column</b><b>Display Name</b><b>Width</b><b>Header</b><b>Show</b><b>Order</b></div>
+  <div id="tsRows"></div><div id="tsPreview"></div>
+  <div class="notice" style="margin-top:14px">Changes are saved automatically. Display names affect only the table header; calculations and stored data keep their original field names. Width is in pixels. Header wrap controls text wrapping. Use ↑ / ↓ to change column order.</div></div></div>
+  <div class="card"><div class="head"><b>Table Header Filters</b></div><div style="padding:18px"><div class="setting-toggle"><div class="setting-copy"><b>Enable spreadsheet-style header filters</b><span>Click any column header in Monthly Summary or Payroll to open a temporary filter. Filter selections are not saved when the table is reopened.</span></div><label class="setting-switch"><input id="headerFiltersEnabled" type="checkbox" ${db.settings.headerFiltersEnabled!==false?'checked':''} onchange="toggleHeaderFiltersSetting(this.checked)"><span></span></label></div></div></div>
+  <div class="card"><div class="head"><b>Working Hours by Department</b></div><div style="padding:18px">
+  <div style="display:grid;gap:6px">${db.settings.departments.map((d,i)=>`<div class="settings-row"><label>${esc(d)}</label><input id="deptH${i}" type="number" min="0.5" step="0.5" value="${Number(db.settings.departmentHours[d]||db.settings.defaultHours)}"></div>`).join('')}</div>
+  <div class="grid" style="margin-top:16px"><div class="field"><label>Fallback Hours</label><input id="dh" type="number" min="0.5" step="0.5" value="${Number(db.settings.defaultHours)||10}"></div></div>
+  <button class="btn primary" style="margin-top:14px" onclick="saveSet()">Save Working Hours</button></div></div>
+  <div class="card"><div class="head"><b>Attendance Filled By</b><button class="btn primary" onclick="addFilledBy()">${ICO.plus} Add Name</button></div><div>${db.settings.filledByUsers.map((x,i)=>`<div class="list-row"><span>${esc(x)}</span><button class="btn btn-danger" onclick="removeFilledBy(${i})">Remove</button></div>`).join('')||'<div class="empty-state">No names added yet. Add the people who fill attendance.</div>'}</div></div>
+  <div class="card"><div class="head"><b>Login</b></div><div style="padding:18px"><button class="btn" onclick="changePass()">Change Admin Password</button></div></div>
+  <div class="card"><div class="head"><b>Local Data Backup</b></div><div style="padding:18px"><div class="notice">The live database is Supabase. JSON backup is a local safety copy; it is not the primary database.</div><div style="margin-top:14px;display:flex;gap:9px"><button class="btn primary" onclick="backup()">Backup JSON</button><button class="btn" onclick="restore()">Restore JSON</button></div></div></div>`;tableSettingsInit();renderTableSettings();applyAllTableSettings();
+}
+function addDept(){appPrompt('Enter the new department name:',x=>{if(!x?.trim())return;let d=x.trim();if(db.settings.departments.includes(d))return appMessage('Department already exists.');db.settings.departments.push(d);db.settings.departmentHours[d]=Number(db.settings.defaultHours)||10;save();settings()},{title:'Add Department',placeholder:'e.g. Finishing'})}
+function removeDept(i){appConfirm('Remove this department from the dropdown? Existing employees are not deleted.',()=>{let d=db.settings.departments[i];db.settings.departments.splice(i,1);delete db.settings.departmentHours[d];save();settings()},{title:'Remove Department',yesLabel:'Remove',danger:true})}
+function toggleHeaderFiltersSetting(enabled){db.settings.headerFiltersEnabled=!!enabled;save();closeHeaderFilterMenu();document.querySelectorAll('#content table[data-table-key]').forEach(t=>initHeaderFilterHeaders(t));appMessage(enabled?'Table header filters enabled.':'Table header filters disabled.','Settings Saved','success')}
+
+function saveSet(){
+  db.settings.defaultHours=Number($('dh').value)||10;
+  db.settings.departmentHours=db.settings.departmentHours||{};db.settings.filledByUsers=db.settings.filledByUsers||[];if(!db.settings.fields.includes('Filled By'))db.settings.fields.splice(Math.max(0,db.settings.fields.indexOf('Status')),0,'Filled By');
+  db.settings.departments.forEach((d,i)=>{let v=Number($('deptH'+i)?.value||0);db.settings.departmentHours[d]=v>0?v:db.settings.defaultHours});
+  save();
+  appMessage('Working hours settings saved successfully.','Settings Saved','success');
+}
+
+function addFilledBy(){appPrompt('Enter the name of the person who fills attendance:',x=>{if(!x?.trim())return;let n=x.trim();if(db.settings.filledByUsers.includes(n))return appMessage('Name already exists.');db.settings.filledByUsers.push(n);save();settings()},{title:'Add Name',placeholder:'e.g. Ramesh Kumar'})}
+function removeFilledBy(i){appConfirm('Remove this name from the Filled By dropdown? Existing employees will keep their saved value.',()=>{db.settings.filledByUsers.splice(i,1);save();settings()},{title:'Remove Name',yesLabel:'Remove',danger:true})}
+
+function changePass(){
+  $('modal').innerHTML=`<div class="box" style="max-width:420px"><div class="mhead"><b>Change Supabase Password</b><button class="btn" onclick="closeModal()">×</button></div><div class="mbody"><div class="grid"><div class="field"><label>Current Password</label><input id="cpOld" type="password" autocomplete="current-password"></div><div class="field"><label>New Password</label><input id="cpNew" type="password" autocomplete="new-password"></div><div class="field"><label>Confirm New Password</label><input id="cpConfirm" type="password" autocomplete="new-password"></div></div><div id="cpErr" style="color:var(--danger);font-size:12px;min-height:14px;margin-top:6px"></div></div><div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveNewPass()">Update Password</button></div></div>`;
+  $('modal').classList.remove('hidden');
+  $('cpOld').focus();
+}
+async function saveNewPass(){
+  const old=$('cpOld').value;
+  const n1=$('cpNew').value;
+  const n2=$('cpConfirm').value;
+  const err=$('cpErr');
+  if(!authUser?.email){err.textContent='No authenticated user found.';return}
+  if(!old){err.textContent='Enter your current password.';return}
+  if(!n1||n1.length<6){err.textContent='New password must be at least 6 characters.';return}
+  if(n1!==n2){err.textContent='New passwords do not match.';return}
+  const btn=document.querySelector('#modal .btn.primary');
+  if(btn){btn.disabled=true;btn.textContent='Updating...';}
+  try{
+    const check=await supabaseClient.auth.signInWithPassword({email:authUser.email,password:old});
+    if(check.error)throw new Error('Current password is incorrect.');
+    const result=await supabaseClient.auth.updateUser({password:n1});
+    if(result.error)throw result.error;
+    closeModal();
+    appMessage('Your Supabase password was updated successfully.','Password Changed','success');
+  }catch(error){
+    err.textContent=error?.message||'Unable to update password.';
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='Update Password';}
+  }
+}
+
+
+/* ============================================================
+   BACKUP / RESTORE & BOOTSTRAP
+   ============================================================ */
+// BACKUP / RESTORE & APPLICATION BOOTSTRAP
+// ============================================================
+function backup(){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(db,null,2)],{type:'application/json'}));a.download='VV_Attendance_Payroll_Backup.json';a.click()}
+function restore(){let i=document.createElement('input');i.type='file';i.accept='.json';i.onchange=()=>{let r=new FileReader();r.onload=()=>{try{db=JSON.parse(r.result);save();appMessage('Backup data was restored successfully.','Restore Complete','success');page(current)}catch(e){appMessage('Invalid backup')}};r.readAsText(i.files[0])};i.click()
+}
+
+async function syncDbToSupabase(){
+  if(supabaseSyncBusy||!supabaseClient||!authUser||!authProfile)return;
+  supabaseSyncBusy=true;
+  try{
+    const employees=(db.employees||[]).map(e=>({id:e.id,name:e.name,department:e.dept,salary:Number(e.salary||0),hours:Number(e.hours||0),filled_by:e.filledBy||null,account_type:e.accountType||null,status:e.status||'Active',sunday_type:e.sundayType||null,sunday_pay:Number(e.sundayPay||0),increments:e.increments||[]}));
+    if(employees.length){let r=await supabaseClient.from('employees').upsert(employees,{onConflict:'id'});if(r.error)throw r.error;}
+    const validEmployeeIds=new Set(employees.map(e=>e.id));
+    const attendanceRows=Object.entries(db.attendance||{}).filter(([k,v])=>v!==''&&v!=null).map(([k,v])=>{let [m,eid,d]=k.split('|');return {employee_id:eid,attendance_date:`${m}-${String(d).padStart(2,'0')}`,status:String(v),filled_by:null};}).filter(r=>validEmployeeIds.has(r.employee_id));
+    if(attendanceRows.length){let r=await supabaseClient.from('attendance').upsert(attendanceRows,{onConflict:'employee_id,attendance_date'});if(r.error)throw r.error;}
+    if(isAdmin()){
+      const payrollRows=Object.entries(db.payroll||{}).map(([k,p])=>{let [m,eid]=k.split('|');return {employee_id:eid,payroll_month:`${m}-01`,salary:Number(p.salary||0),sunday_pay:Number(p.sundayPay||0),pay:Number(p.pay||0),advance:Number(p.advance||0),advance_cash:Number(p.advance_cash||0),tea:Number(p.tea||0),pf_esi:Number(p.pfesi||0),late_deduction:Number(p.late||0),loan_recovery:Number(p.loanRecovery||0),previous_pending:Number(p.prev||0),total_payable:Number(p.total||0),amount_paid:Number(p.paid||0),remaining_balance:Number(p.remaining||0),payment_status:p.approved?'Paid':'Pending',approved:!!p.approved};}).filter(r=>validEmployeeIds.has(r.employee_id));
+      if(payrollRows.length){let r=await supabaseClient.from('payroll').upsert(payrollRows,{onConflict:'employee_id,payroll_month'});if(r.error)throw r.error;}
+      const loanRows=[];for(const x of (db.loanAccounts||[])){if(!validEmployeeIds.has(x.empId))continue;const paid=loanRecoveredTotal(x.empId);loanRows.push({...(x.id?{id:x.id}:{}),employee_id:x.empId,loan_date:x.date||new Date().toISOString().slice(0,10),loan_amount:Number(x.amount||0),paid_amount:Number(paid||0),remaining_balance:Math.max(0,Number(x.amount||0)-Number(paid||0)),payment_status:Number(paid)>=Number(x.amount||0)?'Paid':'Pending',remarks:'ACCOUNT'});}for(const x of (db.loans||[])){if(!validEmployeeIds.has(x.empId))continue;loanRows.push({...(x.id?{id:x.id}:{}),employee_id:x.empId,loan_date:x.date?String(x.date).slice(0,10):`${x.month}-01`,loan_amount:0,paid_amount:Number(x.amount||0),remaining_balance:0,payment_status:'Paid',remarks:`RECOVERY|${x.source||'Payroll'}|${x.month||''}`});}if(loanRows.length){let r=await supabaseClient.from('loans').upsert(loanRows);if(r.error)throw r.error;}
+      const adjustments=[];for(const type of ['advance','cash','tea'])for(const [k,val] of Object.entries(db.extraCols?.[type]||{})){let [m,eid]=k.split('|');if(Number(val||0)>0&&validEmployeeIds.has(eid))adjustments.push({employee_id:eid,adjustment_date:`${m}-01`,adjustment_type:type==='cash'?'advance_cash':type,amount:Number(val),remarks:'Payroll adjustment'});}let del=await supabaseClient.from('payroll_adjustments').delete().not('id','is',null);if(del.error)throw del.error;if(adjustments.length){let r=await supabaseClient.from('payroll_adjustments').insert(adjustments);if(r.error)throw r.error;}
+      const settingsRows=[{setting_key:'departments',setting_value:db.settings.departments||[]},{setting_key:'working_hours',setting_value:{defaultHours:Number(db.settings.defaultHours||10),departmentHours:db.settings.departmentHours||{}}},{setting_key:'header_filters_enabled',setting_value:db.settings.headerFiltersEnabled!==false},{setting_key:'filled_by_users',setting_value:db.settings.filledByUsers||[]},{setting_key:'table_settings',setting_value:db.settings.tableSettings||{}},{setting_key:'statuses',setting_value:db.settings.statuses||['Active','Inactive']}];let sr=await supabaseClient.from('settings').upsert(settingsRows,{onConflict:'setting_key'});if(sr.error)throw sr.error;
+    }
+    scheduleGoogleBackup();
+  }catch(error){console.error('Supabase sync failed:',error);appMessage('Supabase sync failed: '+(error?.message||error),'Supabase Sync','warning');}finally{supabaseSyncBusy=false;}
+}
+
+
+
+load();
+
+
+</script>
+</body>
+</html>
