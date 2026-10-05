@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -354,6 +354,21 @@ flex-wrap:wrap;background:#fbfbfd}
 .lPP{background:var(--blue-soft);color:var(--blue);border-color:#c3d0f2}
 .lPD{background:var(--violet-bg);color:var(--violet);border-color:var(--violet-line)}
 .lS{background:var(--brass-soft);color:#8a5f16;border-color:var(--brass-line)}
+/* Working month picker */
+.mp-year{display:flex;align-items:center;justify-content:center;gap:18px;margin:4px 0 16px}
+.mp-year b{font-family:var(--font-display);font-size:22px;min-width:70px;text-align:center}
+.mp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.mp-m{position:relative;padding:14px 6px;border:1px solid var(--border);border-radius:11px;background:#fbfbfd;font-weight:600;font-size:13.5px;cursor:pointer;color:var(--ink-soft)}
+.mp-m:hover{border-color:var(--blue);background:var(--blue-soft)}
+.mp-m.cur{border-color:var(--brass-line);background:var(--brass-soft);color:var(--brass-dark)}
+.mp-m.cur::after{content:"Current";position:absolute;top:3px;left:0;right:0;font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+.mp-m.cur{padding-top:19px}
+.mp-m.sel{background:var(--blue)!important;border-color:var(--blue)!important;color:#fff!important}
+.mp-sel{margin-top:16px;text-align:center;font-size:13px;color:var(--muted)}
+.mp-sel b{color:var(--ink);font-size:15px}
+.mp-warn{display:none;margin-top:10px;padding:9px 12px;border-radius:9px;background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-line);font-size:12.5px;font-weight:600;text-align:center}
+.month-chip{margin-left:auto;margin-right:14px;display:inline-flex;align-items:center;gap:7px;font-weight:700}
+.month-chip.off{background:var(--amber-bg)!important;color:var(--amber)!important;border-color:var(--amber-line)!important}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -382,7 +397,7 @@ flex-wrap:wrap;background:#fbfbfd}
 <button data-p="loans" onclick="page('loans')"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2.5-6 5 12L17 12h4"/></svg></span><span>Loans</span></button>
 <button data-p="settings" onclick="page('settings')"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V19.5a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H4.5a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.56-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H10a1.7 1.7 0 0 0 1-1.55V4.5a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V10a1.7 1.7 0 0 0 1.55 1H19.5a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.56 1z"/></svg></span><span>Settings</span></button>
 </div><div class="logout"><button onclick="logout()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg><span>Logout</span></button></div></aside>
-<main class="main"><header class="top"><div style="display:flex;align-items:center;gap:14px"><button class="btn sidebar-toggle" onclick="toggleSidebar()" title="Show/hide the side panel"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><span id="top">Dashboard</span></div><span class="top-user"><span class="av">A</span><span>Admin</span></span></header><section id="content" class="content"></section></main></div>
+<main class="main"><header class="top"><div style="display:flex;align-items:center;gap:14px"><button class="btn sidebar-toggle" onclick="toggleSidebar()" title="Show/hide the side panel"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><span id="top">Dashboard</span></div><button id="monthChip" class="btn month-chip hidden" onclick="changeWorkingMonth()" title="Click to change the working month"></button><span class="top-user"><span class="av">A</span><span>Admin</span></span></header><section id="content" class="content"></section></main></div>
 <div id="modal" class="modal hidden"></div>
 <script>
 /* ============================================================
@@ -409,6 +424,7 @@ function initRuntimeState(){
 function isActiveEmployee(e){let s=String(e?.status??'Active').trim().toLowerCase();return s!=='inactive'}
 let supabaseSyncTimer=null;
 let supabaseSyncBusy=false;
+let supabaseSyncPending=false;
 let googleBackupTimer=null;
 let googleBackupBusy=false;
 const GOOGLE_BACKUP_WEB_APP_URL='https://script.google.com/macros/s/AKfycbxk8oBxRZKFzSqL8Z94yuEkkJYM13YPJQAtW_EqGz99xRo_FRqcwPYMs93LaGtE6Nvd/exec'; // Set this to your deployed Google Apps Script Web App URL. Google is write-only backup; the app never reads from Sheets.
@@ -511,6 +527,7 @@ async function openApp(){
     await supabaseClient.auth.signOut();
     return;
   }
+  await chooseWorkingMonth(false);
   page(isAdmin()?'dashboard':'employees');
 }
 
@@ -690,7 +707,7 @@ if($('addEmployeeBtn'))$('addEmployeeBtn').style.display=canAdd()?'':'none';
 $('dm').innerHTML=menuSearchBar('dm')+`<div class="menu-list"><label class="opt" data-all="1"><input type="checkbox" class="check" id="allD" checked onchange="allDept(this)">All Departments</label>`+db.settings.departments.map(x=>`<label class="opt"><input type="checkbox" class="check dc" value="${esc(x)}" onchange="deptChange()"> ${esc(x)}</label>`).join('')+'</div>';
 let filledByNames=[...new Set(db.employees.map(e=>e.filledBy).filter(Boolean))];
 $('efbm').innerHTML=menuSearchBar('efbm')+`<div class="menu-list"><label class="opt" data-all="1"><input type="checkbox" class="check" id="allEFB" checked onchange="allEmpFilledBy(this)">All Filled By</label>`+filledByNames.map(x=>`<label class="opt"><input type="checkbox" class="check efbc" value="${esc(x)}" onchange="empFilledByChange()"> ${esc(x)}</label>`).join('')+'</div>';
-renderEmp()
+restoreEmpFilters();renderEmp()
 }
 function selDept(){return [...document.querySelectorAll('.dc:checked')].map(x=>x.value)}
 function allDept(c){
@@ -736,17 +753,27 @@ function clearEmpFilters(){
   if($('ef'))$('ef').value='';
   syncEmpFilterStyles();renderEmp();
 }
+async function fetchAllRows(build){
+  const size=1000;let all=[];
+  for(let from=0;;from+=size){
+    const r=await build().range(from,from+size-1);
+    if(r.error)return r;
+    const rows=r.data||[];all=all.concat(rows);
+    if(rows.length<size)break;
+  }
+  return {data:all,error:null};
+}
 async function loadAllDataFromSupabase(){
   if(!supabaseClient||!authUser||!authProfile)return;
   const requests=[
-    supabaseClient.from('employees').select('*').order('id',{ascending:true}),
-    supabaseClient.from('attendance').select('*').order('attendance_date',{ascending:true}),
+    fetchAllRows(()=>supabaseClient.from('employees').select('*').order('id',{ascending:true})),
+    fetchAllRows(()=>supabaseClient.from('attendance').select('*').order('attendance_date',{ascending:true}).order('employee_id',{ascending:true})),
     supabaseClient.from('settings').select('*').order('setting_key',{ascending:true})
   ];
   if(isAdmin()){
-    requests.push(supabaseClient.from('payroll').select('*').order('payroll_month',{ascending:true}));
-    requests.push(supabaseClient.from('loans').select('*').order('loan_date',{ascending:true}));
-    requests.push(supabaseClient.from('payroll_adjustments').select('*').order('adjustment_date',{ascending:true}));
+    requests.push(fetchAllRows(()=>supabaseClient.from('payroll').select('*').order('payroll_month',{ascending:true}).order('employee_id',{ascending:true})));
+    requests.push(fetchAllRows(()=>supabaseClient.from('loans').select('*').order('loan_date',{ascending:true}).order('id',{ascending:true})));
+    requests.push(fetchAllRows(()=>supabaseClient.from('payroll_adjustments').select('*').order('adjustment_date',{ascending:true}).order('id',{ascending:true})));
   }
   const res=await Promise.all(requests);
   for(const r of res)if(r.error)throw r.error;
@@ -810,7 +837,23 @@ async function backupToGoogleSheets(){
 // Backward-compatible name used by the Employee page.
 async function loadEmployeesFromSupabase(){return loadAllDataFromSupabase()}
 
-function renderEmp(){let q=($('es')?.value||'').toLowerCase(),f=$('ef')?.value||'',d=selDept(),fb=empSelFilledBy(),r=db.employees.filter(e=>(!q||`${e.id} ${e.name}`.toLowerCase().includes(q))&&(!f||e.status===f)&&(!d.length||d.includes(e.dept))&&(!fb.length||fb.includes(e.filledBy)));$('er').innerHTML=r.map(e=>`<tr><td>${esc(e.id)}</td><td>${esc(e.name)}</td><td>${esc(e.dept)}</td><td>${money(e.salary)}</td><td>${!e.sundayType?'':e.sundayType==='half'?'½ of P':e.sundayType==='double'?'2 × P':money(e.sundayPay)}</td><td>${e.hours}</td><td>${esc(e.filledBy||'')}</td><td>${esc(e.accountType||'')}</td><td><span class="status ${e.status==='Active'?'act':'ina'}">${esc(e.status)}</span></td><td style="display:flex;gap:6px">${canEdit()?`<button class="btn" onclick="empModal('${e.id}')">Edit</button>`:''}${canDelete()?`<button class="btn btn-danger" onclick="delEmp('${e.id}')">Delete</button>`:''}</td></tr>`).join('')||'<tr><td colspan="10">No employees found</td></tr>'}
+function saveEmpFilters(){
+  if(!$('es'))return;
+  window.empFilterState={q:$('es').value||'',status:$('ef')?.value||'',dept:selDept(),filledBy:empSelFilledBy()};
+}
+function restoreEmpFilters(){
+  let st=window.empFilterState;if(!st)return;
+  if($('es'))$('es').value=st.q||'';
+  if($('ef')&&[...$('ef').options].some(o=>o.value===st.status))$('ef').value=st.status||'';
+  document.querySelectorAll('.dc').forEach(x=>x.checked=(st.dept||[]).includes(x.value));
+  let d=selDept();if($('allD'))$('allD').checked=!d.length;
+  if($('dt'))$('dt').textContent=!d.length?'All Departments':d.length===1?d[0]:d.length+' Departments Selected';
+  document.querySelectorAll('.efbc').forEach(x=>x.checked=(st.filledBy||[]).includes(x.value));
+  let fb=empSelFilledBy();if($('allEFB'))$('allEFB').checked=!fb.length;
+  if($('eft'))$('eft').textContent=!fb.length?'All Filled By':fb.length===1?fb[0]:fb.length+' Selected';
+  syncEmpFilterStyles();
+}
+function renderEmp(){saveEmpFilters();let q=($('es')?.value||'').toLowerCase(),f=$('ef')?.value||'',d=selDept(),fb=empSelFilledBy(),r=db.employees.filter(e=>(!q||`${e.id} ${e.name}`.toLowerCase().includes(q))&&(!f||e.status===f)&&(!d.length||d.includes(e.dept))&&(!fb.length||fb.includes(e.filledBy)));$('er').innerHTML=r.map(e=>`<tr><td>${esc(e.id)}</td><td>${esc(e.name)}</td><td>${esc(e.dept)}</td><td>${money(e.salary)}</td><td>${!e.sundayType?'':e.sundayType==='half'?'½ of P':e.sundayType==='double'?'2 × P':money(e.sundayPay)}</td><td>${e.hours}</td><td>${esc(e.filledBy||'')}</td><td>${esc(e.accountType||'')}</td><td><span class="status ${e.status==='Active'?'act':'ina'}">${esc(e.status)}</span></td><td style="display:flex;gap:6px">${canEdit()?`<button class="btn" onclick="empModal('${e.id}')">Edit</button>`:''}${canDelete()?`<button class="btn btn-danger" onclick="delEmp('${e.id}')">Delete</button>`:''}</td></tr>`).join('')||'<tr><td colspan="10">No employees found</td></tr>'}
 
 function nextId(dept){let pre=dept.slice(0,3).toUpperCase(),n=db.employees.filter(e=>e.dept===dept).map(e=>parseInt(e.id.slice(3))||0);return pre+String(Math.max(0,...n)+1).padStart(3,'0')}
 function delEmp(id){
@@ -842,7 +885,7 @@ function hoursRule(){
   $('fh').value=h>0?h:'';
   $('fh').readOnly=true;
 }
-function saveEmp(old){if(!canAdd()&&!old){appMessage('You do not have permission to add employees.','Permission','warning');return}if(old&&!canEdit()){appMessage('You do not have permission to edit employees.','Permission','warning');return}let name=$('fn').value.trim(),dept=$('fd').value,sal=Number($('fs').value);if(!name||!dept||!sal){appMessage('Employee Name, Department and Salary are compulsory.');return}let e=db.employees.find(x=>x.id===old),id=old;if(e&&e.dept!==dept){id=nextId(dept);migrateEmpId(old,id)}else if(!old){id=nextId(dept)}let o={id,name,dept,salary:sal,sundayType:$('ft').value,sundayPay:$('ft').value==='manual'?Number($('fp').value||0):0,hours:Number(db.settings.departmentHours?.[dept] ?? db.settings.defaultHours),status:$('fst')?$('fst').value:(e?.status||'Active'),accountType:$('fat').value,filledBy:(isAdmin()?$('ffb').value:assignedFilledBy()),increments:e?.increments||[]};if(e)Object.assign(e,o);else db.employees.push(o);save();closeModal();employees()}
+function saveEmp(old){if(!canAdd()&&!old){appMessage('You do not have permission to add employees.','Permission','warning');return}if(old&&!canEdit()){appMessage('You do not have permission to edit employees.','Permission','warning');return}let name=$('fn').value.trim(),dept=$('fd').value,salRaw=String($('fs').value).trim(),sal=Number(salRaw);if(!name||!dept||salRaw===''||!Number.isFinite(sal)||sal<0){appMessage('Employee Name, Department and Salary are compulsory (Salary can be 0 but not blank or negative).');return}let e=db.employees.find(x=>x.id===old),id=old;if(e&&e.dept!==dept){id=nextId(dept);migrateEmpId(old,id)}else if(!old){id=nextId(dept)}let o={id,name,dept,salary:sal,sundayType:$('ft').value,sundayPay:$('ft').value==='manual'?Number($('fp').value||0):0,hours:Number(db.settings.departmentHours?.[dept] ?? db.settings.defaultHours),status:$('fst')?$('fst').value:(e?.status||'Active'),accountType:$('fat').value,filledBy:(isAdmin()?$('ffb').value:assignedFilledBy()),increments:e?.increments||[]};if(e)Object.assign(e,o);else db.employees.push(o);save();closeModal();employees()}
 function migrateEmpId(oldId,newId){Object.keys(db.attendance).forEach(k=>{let p=k.split('|');if(p[1]===oldId){p[1]=newId;db.attendance[p.join('|')]=db.attendance[k];delete db.attendance[k]}});Object.keys(db.payroll).forEach(k=>{let p=k.split('|');if(p[1]===oldId){p[1]=newId;db.payroll[p.join('|')]=db.payroll[k];delete db.payroll[k]}});db.loans.forEach(l=>{if(l.empId===oldId)l.empId=newId})}
 function increment(id){
   let e=db.employees.find(x=>x.id===id);
@@ -925,7 +968,7 @@ function attendance(){
       </div>
       <div class="legend-right">
         <button id="attClearFilters" class="btn filter-clear" onclick="clearAttFilters()">Clear Filters</button>
-        ${showCols?'':'<button class="btn primary" onclick="bulk()">Bulk Fill</button>'}
+        ${showCols?'':'<button class="btn" onclick="importAttSheet()">Import from Sheet</button><button class="btn primary" onclick="bulk()">Bulk Fill</button>'}
       </div>
     </div>
     <div class="wrap"><table class="attendance-table" data-table-key="attendance"><thead><tr><th class="s1 stickyh">Employee</th><th class="s2 stickyh">Department</th>${showCols?'':Array.from({length:n},(_,i)=>{let d=i+1,w=new Date(m+'-'+String(d).padStart(2,'0')+'T00:00:00').getDay();return `<th class="day ${w===0?'sunday':''}">${String(d).padStart(2,'0')}<small style="display:block;font-size:9px">${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][w]}</small></th>`}).join('')}${showCols?'<th class="att-amount-col">ADVANCE</th><th class="att-amount-col">ADVANCE CASH</th><th class="att-amount-col">TEA</th>':''}</tr></thead><tbody id="ar"></tbody></table></div>
@@ -1110,14 +1153,68 @@ function pdModal(m,id){let n=dim(m);$('modal').innerHTML=`<div class="box" style
 function savePD(m,id){let a=$('p1').value,b=$('p2').value;if(!a||!b||a===b){appMessage('Select two different dates.','Invalid Dates','warning');return}db.attendance[key(m,id,+a.slice(-2))]='PD';db.attendance[key(m,id,+b.slice(-2))]='PD';save();closeModal();renderAtt()}
 function bulk(){
   let m=$('am').value,n=dim(m);
-  $('modal').innerHTML=`<div class="box"><div class="mhead"><b>Bulk Fill — Attendance</b><button class="btn" onclick="closeModal()">×</button></div><div class="mbody"><div class="notice" style="margin-bottom:14px">Bulk Fill applies only to employees currently visible under the filters.</div><div class="grid"><div class="field"><label>Value</label><select id="bv"><option>P</option><option>A</option><option>H</option><option>PP</option></select></div><div class="field"><label>From</label><input id="b1" type="number" min="1" max="${n}" value="1"></div><div class="field"><label>To</label><input id="b2" type="number" min="1" max="${n}" value="${n}"></div></div></div><div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="doBulk()">Fill Visible Employees</button></div></div>`;$('modal').classList.remove('hidden')}
+  $('modal').innerHTML=`<div class="box"><div class="mhead"><b>Bulk Fill — Attendance</b><button class="btn" onclick="closeModal()">×</button></div><div class="mbody"><div class="notice" style="margin-bottom:14px">Bulk Fill applies only to employees currently visible under the filters.</div><div class="grid"><div class="field"><label>Value</label><select id="bv"><option>P</option><option>A</option><option>H</option><option>PP</option><option value="">(Blank — clear)</option></select></div><div class="field"><label>From</label><input id="b1" type="number" min="1" max="${n}" value="1"></div><div class="field"><label>To</label><input id="b2" type="number" min="1" max="${n}" value="${n}"></div></div></div><div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="doBulk()">Fill Visible Employees</button></div></div>`;$('modal').classList.remove('hidden')}
 function doBulk(){
   let m=$('am').value,v=$('bv').value,a=+$('b1').value,b=+$('b2').value,ds=attSelDept(),es=attSelEmp(),fbs=attSelFilledBy(),q=($('aes')?.value||'').trim().toLowerCase();
   if(a>b)return appMessage('From date cannot be greater than To date.','Invalid Date Range','warning');
   let targets=db.employees.filter(e=>isActiveEmployee(e)&&(!ds.length||ds.includes(e.dept))&&(!es.length||es.includes(e.id))&&(!fbs.length||fbs.includes(e.filledBy))&&(!q||`${e.id} ${e.name}`.toLowerCase().includes(q)));
   if(!targets.length)return appMessage('No employees are currently visible under the selected filters.','No Employees','warning');
-  targets.forEach(e=>{for(let x=a;x<=b;x++)db.attendance[key(m,e.id,x)]=v});
+  targets.forEach(e=>{for(let x=a;x<=b;x++){if(v==='')delete db.attendance[key(m,e.id,x)];else db.attendance[key(m,e.id,x)]=v}});
   save();closeModal();renderAtt();
+}
+
+
+/* ---------- IMPORT ATTENDANCE FROM SHEET (paste / CSV) ---------- */
+function importAttSheet(){
+  let m=$('am').value,n=dim(m);
+  $('modal').innerHTML=`<div class="box" style="max-width:720px"><div class="mhead"><b>Import Attendance from Sheet — ${m}</b><button class="btn" onclick="closeModal()">×</button></div><div class="mbody">
+    <div class="notice" style="margin-bottom:12px">In Google Sheets select the rows (Employee ID, then day 1 to day ${n}) → Copy → Paste below. Or upload a CSV file. Valid values: P, A, H, PP, PD or a number (hours).</div>
+    <div class="grid">
+      <div class="field"><label>Column layout</label><select id="impLayout"><option value="1">ID | 1 | 2 | 3 …</option><option value="2">ID | Name | 1 | 2 | 3 …</option></select></div>
+      <div class="field"><label>Match employee by</label><select id="impMatch"><option value="id">Employee ID</option><option value="name">Employee Name</option></select></div>
+      <div class="field"><label>Blank cells in sheet</label><select id="impBlank"><option value="skip">Keep existing attendance</option><option value="clear">Clear existing attendance</option></select></div>
+      <div class="field"><label>Or upload CSV</label><input id="impFile" type="file" accept=".csv,.tsv,.txt" onchange="importAttFile(this)"></div>
+    </div>
+    <div class="field" style="margin-top:12px"><label>Paste sheet data here</label><textarea id="impText" rows="9" style="width:100%;font-family:monospace;font-size:12px" placeholder="E001&#9;P&#9;P&#9;A&#9;H …"></textarea></div>
+  </div><div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="doImportAtt()">Import</button></div></div>`;
+  $('modal').classList.remove('hidden');
+}
+function importAttFile(inp){
+  let f=inp.files&&inp.files[0];if(!f)return;
+  let r=new FileReader();r.onload=()=>{$('impText').value=String(r.result||'')};r.readAsText(f);
+}
+function doImportAtt(){
+  let m=$('am').value,n=dim(m),off=+$('impLayout').value,by=$('impMatch').value,clr=$('impBlank').value==='clear';
+  let raw=($('impText').value||'').replace(/\r/g,'').split('\n').filter(l=>l.trim()!=='');
+  if(!raw.length)return appMessage('Paste sheet data or upload a CSV first.','No Data','warning');
+  let delim=raw.some(l=>l.includes('\t'))?'\t':',';
+  let cell=c=>String(c==null?'':c).trim().replace(/^"(.*)"$/,'$1').trim();
+  let norm=s=>String(s).trim().toLowerCase().replace(/\s+/g,' ');
+  let emps=db.employees.filter(isActiveEmployee);
+  let map=new Map();emps.forEach(e=>map.set(norm(by==='id'?e.id:e.name),e));
+  let ok=new Set(['P','A','H','PP','PD']),filled=0,cleared=0,invalid=0,rows=0,unmatched=[],badVals=new Set(),writes=[];
+  raw.forEach(line=>{
+    let c=line.split(delim).map(cell),e=map.get(norm(c[0]));
+    if(!e){
+      if(c[off]==='1'||/^day/i.test(c[off]||'')||!c[0])return; // header row
+      unmatched.push(c[0]);return;
+    }
+    rows++;
+    for(let d=1;d<=n;d++){
+      let v=cell(c[off+d-1]),u=v.toUpperCase();
+      if(v===''){if(clr)writes.push([e.id,d,null]);continue}
+      if(ok.has(u))writes.push([e.id,d,u]);
+      else if(/^\d+(\.\d+)?$/.test(v))writes.push([e.id,d,v]);
+      else{invalid++;badVals.add(v)}
+    }
+  });
+  if(!rows)return appMessage('No employee rows matched. Check the "Match employee by" and "Column layout" options.'+(unmatched.length?' First unmatched: '+unmatched.slice(0,5).join(', '):''),'Nothing Imported','warning');
+  writes.forEach(([id,d,v])=>{let k=key(m,id,d);if(v===null){if(k in db.attendance){delete db.attendance[k];cleared++}}else{db.attendance[k]=v;filled++}});
+  save();closeModal();renderAtt();
+  let msg=`Employees updated: ${rows} | Cells filled: ${filled}`+(clr?` | Cells cleared: ${cleared}`:'');
+  if(invalid)msg+=` | Skipped invalid values: ${invalid} (${[...badVals].slice(0,8).join(', ')})`;
+  if(unmatched.length)msg+=` | Not found (${unmatched.length}): ${unmatched.slice(0,10).join(', ')}${unmatched.length>10?' …':''}`;
+  appMessage(msg,'Import Complete',invalid||unmatched.length?'warning':'info');
 }
 
 
@@ -1307,7 +1404,7 @@ function renderMonthlySummary(){
     // Tea is always added; Advance, Cash Advance and PF/ESI are deducted.
     let payable=c.earned+c.prev-c.loan-adv-cash+tea-pfesi;
     Object.assign(t,{pay:t.pay+c.earned,adv:t.adv+adv,cash:t.cash+cash,tea:t.tea+tea,pf:t.pf+pfesi,total:t.total+payable});
-    return `<tr><td>${esc(e.name)}</td><td>${esc(e.dept)}</td><td>${Number.isInteger(present)?present:present.toFixed(1)}</td><td>${Number.isInteger(absent)?absent:absent.toFixed(1)}</td><td>${Math.round(c.PP)}</td><td>${Math.round(c.PD)}</td><td>${Math.round(c.hours)}</td><td>${Math.round(Number(e.salary||0))}</td><td>${Math.round(c.sundayBonus)}</td><td>${Math.round(c.earned)}</td><td>${Math.round(adv)}</td><td>${Math.round(cash)}</td><td>${Math.round(tea)}</td><td>${Math.round(pfesi)}</td><td>${Math.round(payable)}</td></tr>`;
+    return `<tr><td>${esc(e.name)}</td><td>${esc(e.dept)}</td><td>${Number.isInteger(present)?present:present.toFixed(1)}</td><td>${Number.isInteger(absent)?absent:absent.toFixed(1)}</td><td>${Math.round(c.PP)}</td><td>${Math.round(c.PD)}</td><td>${Math.round(c.hours)}</td><td>${Math.round(Number(e.salary||0))}</td><td>${Math.round(c.sun)}</td><td>${Math.round(c.earned)}</td><td>${Math.round(adv)}</td><td>${Math.round(cash)}</td><td>${Math.round(tea)}</td><td>${Math.round(pfesi)}</td><td>${Math.round(payable)}</td></tr>`;
   }).join('');
   let totalRow=rows.length?`<tr style="font-weight:700;background:#f7f8fc"><td>Total</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>${money(t.pay)}</td><td>${money(t.adv)}</td><td>${money(t.cash)}</td><td>${money(t.tea)}</td><td>${money(t.pf)}</td><td>${money(t.total)}</td></tr>`:'';
   $('msr').innerHTML=html+totalRow||`<tr><td colspan="15" style="text-align:center;padding:20px">No employees match the selected filters.</td></tr>`;
@@ -1329,7 +1426,7 @@ function calc(e,m){
   let sun=e.sundayType==='half'?daily*.5:e.sundayType==='double'?daily*2:Number(e.sundayPay||0);
   let numPay=stdH>0?(hoursSum/stdH)*daily:0;
   let payBase=(codeP+numCount+PH+H*.5)*daily+PP*daily+PD*2*daily+numPay;
-  let sundayBonus=PP*sun;
+  let sundayBonus=PP*sun; /* sun = per-Sunday pay (display); sundayBonus = sun x eligible Sundays (total, used in earned) */
   let earned=payBase+sundayBonus;
   let hours=hoursSum;
   let prev=prevPending(e.id,m),loan=db.loans.filter(x=>x.month===m&&x.empId===e.id).reduce((s,x)=>s+Number(x.amount||0),0);
@@ -1395,13 +1492,30 @@ function syncPayrollFilters(){
 function clearPayrollFilters(){document.querySelectorAll('.pdc,.pec,.pfc').forEach(x=>x.checked=true);if($('allPD'))$('allPD').checked=true;if($('allPE'))$('allPE').checked=true;if($('allPFB'))$('allPFB').checked=true;if($('pes'))$('pes').value='';syncPayrollFilters()}
 function switchPayrollTab(tab){let p=tab==='payroll';$('payrollPane').style.display=p?'':'none';$('paySummaryPane').style.display=p?'none':'';$('payTab').classList.toggle('active',p);$('paySummaryTab').classList.toggle('active',!p);if(!p)renderPayrollSummary()}
 function payrollRows(m){let ds=payrollDept(),es=payrollEmp(),fs=payrollFB(),q=($('pes')?.value||'').trim().toLowerCase();return db.employees.filter(e=>isActiveEmployee(e)&&(!ds.length||ds.includes(e.dept))&&(!es.length||es.includes(e.id))&&(!fs.length||fs.includes(e.filledBy))&&(!q||`${e.id} ${e.name}`.toLowerCase().includes(q)))}
-function prevPending(id,m){let d=new Date(m+'-01T00:00:00');d.setMonth(d.getMonth()-1);let pm=d.toISOString().slice(0,7),p=db.payroll[pm+'|'+id];return p?Number(p.remaining||0):0}
+function prevPending(id,m){
+  /* Previous month key built arithmetically (no timezone shift). */
+  let [yy,mm]=String(m).split('-').map(Number);mm-=1;if(mm<1){mm=12;yy-=1}
+  let pm=yy+'-'+String(mm).padStart(2,'0'),p=db.payroll[pm+'|'+id];
+  if(!p)return 0;
+  /* If last month's payable was NEGATIVE (deductions > earnings), carry that same negative amount forward.
+     DB keeps total_payable>=0, so the negative is re-derived here from attendance + adjustments, not read from the DB. */
+  let e=(db.employees||[]).find(x=>x.id===id);
+  if(e){
+    let c=calc(e,pm),k=pm+'|'+id,ex=t=>safeNum(db.extraCols?.[t]?.[k]);
+    let raw=safeNum(c.earned)+safeNum(c.prev)-ex('advance')-ex('cash')+ex('tea')-safeNum(p.pfesi)-safeNum(p.late)-safeNum(p.loanRecovery);
+    if(raw<0)return raw;
+  }
+  return safeNum(p.remaining);
+}
+function safeNum(v){const n=Number(v);return Number.isFinite(n)?n:0}
+function dbNum(v,nonNeg){let n=Math.round(safeNum(v)*100)/100;if(nonNeg&&n<0)n=0;return n===0?0:n}
 function payrollCalc(e,m,p){
   let c=calc(e,m),k=m+'|'+e.id; p=p||db.payroll[k]||{};
   let prev=prevPending(e.id,m),adv=Number(db.extraCols?.advance?.[k]||0),cash=Number(db.extraCols?.cash?.[k]||0),tea=Number(db.extraCols?.tea?.[k]||0),pfesi=Number(p.pfesi||0),late=Number(p.late||0),loan=Number(p.loanRecovery||0);
-  let total=c.earned+prev-adv-cash+tea-pfesi-late-loan;
-  let paid=Number(p.paid||0),remaining=p.approved?0:Math.max(0,total-paid);
-  return{...c,prev,adv,cash,tea,pfesi,late,loanRecovery:loan,total,paid,remaining,approved:!!p.approved};
+  let rawTotal=safeNum(c.earned)+prev-adv-cash+tea-pfesi-late-loan;
+  let total=safeNum(rawTotal); /* shown as-is (can be negative); clamped to >=0 only when sent to Supabase (payroll_total_nonnegative) */
+  let paid=safeNum(p.paid),remaining=p.approved?0:Math.max(0,total-paid);
+  return{...c,prev,adv,cash,tea,pfesi,late,loanRecovery:loan,total,rawTotal,paid,remaining,approved:!!p.approved};
 }
 function renderPay(){
   let m=$('pm')?.value||window.payrollMonth||window.summaryMonth||mon();
@@ -1413,7 +1527,7 @@ function renderPay(){
     let k=m+'|'+e.id,p=db.payroll[k]||{},c=payrollCalc(e,m,p);
     db.payroll[k]={...p,month:m,empId:e.id,total:c.total,paid:c.paid,remaining:c.remaining,approved:c.approved,pfesi:c.pfesi,late:c.late,loanRecovery:c.loanRecovery};
     totals.pay+=Number(c.earned||0);totals.adv+=Number(c.adv||0);totals.cash+=Number(c.cash||0);totals.tea+=Number(c.tea||0);totals.pfesi+=Number(c.pfesi||0);totals.late+=Number(c.late||0);totals.loan+=Number(c.loanRecovery||0);totals.prev+=Number(c.prev||0);totals.total+=Number(c.total||0);totals.paid+=Number(c.paid||0);totals.remaining+=Number(c.remaining||0);
-    return `<tr><td>${esc(e.name)}</td><td>${esc(e.dept)}</td><td>${plainMoney(e.salary)}</td><td>${plainMoney(c.sundayBonus)}</td><td>${plainMoney(c.earned)}</td><td class="att-amount-cell"><button class="att-btn ${Number(c.adv)?'att-num':''}" onclick="payrollCellMenu(event,'advance','${m}','${e.id}',${Number(c.adv)||0})">${Number(c.adv)?plainMoney(c.adv):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.cash)?'att-num':''}" onclick="payrollCellMenu(event,'cash','${m}','${e.id}',${Number(c.cash)||0})">${Number(c.cash)?plainMoney(c.cash):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.tea)?'att-num':''}" onclick="payrollCellMenu(event,'tea','${m}','${e.id}',${Number(c.tea)||0})">${Number(c.tea)?plainMoney(c.tea):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.pfesi)?'att-num':''}" onclick="payrollCellMenu(event,'pfesi','${m}','${e.id}',${Number(c.pfesi)||0})">${Number(c.pfesi)?plainMoney(c.pfesi):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.late)?'att-num':''}" onclick="payrollCellMenu(event,'late','${m}','${e.id}',${Number(c.late)||0})">${Number(c.late)?plainMoney(c.late):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.loanRecovery)?'att-num':''}" onclick="payrollCellMenu(event,'loanRecovery','${m}','${e.id}',${Number(c.loanRecovery)||0})">${Number(c.loanRecovery)?plainMoney(c.loanRecovery):'—'}</button></td><td>${plainMoney(c.prev)}</td><td>${money(c.total)}</td><td class="att-amount-cell"><button class="att-btn ${Number(c.paid)?'att-num':''}" onclick="payrollCellMenu(event,'paid','${m}','${e.id}',${Number(c.paid)||0})">${Number(c.paid)?plainMoney(c.paid):'—'}</button></td><td>${plainMoney(c.remaining)}</td><td>${c.approved?'Paid':'Pending'}</td><td><input class="check" type="checkbox" ${c.approved?'checked':''} onchange="approve('${m}','${e.id}',this.checked)"></td></tr>`;
+    return `<tr><td>${esc(e.name)}</td><td>${esc(e.dept)}</td><td>${plainMoney(e.salary)}</td><td>${plainMoney(c.sun)}</td><td>${plainMoney(c.earned)}</td><td class="att-amount-cell"><button class="att-btn ${Number(c.adv)?'att-num':''}" onclick="payrollCellMenu(event,'advance','${m}','${e.id}',${Number(c.adv)||0})">${Number(c.adv)?plainMoney(c.adv):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.cash)?'att-num':''}" onclick="payrollCellMenu(event,'cash','${m}','${e.id}',${Number(c.cash)||0})">${Number(c.cash)?plainMoney(c.cash):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.tea)?'att-num':''}" onclick="payrollCellMenu(event,'tea','${m}','${e.id}',${Number(c.tea)||0})">${Number(c.tea)?plainMoney(c.tea):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.pfesi)?'att-num':''}" onclick="payrollCellMenu(event,'pfesi','${m}','${e.id}',${Number(c.pfesi)||0})">${Number(c.pfesi)?plainMoney(c.pfesi):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.late)?'att-num':''}" onclick="payrollCellMenu(event,'late','${m}','${e.id}',${Number(c.late)||0})">${Number(c.late)?plainMoney(c.late):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.loanRecovery)?'att-num':''}" onclick="payrollCellMenu(event,'loanRecovery','${m}','${e.id}',${Number(c.loanRecovery)||0})">${Number(c.loanRecovery)?plainMoney(c.loanRecovery):'—'}</button></td><td>${plainMoney(c.prev)}</td><td>${money(c.total)}</td><td class="att-amount-cell"><button class="att-btn ${Number(c.paid)?'att-num':''}" onclick="payrollCellMenu(event,'paid','${m}','${e.id}',${Number(c.paid)||0})">${Number(c.paid)?plainMoney(c.paid):'—'}</button></td><td>${plainMoney(c.remaining)}</td><td>${c.approved?'Paid':'Pending'}</td><td><input class="check" type="checkbox" ${c.approved?'checked':''} onchange="approve('${m}','${e.id}',this.checked)"></td></tr>`;
   }).join('')||'<tr><td colspan="17" style="text-align:center;padding:20px">No employees match the selected filters.</td></tr>';
   if($('prt'))$('prt').innerHTML=rows.length?`<tr><td>Totals</td><td></td><td></td><td></td><td>${plainMoney(totals.pay)}</td><td>${plainMoney(totals.adv)}</td><td>${plainMoney(totals.cash)}</td><td>${plainMoney(totals.tea)}</td><td>${plainMoney(totals.pfesi)}</td><td>${plainMoney(totals.late)}</td><td>${plainMoney(totals.loan)}</td><td>${plainMoney(totals.prev)}</td><td>${money(totals.total)}</td><td>${plainMoney(totals.paid)}</td><td>${plainMoney(totals.remaining)}</td><td></td><td></td></tr>`:'';
   save();
@@ -1478,7 +1592,7 @@ function renderPayrollSummary(){
     let present=ac.P+ac.PP+ac.PD+ac.PH+hoursEntryCount+ac.H*.5,absent=ac.A+ac.H*.5;
     let summaryPayable=c.earned+c.prev-c.loan-pc.adv-pc.cash+pc.tea-pc.pfesi;
     totals.pay+=Number(c.earned||0);totals.adv+=Number(pc.adv||0);totals.cash+=Number(pc.cash||0);totals.tea+=Number(pc.tea||0);totals.pfesi+=Number(pc.pfesi||0);totals.total+=Number(summaryPayable||0);totals.paid+=Number(pc.paid||0);totals.remaining+=Number(pc.remaining||0);
-    return `<tr><td>${esc(e.name)}</td><td>${esc(e.dept)}</td><td>${Number.isInteger(present)?present:present.toFixed(1)}</td><td>${Number.isInteger(absent)?absent:absent.toFixed(1)}</td><td>${Math.round(c.PP)}</td><td>${Math.round(c.PD)}</td><td>${Math.round(c.hours)}</td><td>${plainMoney(e.salary)}</td><td>${plainMoney(c.sundayBonus)}</td><td>${plainMoney(c.earned)}</td><td>${plainMoney(pc.adv)}</td><td>${plainMoney(pc.cash)}</td><td>${plainMoney(pc.tea)}</td><td>${plainMoney(pc.pfesi)}</td><td>${money(summaryPayable)}</td><td>${plainMoney(pc.paid)}</td><td>${plainMoney(pc.remaining)}</td></tr>`;
+    return `<tr><td>${esc(e.name)}</td><td>${esc(e.dept)}</td><td>${Number.isInteger(present)?present:present.toFixed(1)}</td><td>${Number.isInteger(absent)?absent:absent.toFixed(1)}</td><td>${Math.round(c.PP)}</td><td>${Math.round(c.PD)}</td><td>${Math.round(c.hours)}</td><td>${plainMoney(e.salary)}</td><td>${plainMoney(c.sun)}</td><td>${plainMoney(c.earned)}</td><td>${plainMoney(pc.adv)}</td><td>${plainMoney(pc.cash)}</td><td>${plainMoney(pc.tea)}</td><td>${plainMoney(pc.pfesi)}</td><td>${money(summaryPayable)}</td><td>${plainMoney(pc.paid)}</td><td>${plainMoney(pc.remaining)}</td></tr>`;
   }).join('');
   $('prs').innerHTML=html||'<tr><td colspan="17" style="text-align:center;padding:20px">No employees match the selected filters.</td></tr>';
   if($('prst'))$('prst').innerHTML=rows.length?`<tr><td>Totals</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>${money(totals.pay)}</td><td>${money(totals.adv)}</td><td>${money(totals.cash)}</td><td>${money(totals.tea)}</td><td>${money(totals.pfesi)}</td><td>${money(totals.total)}</td><td>${money(totals.paid)}</td><td>${money(totals.remaining)}</td></tr>`:'';
@@ -1736,7 +1850,8 @@ function restore(){let i=document.createElement('input');i.type='file';i.accept=
 }
 
 async function syncDbToSupabase(){
-  if(supabaseSyncBusy||!supabaseClient||!authUser||!authProfile)return;
+  if(!supabaseClient||!authUser||!authProfile)return;
+  if(supabaseSyncBusy){supabaseSyncPending=true;return;}
   supabaseSyncBusy=true;
   try{
     const employees=(db.employees||[]).map(e=>({id:e.id,name:e.name,department:e.dept,salary:Number(e.salary||0),hours:Number(e.hours||0),filled_by:e.filledBy||null,account_type:e.accountType||null,status:e.status||'Active',sunday_type:e.sundayType||null,sunday_pay:Number(e.sundayPay||0),increments:e.increments||[]}));
@@ -1745,15 +1860,53 @@ async function syncDbToSupabase(){
     const attendanceRows=Object.entries(db.attendance||{}).filter(([k,v])=>v!==''&&v!=null).map(([k,v])=>{let [m,eid,d]=k.split('|');return {employee_id:eid,attendance_date:`${m}-${String(d).padStart(2,'0')}`,status:String(v),filled_by:null};}).filter(r=>validEmployeeIds.has(r.employee_id));
     if(attendanceRows.length){let r=await supabaseClient.from('attendance').upsert(attendanceRows,{onConflict:'employee_id,attendance_date'});if(r.error)throw r.error;}
     if(isAdmin()){
-      const payrollRows=Object.entries(db.payroll||{}).map(([k,p])=>{let [m,eid]=k.split('|');return {employee_id:eid,payroll_month:`${m}-01`,salary:Number(p.salary||0),sunday_pay:Number(p.sundayPay||0),pay:Number(p.pay||0),advance:Number(p.advance||0),advance_cash:Number(p.advance_cash||0),tea:Number(p.tea||0),pf_esi:Number(p.pfesi||0),late_deduction:Number(p.late||0),loan_recovery:Number(p.loanRecovery||0),previous_pending:Number(p.prev||0),total_payable:Number(p.total||0),amount_paid:Number(p.paid||0),remaining_balance:Number(p.remaining||0),payment_status:p.approved?'Paid':'Pending',approved:!!p.approved};}).filter(r=>validEmployeeIds.has(r.employee_id));
+      const payrollRows=Object.entries(db.payroll||{}).map(([k,p])=>{let [m,eid]=k.split('|');return {employee_id:eid,payroll_month:`${m}-01`,salary:dbNum(p.salary),sunday_pay:dbNum(p.sundayPay),pay:dbNum(p.pay),advance:dbNum(p.advance),advance_cash:dbNum(p.advance_cash),tea:dbNum(p.tea),pf_esi:dbNum(p.pfesi),late_deduction:dbNum(p.late),loan_recovery:dbNum(p.loanRecovery),previous_pending:dbNum(p.prev),total_payable:dbNum(p.total,true),amount_paid:dbNum(p.paid,true),remaining_balance:dbNum(p.remaining,true),payment_status:p.approved?'Paid':'Pending',approved:!!p.approved};}).filter(r=>validEmployeeIds.has(r.employee_id));
       if(payrollRows.length){let r=await supabaseClient.from('payroll').upsert(payrollRows,{onConflict:'employee_id,payroll_month'});if(r.error)throw r.error;}
       const loanRows=[];for(const x of (db.loanAccounts||[])){if(!validEmployeeIds.has(x.empId))continue;const paid=loanRecoveredTotal(x.empId);loanRows.push({...(x.id?{id:x.id}:{}),employee_id:x.empId,loan_date:x.date||new Date().toISOString().slice(0,10),loan_amount:Number(x.amount||0),paid_amount:Number(paid||0),remaining_balance:Math.max(0,Number(x.amount||0)-Number(paid||0)),payment_status:Number(paid)>=Number(x.amount||0)?'Paid':'Pending',remarks:'ACCOUNT'});}for(const x of (db.loans||[])){if(!validEmployeeIds.has(x.empId))continue;loanRows.push({...(x.id?{id:x.id}:{}),employee_id:x.empId,loan_date:x.date?String(x.date).slice(0,10):`${x.month}-01`,loan_amount:0,paid_amount:Number(x.amount||0),remaining_balance:0,payment_status:'Paid',remarks:`RECOVERY|${x.source||'Payroll'}|${x.month||''}`});}if(loanRows.length){let r=await supabaseClient.from('loans').upsert(loanRows);if(r.error)throw r.error;}
       const adjustments=[];for(const type of ['advance','cash','tea'])for(const [k,val] of Object.entries(db.extraCols?.[type]||{})){let [m,eid]=k.split('|');if(Number(val||0)>0&&validEmployeeIds.has(eid))adjustments.push({employee_id:eid,adjustment_date:`${m}-01`,adjustment_type:type==='cash'?'advance_cash':type,amount:Number(val),remarks:'Payroll adjustment'});}let del=await supabaseClient.from('payroll_adjustments').delete().not('id','is',null);if(del.error)throw del.error;if(adjustments.length){let r=await supabaseClient.from('payroll_adjustments').insert(adjustments);if(r.error)throw r.error;}
       const settingsRows=[{setting_key:'departments',setting_value:db.settings.departments||[]},{setting_key:'working_hours',setting_value:{defaultHours:Number(db.settings.defaultHours||10),departmentHours:db.settings.departmentHours||{}}},{setting_key:'header_filters_enabled',setting_value:db.settings.headerFiltersEnabled!==false},{setting_key:'filled_by_users',setting_value:db.settings.filledByUsers||[]},{setting_key:'table_settings',setting_value:db.settings.tableSettings||{}},{setting_key:'statuses',setting_value:db.settings.statuses||['Active','Inactive']}];let sr=await supabaseClient.from('settings').upsert(settingsRows,{onConflict:'setting_key'});if(sr.error)throw sr.error;
     }
     scheduleGoogleBackup();
-  }catch(error){console.error('Supabase sync failed:',error);appMessage('Supabase sync failed: '+(error?.message||error),'Supabase Sync','warning');}finally{supabaseSyncBusy=false;}
+  }catch(error){console.error('Supabase sync failed:',error);appMessage('Supabase sync failed: '+(error?.message||error),'Supabase Sync','warning');}finally{supabaseSyncBusy=false;if(supabaseSyncPending){supabaseSyncPending=false;setTimeout(()=>syncDbToSupabase(),300);}}
 }
+
+/* ---------- WORKING MONTH SELECTOR (shown at every login / app open) ---------- */
+const MP_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
+function realCurrentMonth(){let d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
+function fmtMonth(m){let [y,x]=String(m).split('-').map(Number);return MP_NAMES[x-1]+' '+y}
+function updateMonthChip(){
+  let c=$('monthChip');if(!c)return;
+  let m=window.dashboardMonth||realCurrentMonth(),off=m!==realCurrentMonth();
+  c.classList.remove('hidden');c.classList.toggle('off',off);
+  c.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>Working Month: '+fmtMonth(m)+(off?' (not current)':'')+'</span>';
+}
+function applyWorkingMonth(m){
+  window.dashboardMonth=m;window.attMonth=m;window.summaryMonth=m;window.payrollMonth=m;
+  updateMonthChip();
+}
+function chooseWorkingMonth(cancelable){
+  return new Promise(resolve=>{
+    let cur=realCurrentMonth(),sel=cancelable?(window.dashboardMonth||cur):cur,yr=+sel.slice(0,4);
+    const draw=()=>{
+      let grid=MP_NAMES.map((n,i)=>{let v=yr+'-'+String(i+1).padStart(2,'0');return `<button class="mp-m ${v===cur?'cur':''} ${v===sel?'sel':''}" onclick="window._mpPick('${v}')">${n.slice(0,3)}</button>`}).join('');
+      $('modal').innerHTML=`<div class="box" style="max-width:460px"><div class="mhead"><b>${cancelable?'Change Working Month':'Select Working Month'}</b>${cancelable?'<button class="btn" onclick="window._mpCancel()">×</button>':''}</div><div class="mbody">
+        <div class="notice" style="margin-bottom:16px">Choose the month you are going to work on. Attendance, summary and payroll will open for this month.</div>
+        <div class="mp-year"><button class="btn" onclick="window._mpYear(-1)">‹</button><b>${yr}</b><button class="btn" onclick="window._mpYear(1)">›</button></div>
+        <div class="mp-grid">${grid}</div>
+        <div class="mp-sel">Selected: <b>${fmtMonth(sel)}</b></div>
+        <div class="mp-warn" style="display:${sel!==cur?'block':'none'}">This is not the current month (${fmtMonth(cur)}). Please confirm it is correct before filling data.</div>
+      </div><div class="mfoot">${cancelable?'<button class="btn" onclick="window._mpCancel()">Cancel</button>':''}<button class="btn primary" onclick="window._mpOk()">Open ${fmtMonth(sel)}</button></div></div>`;
+      $('modal').classList.remove('hidden');
+    };
+    window._mpPick=v=>{sel=v;draw()};
+    window._mpYear=d=>{yr+=d;draw()};
+    window._mpOk=()=>{closeModal();applyWorkingMonth(sel);if(cancelable&&typeof page==='function')page(current);resolve(sel)};
+    window._mpCancel=()=>{closeModal();resolve(null)};
+    draw();
+  });
+}
+function changeWorkingMonth(){chooseWorkingMonth(true)}
+['attendanceMonthChange','summaryMonthChange','payrollMonthChange','setDashboardMonth'].forEach(n=>{let f=window[n];if(typeof f==='function')window[n]=function(){let r=f.apply(this,arguments);updateMonthChip();return r}});
 
 
 
