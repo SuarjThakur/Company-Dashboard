@@ -374,6 +374,7 @@ tr.prev-pend td{background:#fff1dc!important}
 tr.prev-pend:hover td{background:#ffe6bf!important}
 tr.prev-pend td:first-child{box-shadow:inset 5px 0 0 #e8590c}
 .pp-badge{display:block;margin-top:2px;font-size:10px;font-weight:700;color:#c2410c;letter-spacing:0;text-transform:none;white-space:nowrap}
+td.neg-bal{color:#c0392b;font-weight:800}
 td.prev-cell-hot{color:#c2410c;font-weight:800}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1540,6 +1541,7 @@ function prevPending(id,m){
     let c=calc(e,pm),k=pm+'|'+id,ex=t=>safeNum(db.extraCols?.[t]?.[k]);
     let raw=safeNum(c.earned)+safeNum(c.prev)-ex('advance')-ex('cash')+ex('tea')-safeNum(p.pfesi)-safeNum(p.late)-safeNum(p.loanRecovery);
     if(raw<0)return raw;
+    if(!p.approved){let r=raw-safeNum(p.paid);if(r<0)return r}
   }
   return safeNum(p.remaining);
 }
@@ -1550,7 +1552,7 @@ function payrollCalc(e,m,p){
   let prev=prevPending(e.id,m),adv=Number(db.extraCols?.advance?.[k]||0),cash=Number(db.extraCols?.cash?.[k]||0),tea=Number(db.extraCols?.tea?.[k]||0),pfesi=Number(p.pfesi||0),late=Number(p.late||0),loan=Number(p.loanRecovery||0);
   let rawTotal=safeNum(c.earned)+prev-adv-cash+tea-pfesi-late-loan;
   let total=safeNum(rawTotal); /* shown as-is (can be negative); clamped to >=0 only when sent to Supabase (payroll_total_nonnegative) */
-  let paid=safeNum(p.paid),remaining=p.approved?0:Math.max(0,total-paid);
+  let paid=safeNum(p.paid),remaining=p.approved?Math.min(0,total):total-paid; /* negative balance is kept (shown with minus) */
   return{...c,prev,adv,cash,tea,pfesi,late,loanRecovery:loan,total,rawTotal,paid,remaining,approved:!!p.approved};
 }
 function renderPay(){
@@ -1563,9 +1565,9 @@ function renderPay(){
     let k=m+'|'+e.id,p=db.payroll[k]||{},c=payrollCalc(e,m,p);
     db.payroll[k]={...p,month:m,empId:e.id,total:c.total,paid:c.paid,remaining:c.remaining,approved:c.approved,pfesi:c.pfesi,late:c.late,loanRecovery:c.loanRecovery};
     totals.pay+=Number(c.earned||0);totals.adv+=Number(c.adv||0);totals.cash+=Number(c.cash||0);totals.tea+=Number(c.tea||0);totals.pfesi+=Number(c.pfesi||0);totals.late+=Number(c.late||0);totals.loan+=Number(c.loanRecovery||0);totals.prev+=Number(c.prev||0);totals.total+=Number(c.total||0);totals.paid+=Number(c.paid||0);totals.remaining+=Number(c.remaining||0);
-    return `<tr${ppAttr(c.prev)}><td>${esc(e.name)}${ppBadge(c.prev)}</td><td>${esc(e.dept)}</td><td>${plainMoney(e.salary)}</td><td>${plainMoney(c.sun)}</td><td>${plainMoney(c.earned)}</td><td class="att-amount-cell"><button class="att-btn ${Number(c.adv)?'att-num':''}" onclick="payrollCellMenu(event,'advance','${m}','${e.id}',${Number(c.adv)||0})">${Number(c.adv)?plainMoney(c.adv):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.cash)?'att-num':''}" onclick="payrollCellMenu(event,'cash','${m}','${e.id}',${Number(c.cash)||0})">${Number(c.cash)?plainMoney(c.cash):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.tea)?'att-num':''}" onclick="payrollCellMenu(event,'tea','${m}','${e.id}',${Number(c.tea)||0})">${Number(c.tea)?plainMoney(c.tea):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.pfesi)?'att-num':''}" onclick="payrollCellMenu(event,'pfesi','${m}','${e.id}',${Number(c.pfesi)||0})">${Number(c.pfesi)?plainMoney(c.pfesi):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.late)?'att-num':''}" onclick="payrollCellMenu(event,'late','${m}','${e.id}',${Number(c.late)||0})">${Number(c.late)?plainMoney(c.late):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.loanRecovery)?'att-num':''}" onclick="payrollCellMenu(event,'loanRecovery','${m}','${e.id}',${Number(c.loanRecovery)||0})">${Number(c.loanRecovery)?plainMoney(c.loanRecovery):'—'}</button></td><td class="${ppHot(c.prev)?'prev-cell-hot':''}">${plainMoney(c.prev)}</td><td>${money(c.total)}</td><td class="att-amount-cell"><button class="att-btn ${Number(c.paid)?'att-num':''}" onclick="payrollCellMenu(event,'paid','${m}','${e.id}',${Number(c.paid)||0})">${Number(c.paid)?plainMoney(c.paid):'—'}</button></td><td>${plainMoney(c.remaining)}</td><td>${c.approved?'Paid':'Pending'}</td><td><input class="check" type="checkbox" ${c.approved?'checked':''} onchange="approve('${m}','${e.id}',this.checked)"></td></tr>`;
+    return `<tr${ppAttr(c.prev)}><td>${esc(e.name)}${ppBadge(c.prev)}</td><td>${esc(e.dept)}</td><td>${plainMoney(e.salary)}</td><td>${plainMoney(c.sun)}</td><td>${plainMoney(c.earned)}</td><td class="att-amount-cell"><button class="att-btn ${Number(c.adv)?'att-num':''}" onclick="payrollCellMenu(event,'advance','${m}','${e.id}',${Number(c.adv)||0})">${Number(c.adv)?plainMoney(c.adv):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.cash)?'att-num':''}" onclick="payrollCellMenu(event,'cash','${m}','${e.id}',${Number(c.cash)||0})">${Number(c.cash)?plainMoney(c.cash):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.tea)?'att-num':''}" onclick="payrollCellMenu(event,'tea','${m}','${e.id}',${Number(c.tea)||0})">${Number(c.tea)?plainMoney(c.tea):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.pfesi)?'att-num':''}" onclick="payrollCellMenu(event,'pfesi','${m}','${e.id}',${Number(c.pfesi)||0})">${Number(c.pfesi)?plainMoney(c.pfesi):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.late)?'att-num':''}" onclick="payrollCellMenu(event,'late','${m}','${e.id}',${Number(c.late)||0})">${Number(c.late)?plainMoney(c.late):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.loanRecovery)?'att-num':''}" onclick="payrollCellMenu(event,'loanRecovery','${m}','${e.id}',${Number(c.loanRecovery)||0})">${Number(c.loanRecovery)?plainMoney(c.loanRecovery):'—'}</button></td><td class="${ppHot(c.prev)?'prev-cell-hot':''}">${plainMoney(c.prev)}</td><td>${money(c.total)}</td><td class="att-amount-cell"><button class="att-btn ${Number(c.paid)?'att-num':''}" onclick="payrollCellMenu(event,'paid','${m}','${e.id}',${Number(c.paid)||0})">${Number(c.paid)?plainMoney(c.paid):'—'}</button></td><td${c.remaining<0?' class="neg-bal"':''}>${plainMoney(c.remaining)}</td><td>${c.approved?'Paid':'Pending'}</td><td><input class="check" type="checkbox" ${c.approved?'checked':''} onchange="approve('${m}','${e.id}',this.checked)"></td></tr>`;
   }).join('')||'<tr><td colspan="17" style="text-align:center;padding:20px">No employees match the selected filters.</td></tr>';
-  if($('prt'))$('prt').innerHTML=rows.length?`<tr><td>Totals</td><td></td><td></td><td></td><td>${plainMoney(totals.pay)}</td><td>${plainMoney(totals.adv)}</td><td>${plainMoney(totals.cash)}</td><td>${plainMoney(totals.tea)}</td><td>${plainMoney(totals.pfesi)}</td><td>${plainMoney(totals.late)}</td><td>${plainMoney(totals.loan)}</td><td>${plainMoney(totals.prev)}</td><td>${money(totals.total)}</td><td>${plainMoney(totals.paid)}</td><td>${plainMoney(totals.remaining)}</td><td></td><td></td></tr>`:'';
+  if($('prt'))$('prt').innerHTML=rows.length?`<tr><td>Totals</td><td></td><td></td><td></td><td>${plainMoney(totals.pay)}</td><td>${plainMoney(totals.adv)}</td><td>${plainMoney(totals.cash)}</td><td>${plainMoney(totals.tea)}</td><td>${plainMoney(totals.pfesi)}</td><td>${plainMoney(totals.late)}</td><td>${plainMoney(totals.loan)}</td><td>${plainMoney(totals.prev)}</td><td>${money(totals.total)}</td><td>${plainMoney(totals.paid)}</td><td${totals.remaining<0?' class="neg-bal"':''}>${plainMoney(totals.remaining)}</td><td></td><td></td></tr>`:'';
   save();
 }
 function payrollCellMenu(ev,field,m,id,current){
@@ -1613,7 +1615,7 @@ function payrollCellMenu(ev,field,m,id,current){
 }
 function payInput(field,m,id,v){let val=Math.max(0,Math.round(Number(v)||0));if(field==='loanRecovery'){setLoanRecovery(m,id,val,'Payroll');return}let k=m+'|'+id;db.payroll[k]=db.payroll[k]||{};db.payroll[k][field]=val;save();renderPay();if($('paySummaryPane')?.style.display!=='none')renderPayrollSummary()}
 function paid(m,id,v){let k=m+'|'+id;db.payroll[k]=db.payroll[k]||{};db.payroll[k].paid=Math.max(0,Math.round(Number(v)||0));save();renderPay();if($('paySummaryPane')?.style.display!=='none')renderPayrollSummary()}
-function approve(m,id,v){let k=m+'|'+id;db.payroll[k]=db.payroll[k]||{};db.payroll[k].approved=!!v;let e=db.employees.find(x=>x.id===id),c=payrollCalc(e,m,db.payroll[k]);db.payroll[k].remaining=v?0:Math.max(0,c.total-Number(db.payroll[k].paid||0));db.payroll[k].total=c.total;save();renderPay();if($('paySummaryPane')?.style.display!=='none')renderPayrollSummary()}
+function approve(m,id,v){let k=m+'|'+id;db.payroll[k]=db.payroll[k]||{};db.payroll[k].approved=!!v;let e=db.employees.find(x=>x.id===id),c=payrollCalc(e,m,db.payroll[k]);db.payroll[k].remaining=v?Math.min(0,c.total):(c.total-Number(db.payroll[k].paid||0));db.payroll[k].total=c.total;save();renderPay();if($('paySummaryPane')?.style.display!=='none')renderPayrollSummary()}
 function bulkApprove(){let m=$('pm').value;appConfirm('Approve all active employees for this month?',()=>{payrollRows(m).forEach(e=>{let k=m+'|'+e.id;db.payroll[k]=db.payroll[k]||{};db.payroll[k].approved=true;db.payroll[k].remaining=0});save();renderPay();if($('paySummaryPane')?.style.display!=='none')renderPayrollSummary()},{title:'Approve Payroll',yesLabel:'Approve All'})}
 function renderPayrollSummary(){
   if(!$('prs'))return;
@@ -1628,10 +1630,10 @@ function renderPayrollSummary(){
     let present=ac.P+ac.PP+ac.PD+ac.PH+hoursEntryCount+ac.H*.5,absent=ac.A+ac.H*.5;
     let summaryPayable=c.earned+c.prev-c.loan-pc.adv-pc.cash+pc.tea-pc.pfesi;
     totals.pay+=Number(c.earned||0);totals.adv+=Number(pc.adv||0);totals.cash+=Number(pc.cash||0);totals.tea+=Number(pc.tea||0);totals.pfesi+=Number(pc.pfesi||0);totals.total+=Number(summaryPayable||0);totals.paid+=Number(pc.paid||0);totals.remaining+=Number(pc.remaining||0);
-    return `<tr${ppAttr(c.prev)}><td>${esc(e.name)}${ppBadge(c.prev)}</td><td>${esc(e.dept)}</td><td>${Number.isInteger(present)?present:present.toFixed(1)}</td><td>${Number.isInteger(absent)?absent:absent.toFixed(1)}</td><td>${Math.round(c.PP)}</td><td>${Math.round(c.PD)}</td><td>${Math.round(c.hours)}</td><td>${plainMoney(e.salary)}</td><td>${plainMoney(c.sun)}</td><td>${plainMoney(c.earned)}</td><td>${plainMoney(pc.adv)}</td><td>${plainMoney(pc.cash)}</td><td>${plainMoney(pc.tea)}</td><td>${plainMoney(pc.pfesi)}</td><td>${money(summaryPayable)}</td><td>${plainMoney(pc.paid)}</td><td>${plainMoney(pc.remaining)}</td></tr>`;
+    return `<tr${ppAttr(c.prev)}><td>${esc(e.name)}${ppBadge(c.prev)}</td><td>${esc(e.dept)}</td><td>${Number.isInteger(present)?present:present.toFixed(1)}</td><td>${Number.isInteger(absent)?absent:absent.toFixed(1)}</td><td>${Math.round(c.PP)}</td><td>${Math.round(c.PD)}</td><td>${Math.round(c.hours)}</td><td>${plainMoney(e.salary)}</td><td>${plainMoney(c.sun)}</td><td>${plainMoney(c.earned)}</td><td>${plainMoney(pc.adv)}</td><td>${plainMoney(pc.cash)}</td><td>${plainMoney(pc.tea)}</td><td>${plainMoney(pc.pfesi)}</td><td>${money(summaryPayable)}</td><td>${plainMoney(pc.paid)}</td><td${pc.remaining<0?' class="neg-bal"':''}>${plainMoney(pc.remaining)}</td></tr>`;
   }).join('');
   $('prs').innerHTML=html||'<tr><td colspan="17" style="text-align:center;padding:20px">No employees match the selected filters.</td></tr>';
-  if($('prst'))$('prst').innerHTML=rows.length?`<tr><td>Totals</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>${money(totals.pay)}</td><td>${money(totals.adv)}</td><td>${money(totals.cash)}</td><td>${money(totals.tea)}</td><td>${money(totals.pfesi)}</td><td>${money(totals.total)}</td><td>${money(totals.paid)}</td><td>${money(totals.remaining)}</td></tr>`:'';
+  if($('prst'))$('prst').innerHTML=rows.length?`<tr><td>Totals</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>${money(totals.pay)}</td><td>${money(totals.adv)}</td><td>${money(totals.cash)}</td><td>${money(totals.tea)}</td><td>${money(totals.pfesi)}</td><td>${money(totals.total)}</td><td>${money(totals.paid)}</td><td${totals.remaining<0?' class="neg-bal"':''}>${money(totals.remaining)}</td></tr>`:'';
 }
 
 
@@ -2032,6 +2034,12 @@ function loanPayDelete(id,month){
   /* capture phase: runs before the page's own onchange handler, so the table is drawn with the reset employee list */
   document.addEventListener('change',ev=>{
     const t=ev.target;if(!t||t.type!=='checkbox')return;
+    /* From the "All" state, clicking one name selects ONLY that name (instead of un-ticking it) */
+    for(const g of GROUPS)for(const sel of [g.d,g.f,g.e]){
+      if(!t.matches(sel))continue;
+      const all=[...document.querySelectorAll(sel)];
+      if(!t.checked&&all.length>1&&all.every(x=>x===t||x.checked)){all.forEach(x=>{x.checked=(x===t)})}
+    }
     for(const g of GROUPS){
       const parent=t.matches(g.d)||t.matches(g.f)||t.id===g.all[0]||t.id===g.all[2];
       if(parent){
