@@ -324,7 +324,7 @@ flex-wrap:wrap;background:#fbfbfd}
 @media(max-width:600px){.side{width:65px}.brand{padding:18px 10px;justify-content:center}.brand b,.brand small{display:none}
 .nav button{font-size:0;text-align:center;justify-content:center}.nav-label{display:none}.content{padding:12px}.stats{grid-template-columns:1fr}
 .top-user span:not(.av){display:none}.top-user{padding:6px}}
-@media print{.side,.top,.no-print,.title,.sub{display:none!important}.main,.content{overflow:visible}.wrap{max-height:none;overflow:visible}.card{border:0;box-shadow:none}.print-hide-col{display:none!important}}
+@media print{.side,.top,.no-print,.title,.sub{display:none!important}.main,.content{overflow:visible}.wrap{max-height:none!important;overflow:visible}.card{border:0;box-shadow:none}.print-hide-col{display:none!important}}
 .hidden{display:none!important}
 
 .att-select{font-weight:700;text-align:center;cursor:pointer;border-radius:8px;padding:7px 3px!important}
@@ -369,6 +369,12 @@ flex-wrap:wrap;background:#fbfbfd}
 .mp-warn{display:none;margin-top:10px;padding:9px 12px;border-radius:9px;background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-line);font-size:12.5px;font-weight:600;text-align:center}
 .month-chip{margin-left:auto;margin-right:14px;display:inline-flex;align-items:center;gap:7px;font-weight:700}
 .month-chip.off{background:var(--amber-bg)!important;color:var(--amber)!important;border-color:var(--amber-line)!important}
+.opt.dep-hide{display:none!important}
+tr.prev-pend td{background:#fff1dc!important}
+tr.prev-pend:hover td{background:#ffe6bf!important}
+tr.prev-pend td:first-child{box-shadow:inset 5px 0 0 #e8590c}
+.pp-badge{display:block;margin-top:2px;font-size:10px;font-weight:700;color:#c2410c;letter-spacing:0;text-transform:none;white-space:nowrap}
+td.prev-cell-hot{color:#c2410c;font-weight:800}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -436,6 +442,9 @@ function save(){
   }
 }
 function esc(x){return String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function ppHot(v){return Math.round(Number(v)||0)!==0}
+function ppAttr(v){return ppHot(v)?` class="prev-pend" title="Previous month pending: ${money(v)}"`:''}
+function ppBadge(v){return ppHot(v)?`<small class="pp-badge">Prev pending ${money(v)}</small>`:''}
 function money(x){return '₹'+Math.round(Number(x||0)).toLocaleString('en-IN')}
 function plainMoney(x){return Math.round(Number(x||0)).toLocaleString('en-IN')}
 function mon(){return new Date().toISOString().slice(0,7)}
@@ -1001,11 +1010,11 @@ function attendance(){
     <div class="wrap"><table class="attendance-table" data-table-key="attendance"><thead><tr><th class="s1 stickyh">Employee</th><th class="s2 stickyh">Department</th>${showCols?'':Array.from({length:n},(_,i)=>{let d=i+1,w=new Date(m+'-'+String(d).padStart(2,'0')+'T00:00:00').getDay();return `<th class="day ${w===0?'sunday':''}">${String(d).padStart(2,'0')}<small style="display:block;font-size:9px">${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][w]}</small></th>`}).join('')}${showCols?'<th class="att-amount-col">ADVANCE</th><th class="att-amount-col">ADVANCE CASH</th><th class="att-amount-col">TEA</th>':''}</tr></thead><tbody id="ar"></tbody></table></div>
   </div>`;
 
-  let depts=Array.isArray(db.settings.departments)?db.settings.departments:[],active=(db.employees||[]).filter(e=>isActiveEmployee(e));
+  let depts=[...new Set([...(Array.isArray(db.settings.departments)?db.settings.departments:[]),...(db.employees||[]).filter(e=>isActiveEmployee(e)).map(e=>e.dept).filter(Boolean)])],active=(db.employees||[]).filter(e=>isActiveEmployee(e));
   $('adm').innerHTML=menuSearchBar('adm')+`<div class="menu-list"><label class="opt" data-all="1"><input type="checkbox" class="check" id="allAD" onchange="allAttDept(this)">All Departments</label>`+depts.map(x=>`<label class="opt"><input type="checkbox" class="check adc" value="${esc(x)}" ${!oldDept.length||oldDept.includes(x)?'checked':''} onchange="attDeptChange()"> ${esc(x)}</label>`).join('')+'</div>';
   $('aem').innerHTML=menuSearchBar('aem')+`<div class="menu-list"><label class="opt" data-all="1"><input type="checkbox" class="check" id="allAE" onchange="allAttEmp(this)">All Employees</label>`+active.map(e=>`<label class="opt"><input type="checkbox" class="check aec" value="${esc(e.id)}" ${!oldEmp.length||oldEmp.includes(e.id)?'checked':''} onchange="attEmpChange()"> ${esc(e.id)} - ${esc(e.name)}</label>`).join('')+'</div>';
-  let filledByNames=[...new Set(active.map(e=>e.filledBy).filter(Boolean))];
-  $('afbm').innerHTML=menuSearchBar('afbm')+`<div class="menu-list"><label class="opt" data-all="1"><input type="checkbox" class="check" id="allAFB" onchange="allAttFilledBy(this)">All Filled By</label>`+filledByNames.map(x=>`<label class="opt"><input type="checkbox" class="check afbc" value="${esc(x)}" ${!oldFB.length||oldFB.includes(x)?'checked':''} onchange="attFilledByChange()"> ${esc(x)}</label>`).join('')+'</div>';
+  let filledByNames=[...new Set(active.map(e=>e.filledBy||''))];
+  $('afbm').innerHTML=menuSearchBar('afbm')+`<div class="menu-list"><label class="opt" data-all="1"><input type="checkbox" class="check" id="allAFB" onchange="allAttFilledBy(this)">All Filled By</label>`+filledByNames.map(x=>`<label class="opt"><input type="checkbox" class="check afbc" value="${esc(x)}" ${!oldFB.length||oldFB.includes(x)?'checked':''} onchange="attFilledByChange()"> ${esc(x||'Unassigned')}</label>`).join('')+'</div>';
   syncAttFilterLabels();renderAtt();syncLegendActive();
 }
 function toggleExtraCols(){window.showExtraCols=!window.showExtraCols;attendance()}
@@ -1387,10 +1396,10 @@ function monthlySummary(){
     <div class="filter-field temp-summary-employee"><label>Employee</label><div class="multi"><button class="btn multibtn" onclick="toggleMenu('sem')"><span id="set">All Employees</span>${CHEV}</button><div id="sem" class="menu"></div></div></div>
   </div>
   <div class="wrap"><table class="monthly-summary-table" data-table-key="monthlySummary"><thead><tr><th>Employee</th><th>Department</th><th>Present</th><th>Absent</th><th>Holiday</th><th>Double Shift</th><th>Total Hrs</th><th>Salary</th><th>Sunday Pay</th><th>Pay</th><th>ADVANCE</th><th>ADVANCE (CASH)</th><th>TEA</th><th>PF/ESI</th><th>Total Payable</th></tr></thead><tbody id="msr"></tbody></table></div></div>`;
-  let active=db.employees.filter(e=>isActiveEmployee(e)),depts=Array.isArray(db.settings.departments)?db.settings.departments:[],filled=[...new Set(active.map(e=>e.filledBy).filter(Boolean))];
+  let active=db.employees.filter(e=>isActiveEmployee(e)),depts=[...new Set([...(Array.isArray(db.settings.departments)?db.settings.departments:[]),...(db.employees||[]).filter(e=>isActiveEmployee(e)).map(e=>e.dept).filter(Boolean)])],filled=[...new Set(active.map(e=>e.filledBy||''))];
   $('sdm').innerHTML=menuSearchBar('sdm')+`<div class="menu-list"><label class="opt" data-all="1"><input type="checkbox" class="check" id="allSD" onchange="allMonthlyDept(this)">All Departments</label>`+depts.map(x=>`<label class="opt"><input type="checkbox" class="check sdc" value="${esc(x)}" ${!oldDept.length||oldDept.includes(x)?'checked':''} onchange="syncMonthlyFilters()"> ${esc(x)}</label>`).join('')+'</div>';
   $('sem').innerHTML=menuSearchBar('sem')+`<div class="menu-list"><label class="opt" data-all="1"><input type="checkbox" class="check" id="allSE" onchange="allMonthlyEmp(this)">All Employees</label>`+active.map(e=>`<label class="opt"><input type="checkbox" class="check sec" value="${esc(e.id)}" ${!oldEmp.length||oldEmp.includes(e.id)?'checked':''} onchange="syncMonthlyFilters()"> ${esc(e.id)} - ${esc(e.name)}</label>`).join('')+'</div>';
-  $('sfbm').innerHTML=menuSearchBar('sfbm')+`<div class="menu-list"><label class="opt" data-all="1"><input type="checkbox" class="check" id="allSFB" onchange="allMonthlyFilledBy(this)">All Filled By</label>`+filled.map(x=>`<label class="opt"><input type="checkbox" class="check sfbc" value="${esc(x)}" ${!oldFB.length||oldFB.includes(x)?'checked':''} onchange="syncMonthlyFilters()"> ${esc(x)}</label>`).join('')+'</div>';
+  $('sfbm').innerHTML=menuSearchBar('sfbm')+`<div class="menu-list"><label class="opt" data-all="1"><input type="checkbox" class="check" id="allSFB" onchange="allMonthlyFilledBy(this)">All Filled By</label>`+filled.map(x=>`<label class="opt"><input type="checkbox" class="check sfbc" value="${esc(x)}" ${!oldFB.length||oldFB.includes(x)?'checked':''} onchange="syncMonthlyFilters()"> ${esc(x||'Unassigned')}</label>`).join('')+'</div>';
   syncMonthlyFilters();
 }
 function summaryMonthChange(v){if(v){window.dashboardMonth=v;window.summaryMonth=v;window.attMonth=v;window.payrollMonth=v;updateMonthlySummaryNav(v);if($('top'))$('top').textContent=monthLabel(v);monthlySummary()}}
@@ -1431,7 +1440,7 @@ function renderMonthlySummary(){
     // Tea is always added; Advance, Cash Advance and PF/ESI are deducted.
     let payable=c.earned+c.prev-c.loan-adv-cash+tea-pfesi;
     Object.assign(t,{pay:t.pay+c.earned,adv:t.adv+adv,cash:t.cash+cash,tea:t.tea+tea,pf:t.pf+pfesi,total:t.total+payable});
-    return `<tr><td>${esc(e.name)}</td><td>${esc(e.dept)}</td><td>${Number.isInteger(present)?present:present.toFixed(1)}</td><td>${Number.isInteger(absent)?absent:absent.toFixed(1)}</td><td>${Math.round(c.PP)}</td><td>${Math.round(c.PD)}</td><td>${Math.round(c.hours)}</td><td>${Math.round(Number(e.salary||0))}</td><td>${Math.round(c.sun)}</td><td>${Math.round(c.earned)}</td><td>${Math.round(adv)}</td><td>${Math.round(cash)}</td><td>${Math.round(tea)}</td><td>${Math.round(pfesi)}</td><td>${Math.round(payable)}</td></tr>`;
+    return `<tr${ppAttr(c.prev)}><td>${esc(e.name)}${ppBadge(c.prev)}</td><td>${esc(e.dept)}</td><td>${Number.isInteger(present)?present:present.toFixed(1)}</td><td>${Number.isInteger(absent)?absent:absent.toFixed(1)}</td><td>${Math.round(c.PP)}</td><td>${Math.round(c.PD)}</td><td>${Math.round(c.hours)}</td><td>${Math.round(Number(e.salary||0))}</td><td>${Math.round(c.sun)}</td><td>${Math.round(c.earned)}</td><td>${Math.round(adv)}</td><td>${Math.round(cash)}</td><td>${Math.round(tea)}</td><td>${Math.round(pfesi)}</td><td>${Math.round(payable)}</td></tr>`;
   }).join('');
   let totalRow=rows.length?`<tr style="font-weight:700;background:#f7f8fc"><td>Total</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>${money(t.pay)}</td><td>${money(t.adv)}</td><td>${money(t.cash)}</td><td>${money(t.tea)}</td><td>${money(t.pf)}</td><td>${money(t.total)}</td></tr>`:'';
   $('msr').innerHTML=html+totalRow||`<tr><td colspan="15" style="text-align:center;padding:20px">No employees match the selected filters.</td></tr>`;
@@ -1488,10 +1497,10 @@ function payroll(){
   <div class="payroll-tabs no-print"><button id="payTab" class="payroll-tab active" onclick="switchPayrollTab('payroll')">Payroll</button><button id="paySummaryTab" class="payroll-tab" onclick="switchPayrollTab('summary')">Summary</button></div>
   <div id="payrollPane"><div class="wrap"><table class="payroll-table" data-table-key="payroll"><thead><tr><th>Employee Name</th><th>Department</th><th>Salary</th><th>Sunday Pay</th><th>Pay</th><th>ADVANCE</th><th>ADVANCE (CASH)</th><th>TEA</th><th>PF/ESI</th><th>Late Deduction</th><th>Loan Recovery</th><th>Previous Pending</th><th>Total Payable</th><th>Amount Paid</th><th>Remaining Balance</th><th>Payment Status</th><th>Approved</th></tr></thead><tbody id="pr"></tbody><tfoot id="prt"></tfoot></table></div></div>
   <div id="paySummaryPane" style="display:none"><div class="wrap"><table class="monthly-summary-table" data-table-key="payrollSummary"><thead><tr><th>Employee</th><th>Department</th><th>Present</th><th>Absent</th><th>Holiday</th><th>Double Shift</th><th>Total Hrs</th><th>Salary</th><th>Sunday Pay</th><th>Pay</th><th>ADVANCE</th><th>ADVANCE (CASH)</th><th>TEA</th><th>PF/ESI</th><th>Total Payable</th><th>Amount Paid</th><th>Remaining Balance</th></tr></thead><tbody id="prs"></tbody><tfoot id="prst"></tfoot></table></div></div></div>`;
-  let active=db.employees.filter(e=>isActiveEmployee(e)),depts=Array.isArray(db.settings.departments)?db.settings.departments:[],filled=[...new Set(active.map(e=>e.filledBy).filter(Boolean))];
+  let active=db.employees.filter(e=>isActiveEmployee(e)),depts=[...new Set([...(Array.isArray(db.settings.departments)?db.settings.departments:[]),...(db.employees||[]).filter(e=>isActiveEmployee(e)).map(e=>e.dept).filter(Boolean)])],filled=[...new Set(active.map(e=>e.filledBy||''))];
   $('pdm').innerHTML=menuSearchBar('pdm')+`<div class="menu-list"><label class="opt"><input type="checkbox" class="check" id="allPD" onchange="allPayrollDept(this)">All Departments</label>`+depts.map(x=>`<label class="opt"><input type="checkbox" class="check pdc" value="${esc(x)}" ${!oldDept.length||oldDept.includes(x)?'checked':''} onchange="syncPayrollFilters()"> ${esc(x)}</label>`).join('')+'</div>';
   $('pem').innerHTML=menuSearchBar('pem')+`<div class="menu-list"><label class="opt"><input type="checkbox" class="check" id="allPE" onchange="allPayrollEmp(this)">All Employees</label>`+active.map(e=>`<label class="opt"><input type="checkbox" class="check pec" value="${esc(e.id)}" ${!oldEmp.length||oldEmp.includes(e.id)?'checked':''} onchange="syncPayrollFilters()"> ${esc(e.id)} - ${esc(e.name)}</label>`).join('')+'</div>';
-  $('pfbm').innerHTML=menuSearchBar('pfbm')+`<div class="menu-list"><label class="opt"><input type="checkbox" class="check" id="allPFB" onchange="allPayrollFilledBy(this)">All Filled By</label>`+filled.map(x=>`<label class="opt"><input type="checkbox" class="check pfc" value="${esc(x)}" ${!oldFB.length||oldFB.includes(x)?'checked':''} onchange="syncPayrollFilters()"> ${esc(x)}</label>`).join('')+'</div>';
+  $('pfbm').innerHTML=menuSearchBar('pfbm')+`<div class="menu-list"><label class="opt"><input type="checkbox" class="check" id="allPFB" onchange="allPayrollFilledBy(this)">All Filled By</label>`+filled.map(x=>`<label class="opt"><input type="checkbox" class="check pfc" value="${esc(x)}" ${!oldFB.length||oldFB.includes(x)?'checked':''} onchange="syncPayrollFilters()"> ${esc(x||'Unassigned')}</label>`).join('')+'</div>';
   syncPayrollFilters();
   
 }
@@ -1554,7 +1563,7 @@ function renderPay(){
     let k=m+'|'+e.id,p=db.payroll[k]||{},c=payrollCalc(e,m,p);
     db.payroll[k]={...p,month:m,empId:e.id,total:c.total,paid:c.paid,remaining:c.remaining,approved:c.approved,pfesi:c.pfesi,late:c.late,loanRecovery:c.loanRecovery};
     totals.pay+=Number(c.earned||0);totals.adv+=Number(c.adv||0);totals.cash+=Number(c.cash||0);totals.tea+=Number(c.tea||0);totals.pfesi+=Number(c.pfesi||0);totals.late+=Number(c.late||0);totals.loan+=Number(c.loanRecovery||0);totals.prev+=Number(c.prev||0);totals.total+=Number(c.total||0);totals.paid+=Number(c.paid||0);totals.remaining+=Number(c.remaining||0);
-    return `<tr><td>${esc(e.name)}</td><td>${esc(e.dept)}</td><td>${plainMoney(e.salary)}</td><td>${plainMoney(c.sun)}</td><td>${plainMoney(c.earned)}</td><td class="att-amount-cell"><button class="att-btn ${Number(c.adv)?'att-num':''}" onclick="payrollCellMenu(event,'advance','${m}','${e.id}',${Number(c.adv)||0})">${Number(c.adv)?plainMoney(c.adv):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.cash)?'att-num':''}" onclick="payrollCellMenu(event,'cash','${m}','${e.id}',${Number(c.cash)||0})">${Number(c.cash)?plainMoney(c.cash):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.tea)?'att-num':''}" onclick="payrollCellMenu(event,'tea','${m}','${e.id}',${Number(c.tea)||0})">${Number(c.tea)?plainMoney(c.tea):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.pfesi)?'att-num':''}" onclick="payrollCellMenu(event,'pfesi','${m}','${e.id}',${Number(c.pfesi)||0})">${Number(c.pfesi)?plainMoney(c.pfesi):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.late)?'att-num':''}" onclick="payrollCellMenu(event,'late','${m}','${e.id}',${Number(c.late)||0})">${Number(c.late)?plainMoney(c.late):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.loanRecovery)?'att-num':''}" onclick="payrollCellMenu(event,'loanRecovery','${m}','${e.id}',${Number(c.loanRecovery)||0})">${Number(c.loanRecovery)?plainMoney(c.loanRecovery):'—'}</button></td><td>${plainMoney(c.prev)}</td><td>${money(c.total)}</td><td class="att-amount-cell"><button class="att-btn ${Number(c.paid)?'att-num':''}" onclick="payrollCellMenu(event,'paid','${m}','${e.id}',${Number(c.paid)||0})">${Number(c.paid)?plainMoney(c.paid):'—'}</button></td><td>${plainMoney(c.remaining)}</td><td>${c.approved?'Paid':'Pending'}</td><td><input class="check" type="checkbox" ${c.approved?'checked':''} onchange="approve('${m}','${e.id}',this.checked)"></td></tr>`;
+    return `<tr${ppAttr(c.prev)}><td>${esc(e.name)}${ppBadge(c.prev)}</td><td>${esc(e.dept)}</td><td>${plainMoney(e.salary)}</td><td>${plainMoney(c.sun)}</td><td>${plainMoney(c.earned)}</td><td class="att-amount-cell"><button class="att-btn ${Number(c.adv)?'att-num':''}" onclick="payrollCellMenu(event,'advance','${m}','${e.id}',${Number(c.adv)||0})">${Number(c.adv)?plainMoney(c.adv):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.cash)?'att-num':''}" onclick="payrollCellMenu(event,'cash','${m}','${e.id}',${Number(c.cash)||0})">${Number(c.cash)?plainMoney(c.cash):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.tea)?'att-num':''}" onclick="payrollCellMenu(event,'tea','${m}','${e.id}',${Number(c.tea)||0})">${Number(c.tea)?plainMoney(c.tea):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.pfesi)?'att-num':''}" onclick="payrollCellMenu(event,'pfesi','${m}','${e.id}',${Number(c.pfesi)||0})">${Number(c.pfesi)?plainMoney(c.pfesi):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.late)?'att-num':''}" onclick="payrollCellMenu(event,'late','${m}','${e.id}',${Number(c.late)||0})">${Number(c.late)?plainMoney(c.late):'—'}</button></td><td class="att-amount-cell"><button class="att-btn ${Number(c.loanRecovery)?'att-num':''}" onclick="payrollCellMenu(event,'loanRecovery','${m}','${e.id}',${Number(c.loanRecovery)||0})">${Number(c.loanRecovery)?plainMoney(c.loanRecovery):'—'}</button></td><td class="${ppHot(c.prev)?'prev-cell-hot':''}">${plainMoney(c.prev)}</td><td>${money(c.total)}</td><td class="att-amount-cell"><button class="att-btn ${Number(c.paid)?'att-num':''}" onclick="payrollCellMenu(event,'paid','${m}','${e.id}',${Number(c.paid)||0})">${Number(c.paid)?plainMoney(c.paid):'—'}</button></td><td>${plainMoney(c.remaining)}</td><td>${c.approved?'Paid':'Pending'}</td><td><input class="check" type="checkbox" ${c.approved?'checked':''} onchange="approve('${m}','${e.id}',this.checked)"></td></tr>`;
   }).join('')||'<tr><td colspan="17" style="text-align:center;padding:20px">No employees match the selected filters.</td></tr>';
   if($('prt'))$('prt').innerHTML=rows.length?`<tr><td>Totals</td><td></td><td></td><td></td><td>${plainMoney(totals.pay)}</td><td>${plainMoney(totals.adv)}</td><td>${plainMoney(totals.cash)}</td><td>${plainMoney(totals.tea)}</td><td>${plainMoney(totals.pfesi)}</td><td>${plainMoney(totals.late)}</td><td>${plainMoney(totals.loan)}</td><td>${plainMoney(totals.prev)}</td><td>${money(totals.total)}</td><td>${plainMoney(totals.paid)}</td><td>${plainMoney(totals.remaining)}</td><td></td><td></td></tr>`:'';
   save();
@@ -1619,7 +1628,7 @@ function renderPayrollSummary(){
     let present=ac.P+ac.PP+ac.PD+ac.PH+hoursEntryCount+ac.H*.5,absent=ac.A+ac.H*.5;
     let summaryPayable=c.earned+c.prev-c.loan-pc.adv-pc.cash+pc.tea-pc.pfesi;
     totals.pay+=Number(c.earned||0);totals.adv+=Number(pc.adv||0);totals.cash+=Number(pc.cash||0);totals.tea+=Number(pc.tea||0);totals.pfesi+=Number(pc.pfesi||0);totals.total+=Number(summaryPayable||0);totals.paid+=Number(pc.paid||0);totals.remaining+=Number(pc.remaining||0);
-    return `<tr><td>${esc(e.name)}</td><td>${esc(e.dept)}</td><td>${Number.isInteger(present)?present:present.toFixed(1)}</td><td>${Number.isInteger(absent)?absent:absent.toFixed(1)}</td><td>${Math.round(c.PP)}</td><td>${Math.round(c.PD)}</td><td>${Math.round(c.hours)}</td><td>${plainMoney(e.salary)}</td><td>${plainMoney(c.sun)}</td><td>${plainMoney(c.earned)}</td><td>${plainMoney(pc.adv)}</td><td>${plainMoney(pc.cash)}</td><td>${plainMoney(pc.tea)}</td><td>${plainMoney(pc.pfesi)}</td><td>${money(summaryPayable)}</td><td>${plainMoney(pc.paid)}</td><td>${plainMoney(pc.remaining)}</td></tr>`;
+    return `<tr${ppAttr(c.prev)}><td>${esc(e.name)}${ppBadge(c.prev)}</td><td>${esc(e.dept)}</td><td>${Number.isInteger(present)?present:present.toFixed(1)}</td><td>${Number.isInteger(absent)?absent:absent.toFixed(1)}</td><td>${Math.round(c.PP)}</td><td>${Math.round(c.PD)}</td><td>${Math.round(c.hours)}</td><td>${plainMoney(e.salary)}</td><td>${plainMoney(c.sun)}</td><td>${plainMoney(c.earned)}</td><td>${plainMoney(pc.adv)}</td><td>${plainMoney(pc.cash)}</td><td>${plainMoney(pc.tea)}</td><td>${plainMoney(pc.pfesi)}</td><td>${money(summaryPayable)}</td><td>${plainMoney(pc.paid)}</td><td>${plainMoney(pc.remaining)}</td></tr>`;
   }).join('');
   $('prs').innerHTML=html||'<tr><td colspan="17" style="text-align:center;padding:20px">No employees match the selected filters.</td></tr>';
   if($('prst'))$('prst').innerHTML=rows.length?`<tr><td>Totals</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>${money(totals.pay)}</td><td>${money(totals.adv)}</td><td>${money(totals.cash)}</td><td>${money(totals.tea)}</td><td>${money(totals.pfesi)}</td><td>${money(totals.total)}</td><td>${money(totals.paid)}</td><td>${money(totals.remaining)}</td></tr>`:'';
@@ -1641,21 +1650,21 @@ function setLoanRecovery(m,id,amount,source){
   amount=Math.max(0,Math.round(Number(amount)||0));let acc=loanAccount(id),bal=loanBalance(acc);
   if(acc&&amount>bal)return appMessage('Recovery amount cannot be greater than remaining loan balance');
   let idx=(db.loans||[]).findIndex(x=>x.month===m&&x.empId===id);
-  if(amount===0){if(idx>=0)db.loans.splice(idx,1)}else{let rec={month:m,empId:id,amount,date:new Date().toISOString(),source:source||'Payroll'};if(idx>=0)db.loans[idx]={...db.loans[idx],...rec};else db.loans.push(rec)}
+  if(amount===0){if(idx>=0){let gone=db.loans.splice(idx,1)[0];if(gone&&gone.id)deleteLoanRowsDb(id,false,[gone.id])}}else{let rec={month:m,empId:id,amount,date:new Date().toISOString(),source:source||'Payroll'};if(idx>=0)db.loans[idx]={...db.loans[idx],...rec};else db.loans.push(rec)}
   let k=m+'|'+id;db.payroll[k]=db.payroll[k]||{};db.payroll[k].loanRecovery=amount;save();renderPay();if($('paySummaryPane')?.style.display!=='none')renderPayrollSummary();if(current==='loans')loans();
 }
 function loanDateDisplay(v){let s=String(v||'');if(/^\d{4}-\d{2}-\d{2}$/.test(s)){let [y,m,d]=s.split('-');return d+'/'+m+'/'+y.slice(2)}return s}
 function loans(){
   if(!isAdmin()){page('employees');return}
   let accounts=loanAccounts(),totalLoan=accounts.reduce((s,x)=>s+Number(x.amount||0),0),totalPaid=accounts.reduce((s,x)=>s+loanRecoveredTotal(x.empId),0),outstanding=Math.max(0,totalLoan-totalPaid);
-  $('content').innerHTML=`<div class="card"><div class="head"><b>Loan Details</b><div class="no-print"><button class="btn primary" onclick="loanModal()">${ICO.plus} Add Loan</button></div></div>${accounts.length?`<div class="wrap"><table data-table-key="loans"><thead><tr><th>Employee Name</th><th>Department</th><th>Date</th><th>Loan Amount</th><th>Remaining Balance</th><th>Pay</th><th>View</th></tr></thead><tbody>${accounts.map(x=>{let e=db.employees.find(y=>y.id===x.empId),bal=loanBalance(x);return `<tr><td>${esc(e?.name||x.empId)}</td><td>${esc(e?.dept||'')}</td><td>${loanDateDisplay(x.date)}</td><td>${money(x.amount)}</td><td>${money(bal)}</td><td><button class="btn" onclick="loanPayModal('${esc(x.empId)}')">Set / Clear</button></td><td><button class="btn" title="View payment history" onclick="loanView('${esc(x.empId)}')">👁</button></td></tr>`}).join('')}</tbody></table></div>`:`<div class="empty-state"><div class="es-ico">◇</div>No loans yet. Add a loan to start tracking recovery.</div>`}</div>${accounts.length?`<div class="card"><div class="head"><b>Loan Summary</b><div style="display:flex;gap:24px;flex-wrap:wrap"><span>Loan Amount <b>${money(totalLoan)}</b></span><span>Total Paid <b>${money(totalPaid)}</b></span><span>Outstanding <b>${money(outstanding)}</b></span></div></div></div>`:''}`;tableSettingsInit();applyTableSettings();
+  $('content').innerHTML=`<div class="card"><div class="head"><b>Loan Details</b><div class="no-print"><button class="btn primary" onclick="loanModal()">${ICO.plus} Add Loan</button></div></div>${accounts.length?`<div class="wrap"><table data-table-key="loans"><thead><tr><th>Employee Name</th><th>Department</th><th>Date</th><th>Loan Amount</th><th>Remaining Balance</th><th>Pay</th><th>View</th></tr></thead><tbody>${accounts.map(x=>{let e=db.employees.find(y=>y.id===x.empId),bal=loanBalance(x);return `<tr><td>${esc(e?.name||x.empId)}</td><td>${esc(e?.dept||'')}</td><td>${loanDateDisplay(x.date)}</td><td>${money(x.amount)}</td><td>${money(bal)}</td><td><button class="btn" onclick="loanPayModal('${esc(x.empId)}')">Set / Clear</button></td><td><button class="btn" title="View payment history" onclick="loanView('${esc(x.empId)}')">👁</button> <button class="btn" title="Edit loan" onclick="loanEditModal('${esc(x.empId)}')">✏️</button> <button class="btn btn-danger" title="Delete loan" onclick="loanDelete('${esc(x.empId)}')">🗑</button></td></tr>`}).join('')}</tbody></table></div>`:`<div class="empty-state"><div class="es-ico">◇</div>No loans yet. Add a loan to start tracking recovery.</div>`}</div>${accounts.length?`<div class="card"><div class="head"><b>Loan Summary</b><div style="display:flex;gap:24px;flex-wrap:wrap"><span>Loan Amount <b>${money(totalLoan)}</b></span><span>Total Paid <b>${money(totalPaid)}</b></span><span>Outstanding <b>${money(outstanding)}</b></span></div></div></div>`:''}`;tableSettingsInit();applyTableSettings();
 }
 function loanModal(){let active=db.employees.filter(isActiveEmployee);$('modal').innerHTML=`<div class="box"><div class="mhead"><b>Add Loan</b><button class="btn" onclick="closeModal()">×</button></div><div class="mbody"><div class="grid"><div class="field"><label>Employee ID</label><select id="loanEmp" onchange="loanEmployeeChanged()">${active.map(e=>`<option value="${esc(e.id)}">${esc(e.id)}</option>`).join('')}</select></div><div class="field"><label>Employee Name</label><input id="loanName" readonly></div><div class="field"><label>Department</label><input id="loanDept" readonly></div><div class="field"><label>Date</label><input id="loanDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div class="field"><label>Loan Amount</label><input id="loanAmount" type="number" min="0" step="1"></div></div></div><div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveLoanAccount()">Save</button></div></div>`;$('modal').classList.remove('hidden');loanEmployeeChanged()}
 function loanEmployeeChanged(){let e=db.employees.find(x=>x.id===$('loanEmp')?.value);if($('loanName'))$('loanName').value=e?.name||'';if($('loanDept'))$('loanDept').value=e?.dept||''}
 function saveLoanAccount(){let id=$('loanEmp')?.value,e=db.employees.find(x=>x.id===id),amount=Math.max(0,Math.round(Number($('loanAmount')?.value)||0)),date=$('loanDate')?.value;if(!id||!e||!date||amount<=0)return appMessage('Enter employee, date and loan amount');if(loanAccount(id))return appMessage('This employee already has an active loan');db.loanAccounts.push({empId:id,amount,date,status:'Active'});save();closeModal();loans()}
 function loanPayModal(id){let e=db.employees.find(x=>x.id===id),m=mon(),bal=loanBalance(loanAccount(id));$('modal').innerHTML=`<div class="box"><div class="mhead"><b>Loan Payment - ${esc(e?.name||id)}</b><button class="btn" onclick="closeModal()">×</button></div><div class="mbody"><div class="grid"><div class="field"><label>Month</label><input id="loanPayMonth" type="month" value="${m}"></div><div class="field"><label>Remaining Balance</label><input value="${Math.round(bal)}" readonly></div><div class="field"><label>Pay Amount</label><input id="loanPayAmount" type="number" min="0" max="${Math.round(bal)}" step="1"></div></div></div><div class="mfoot"><button class="btn" onclick="$('loanPayAmount').value=''">Clear</button><button class="btn primary" onclick="setLoanPaymentFromModal('${esc(id)}')">Set</button></div></div>`;$('modal').classList.remove('hidden')}
 function setLoanPaymentFromModal(id){let m=$('loanPayMonth')?.value||mon(),a=Math.max(0,Math.round(Number($('loanPayAmount')?.value)||0));if(a<=0)return appMessage('Enter payment amount');setLoanRecovery(m,id,a,'Loan');closeModal()}
-function loanView(id){let e=db.employees.find(x=>x.id===id),acc=loanAccount(id),rows=loanRecoveries(id).slice().sort((a,b)=>String(a.date||a.month).localeCompare(String(b.date||b.month))),running=0,total=rows.reduce((s,x)=>s+Number(x.amount||0),0),bal=Math.max(0,Number(acc?.amount||0)-total);$('modal').innerHTML=`<div class="box"><div class="mhead"><b>Loan Payment History - ${esc(e?.name||id)}</b><button class="btn" onclick="closeModal()">×</button></div><div class="mbody"><div style="display:flex;gap:22px;flex-wrap:wrap;margin-bottom:16px"><span>Loan Amount: <b>${money(acc?.amount||0)}</b></span><span>Amount Paid: <b>${money(total)}</b></span><span>Remaining: <b>${money(bal)}</b></span></div>${rows.length?`<div class="wrap"><table><thead><tr><th>Date</th><th>Amount Paid</th><th>Remaining Balance</th></tr></thead><tbody>${rows.map(r=>{running+=Number(r.amount||0);return `<tr><td>${loanDateDisplay(r.month||String(r.date||'').slice(0,10))}</td><td>${money(r.amount)}</td><td>${money(Math.max(0,Number(acc?.amount||0)-running))}</td></tr>`}).join('')}</tbody></table></div>`:`<div class="empty-state">No payment history yet.</div>`}</div><div class="mfoot"><button class="btn" onclick="closeModal()">Close</button></div></div>`;$('modal').classList.remove('hidden')}
+function loanView(id){let e=db.employees.find(x=>x.id===id),acc=loanAccount(id),rows=loanRecoveries(id).slice().sort((a,b)=>String(a.date||a.month).localeCompare(String(b.date||b.month))),running=0,total=rows.reduce((s,x)=>s+Number(x.amount||0),0),bal=Math.max(0,Number(acc?.amount||0)-total);$('modal').innerHTML=`<div class="box"><div class="mhead"><b>Loan Payment History - ${esc(e?.name||id)}</b><button class="btn" onclick="closeModal()">×</button></div><div class="mbody"><div style="display:flex;gap:22px;flex-wrap:wrap;margin-bottom:16px"><span>Loan Amount: <b>${money(acc?.amount||0)}</b></span><span>Amount Paid: <b>${money(total)}</b></span><span>Remaining: <b>${money(bal)}</b></span></div>${rows.length?`<div class="wrap"><table><thead><tr><th>Date</th><th>Amount Paid</th><th>Remaining Balance</th><th>Action</th></tr></thead><tbody>${rows.map(r=>{running+=Number(r.amount||0);return `<tr><td>${loanDateDisplay(r.month||String(r.date||'').slice(0,10))}</td><td>${money(r.amount)}</td><td>${money(Math.max(0,Number(acc?.amount||0)-running))}</td><td><button class="btn" onclick="loanPayEdit('${esc(id)}','${esc(r.month)}')">Edit</button> <button class="btn btn-danger" onclick="loanPayDelete('${esc(id)}','${esc(r.month)}')">Delete</button></td></tr>`}).join('')}</tbody></table></div>`:`<div class="empty-state">No payment history yet.</div>`}</div><div class="mfoot"><button class="btn" onclick="closeModal()">Close</button></div></div>`;$('modal').classList.remove('hidden')}
 function delLoan(i){appConfirm('Delete this recovery entry?',()=>{db.loans.splice(i,1);save();loans()},{title:'Delete Recovery',yesLabel:'Delete',danger:true})}
 
 
@@ -1940,6 +1949,123 @@ function changeWorkingMonth(){chooseWorkingMonth(true)}
 load();
 
 
+
+/* ============================================================
+   ADDED: loan edit/delete, linked filters, fixed table headers
+   ============================================================ */
+function waitSyncIdle(){return new Promise(res=>{let n=0;(function chk(){if(!supabaseSyncBusy||n++>40)return res();setTimeout(chk,150)})()})}
+async function deleteLoanRowsDb(empId,wipeAll,ids){
+  if(!supabaseClient||!authUser)return true;
+  try{
+    await waitSyncIdle();
+    let r;
+    if(wipeAll)r=await supabaseClient.from('loans').delete().eq('employee_id',empId);
+    else if(ids&&ids.length)r=await supabaseClient.from('loans').delete().in('id',ids);
+    else return true;
+    if(r.error)throw r.error;
+    return true;
+  }catch(e){console.error('Loan delete failed:',e);appMessage('Could not delete from the database: '+(e?.message||e)+'. Nothing was changed.','Loan','warning');return false}
+}
+function loanEditModal(id){
+  let acc=loanAccount(id);if(!acc)return;let e=db.employees.find(x=>x.id===id),paid=loanRecoveredTotal(id);
+  $('modal').innerHTML=`<div class="box"><div class="mhead"><b>Edit Loan - ${esc(e?.name||id)}</b><button class="btn" onclick="closeModal()">×</button></div><div class="mbody"><div class="grid"><div class="field"><label>Employee</label><input value="${esc(id)} - ${esc(e?.name||'')}" readonly></div><div class="field"><label>Already Recovered</label><input value="${Math.round(paid)}" readonly></div><div class="field"><label>Date</label><input id="loanEditDate" type="date" value="${esc(String(acc.date||'').slice(0,10))}"></div><div class="field"><label>Loan Amount</label><input id="loanEditAmount" type="number" min="0" step="1" value="${Math.round(Number(acc.amount||0))}"></div></div></div><div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveLoanEdit('${esc(id)}')">Save</button></div></div>`;
+  $('modal').classList.remove('hidden');
+}
+function saveLoanEdit(id){
+  let acc=loanAccount(id),amount=Math.round(Number($('loanEditAmount')?.value)||0),date=$('loanEditDate')?.value,paid=loanRecoveredTotal(id);
+  if(!acc||!date||amount<=0)return appMessage('Enter date and loan amount');
+  if(amount<paid)return appMessage('Loan amount cannot be less than the amount already recovered ('+money(paid)+'). Edit or delete the payment entries first.');
+  acc.amount=amount;acc.date=date;save();closeModal();loans();
+}
+function loanDelete(id){
+  let acc=loanAccount(id);if(!acc)return;
+  let e=db.employees.find(x=>x.id===id),recs=loanRecoveries(id),paid=loanRecoveredTotal(id);
+  appConfirm('Delete the loan of '+(e?.name||id)+' ('+money(acc.amount)+')?'+(recs.length?'\n\nIts '+recs.length+' payment entr'+(recs.length>1?'ies':'y')+' ('+money(paid)+') will also be removed, and will no longer be deducted in Payroll.':'')+'\n\nThis cannot be undone.',async()=>{
+    let others=loanAccounts().some(x=>x!==acc&&x.empId===id);
+    let ids=[acc.id,...(others?[]:recs.map(r=>r.id))].filter(Boolean);
+    if(!await deleteLoanRowsDb(id,!others,ids))return;
+    db.loanAccounts=db.loanAccounts.filter(x=>x!==acc);
+    if(!others){recs.forEach(r=>{let k=r.month+'|'+id;if(db.payroll[k])db.payroll[k].loanRecovery=0});db.loans=db.loans.filter(x=>x.empId!==id)}
+    save();loans();
+  },{title:'Delete Loan',yesLabel:'Delete',danger:true});
+}
+function loanPayEdit(id,month){
+  let rec=(db.loans||[]).find(x=>x.empId===id&&x.month===month),acc=loanAccount(id);if(!rec)return;
+  let max=Math.max(0,Number(acc?.amount||0)-loanRecoveredTotal(id)+Number(rec.amount||0));
+  appPrompt('Payment for '+month+(acc?' (maximum '+money(max)+')':''),v=>{
+    let a=Math.round(Number(v)||0);
+    if(a<=0)return appMessage('Enter an amount greater than 0. To remove the entry, use Delete.');
+    if(acc&&a>max)return appMessage('Amount cannot be more than '+money(max));
+    rec.amount=a;let k=month+'|'+id;db.payroll[k]=db.payroll[k]||{};db.payroll[k].loanRecovery=a;
+    save();loanView(id);if(current==='loans')loans();
+  },{title:'Edit Loan Payment',type:'number',value:String(Math.round(rec.amount))});
+}
+function loanPayDelete(id,month){
+  let rec=(db.loans||[]).find(x=>x.empId===id&&x.month===month);if(!rec)return;
+  appConfirm('Delete the '+month+' payment of '+money(rec.amount)+'?\n\nIt will no longer be deducted in Payroll for that month.',async()=>{
+    if(rec.id&&!await deleteLoanRowsDb(id,false,[rec.id]))return;
+    db.loans=db.loans.filter(x=>x!==rec);
+    let k=month+'|'+id;if(db.payroll[k])db.payroll[k].loanRecovery=0;
+    save();loanView(id);if(current==='loans')loans();
+  },{title:'Delete Payment',yesLabel:'Delete',danger:true});
+}
+
+/* Linked filters: Department <-> Filled By limit each other; Employee list follows both. */
+(function(){
+  const GROUPS=[
+    {d:'.adc',e:'.aec',f:'.afbc',all:['allAD','allAE','allAFB'],reset(){window.attEmp=[]}},
+    {d:'.sdc',e:'.sec',f:'.sfbc',all:['allSD','allSE','allSFB']},
+    {d:'.pdc',e:'.pec',f:'.pfc',all:['allPD','allPE','allPFB']}
+  ];
+  const vals=sel=>[...document.querySelectorAll(sel+':checked')].map(x=>x.value);
+  function cascade(g){
+    if(!document.querySelector(g.d))return;
+    const emps=(db.employees||[]).filter(isActiveEmployee);
+    const ds=new Set(vals(g.d)),fs=new Set(vals(g.f));
+    const okD=e=>!ds.size||ds.has(e.dept),okF=e=>!fs.size||fs.has(e.filledBy||'');
+    const hide=(sel,ok)=>document.querySelectorAll(sel).forEach(cb=>{const l=cb.closest('label.opt');if(l)l.classList.toggle('dep-hide',!ok(cb.value))});
+    hide(g.d,v=>emps.some(e=>e.dept===v&&okF(e)));
+    hide(g.f,v=>emps.some(e=>(e.filledBy||'')===v&&okD(e)));
+    hide(g.e,v=>{const e=emps.find(x=>x.id===v);return !!e&&okD(e)&&okF(e)});
+  }
+  window.cascadeFilters=()=>{try{GROUPS.forEach(cascade)}catch(e){console.error(e)}};
+  /* capture phase: runs before the page's own onchange handler, so the table is drawn with the reset employee list */
+  document.addEventListener('change',ev=>{
+    const t=ev.target;if(!t||t.type!=='checkbox')return;
+    for(const g of GROUPS){
+      const parent=t.matches(g.d)||t.matches(g.f)||t.id===g.all[0]||t.id===g.all[2];
+      if(parent){
+        document.querySelectorAll(g.e).forEach(x=>x.checked=true);
+        const a=document.getElementById(g.all[1]);if(a)a.checked=true;
+        if(g.reset)g.reset();
+        setTimeout(()=>cascade(g),0);
+      }else if(t.matches(g.e)||t.id===g.all[1]){setTimeout(()=>cascade(g),0)}
+    }
+  },true);
+})();
+
+/* Table headers stay fixed: the table area always fits the screen, so only the rows scroll */
+function fitWraps(){
+  const c=document.getElementById('content');if(!c)return;
+  const cr=c.getBoundingClientRect();
+  c.querySelectorAll('.wrap').forEach(w=>{
+    if(w.closest('#modal')||w.offsetParent===null)return;
+    const top=w.getBoundingClientRect().top-cr.top+c.scrollTop;
+    w.style.maxHeight=Math.max(220,c.clientHeight-top-18)+'px';
+  });
+}
+(function(){
+  let t=null;
+  const run=()=>{cancelAnimationFrame(t);t=requestAnimationFrame(()=>{fitWraps();if(window.cascadeFilters)cascadeFilters()})};
+  window.addEventListener('resize',run);
+  const boot=()=>{
+    const c=document.getElementById('content');if(!c){setTimeout(boot,300);return}
+    new MutationObserver(()=>{run();setTimeout(fitWraps,250)}).observe(c,{childList:true,subtree:true});
+    if(window.ResizeObserver)new ResizeObserver(run).observe(c);
+    run();
+  };
+  boot();
+})();
 </script>
 </body>
 </html>
