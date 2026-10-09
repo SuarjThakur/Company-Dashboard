@@ -830,7 +830,16 @@ async function loadAllDataFromSupabase(){
   db.payroll={};
   (payRes.data||[]).forEach(x=>{const m=String(x.payroll_month||'').slice(0,7),k=m+'|'+x.employee_id;db.payroll[k]={month:m,empId:x.employee_id,salary:Number(x.salary||0),sundayPay:Number(x.sunday_pay||0),pay:Number(x.pay||0),advance:Number(x.advance||0),advance_cash:Number(x.advance_cash||0),tea:Number(x.tea||0),pfesi:Number(x.pf_esi||0),late:Number(x.late_deduction||0),loanRecovery:Number(x.loan_recovery||0),prev:Number(x.previous_pending||0),total:Number(x.total_payable||0),paid:Number(x.amount_paid||0),remaining:Number(x.remaining_balance||0),paymentStatus:x.payment_status||'Pending',approved:!!x.approved,_supabaseId:x.id};});
   db.loanAccounts=[];db.loans=[];
-  (loanRes.data||[]).forEach(x=>{const remarks=String(x.remarks||'');if(remarks.startsWith('RECOVERY|')){const parts=remarks.split('|');db.loans.push({id:x.id,month:String(x.loan_date||'').slice(0,7),empId:x.employee_id,amount:Number(x.paid_amount||0),date:x.loan_date,source:parts[1]||'Payroll'});}else{db.loanAccounts.push({id:x.id,empId:x.employee_id,amount:Number(x.loan_amount||0),date:x.loan_date,remarks:x.remarks||''});}});
+  const loanSeen=new Map(),loanDupIds=[];
+  (loanRes.data||[]).forEach(x=>{const remarks=String(x.remarks||'');const isRec=remarks.startsWith('RECOVERY|');const parts=remarks.split('|');
+    const month=isRec?(/^\d{4}-\d{2}$/.test(parts[2]||'')?parts[2]:String(x.loan_date||'').slice(0,7)):'';
+    const key=isRec?'R|'+x.employee_id+'|'+month:'A|'+x.employee_id;
+    if(loanSeen.has(key)){const k=loanSeen.get(key);if(Number(k.loan_amount)===Number(x.loan_amount)&&Number(k.paid_amount)===Number(x.paid_amount))loanDupIds.push(x.id);return}
+    loanSeen.set(key,x);
+    if(isRec){db.loans.push({id:x.id,month,empId:x.employee_id,amount:Number(x.paid_amount||0),date:x.loan_date,source:parts[1]||'Payroll'});}
+    else{db.loanAccounts.push({id:x.id,empId:x.employee_id,amount:Number(x.loan_amount||0),date:x.loan_date,remarks:x.remarks||''});}
+  });
+  if(loanDupIds.length)setTimeout(()=>{try{if(isAdmin())deleteLoanRowsDb(null,false,loanDupIds)}catch(e){}},2500);
   db.extraCols={advance:{},cash:{},tea:{}};
   (adjRes.data||[]).forEach(x=>{const m=String(x.adjustment_date||'').slice(0,7);const type=x.adjustment_type==='advance_cash'?'cash':x.adjustment_type;if(db.extraCols[type])db.extraCols[type][m+'|'+x.employee_id]=Number(x.amount||0);});
   const base={departments:['Mending','Staff','Knitting'],statuses:['Active','Inactive'],departmentHours:{Mending:8,Staff:10,Knitting:10},defaultHours:10,fields:['Employee ID','Employee Name','Department','Salary','Sunday Pay','Working Hours','Filled By','Status'],filledByUsers:[],headerFiltersEnabled:false,tableSettings:{}};
@@ -1910,7 +1919,19 @@ async function syncDbToSupabase(){
     if(isAdmin()){
       const payrollRows=Object.entries(db.payroll||{}).map(([k,p])=>{let [m,eid]=k.split('|');return {employee_id:eid,payroll_month:`${m}-01`,salary:dbNum(p.salary),sunday_pay:dbNum(p.sundayPay),pay:dbNum(p.pay),advance:dbNum(p.advance),advance_cash:dbNum(p.advance_cash),tea:dbNum(p.tea),pf_esi:dbNum(p.pfesi),late_deduction:dbNum(p.late),loan_recovery:dbNum(p.loanRecovery),previous_pending:dbNum(p.prev),total_payable:dbNum(p.total,true),amount_paid:dbNum(p.paid,true),remaining_balance:dbNum(p.remaining,true),payment_status:p.approved?'Paid':'Pending',approved:!!p.approved};}).filter(r=>validEmployeeIds.has(r.employee_id));
       if(payrollRows.length){let r=await supabaseClient.from('payroll').upsert(payrollRows,{onConflict:'employee_id,payroll_month'});if(r.error)throw r.error;}
-      const loanRows=[];for(const x of (db.loanAccounts||[])){if(!validEmployeeIds.has(x.empId))continue;const paid=loanRecoveredTotal(x.empId);loanRows.push({...(x.id?{id:x.id}:{}),employee_id:x.empId,loan_date:x.date||new Date().toISOString().slice(0,10),loan_amount:Number(x.amount||0),paid_amount:Number(paid||0),remaining_balance:Math.max(0,Number(x.amount||0)-Number(paid||0)),payment_status:Number(paid)>=Number(x.amount||0)?'Paid':'Pending',remarks:'ACCOUNT'});}for(const x of (db.loans||[])){if(!validEmployeeIds.has(x.empId))continue;loanRows.push({...(x.id?{id:x.id}:{}),employee_id:x.empId,loan_date:x.date?String(x.date).slice(0,10):`${x.month}-01`,loan_amount:0,paid_amount:Number(x.amount||0),remaining_balance:0,payment_status:'Paid',remarks:`RECOVERY|${x.source||'Payroll'}|${x.month||''}`});}if(loanRows.length){let r=await supabaseClient.from('loans').upsert(loanRows);if(r.error)throw r.error;}
+      const loanRows=[],loanRefs=[];for(const x of (db.loanAccounts||[])){if(!validEmployeeIds.has(x.empId))continue;const paid=loanRecoveredTotal(x.empId);loanRefs.push(x);loanRows.push({...(x.id?{id:x.id}:{}),employee_id:x.empId,loan_date:x.date||new Date().toISOString().slice(0,10),loan_amount:Number(x.amount||0),paid_amount:Number(paid||0),remaining_balance:Math.max(0,Number(x.amount||0)-Number(paid||0)),payment_status:Number(paid)>=Number(x.amount||0)?'Paid':'Pending',remarks:'ACCOUNT'});}for(const x of (db.loans||[])){if(!validEmployeeIds.has(x.empId))continue;loanRefs.push(x);loanRows.push({...(x.id?{id:x.id}:{}),employee_id:x.empId,loan_date:x.date?String(x.date).slice(0,10):`${x.month}-01`,loan_amount:0,paid_amount:Number(x.amount||0),remaining_balance:0,payment_status:'Paid',remarks:`RECOVERY|${x.source||'Payroll'}|${x.month||''}`});}if(loanRows.length){
+        const oldRows=[],newRows=[],newRefs=[];
+        loanRows.forEach((row,i)=>{if(row.id)oldRows.push(row);else{newRows.push(row);newRefs.push(loanRefs[i])}});
+        if(oldRows.length){let r=await supabaseClient.from('loans').upsert(oldRows);if(r.error)throw r.error;}
+        if(newRows.length){
+          let r=await supabaseClient.from('loans').insert(newRows).select('id');if(r.error)throw r.error;
+          (r.data||[]).forEach((row,i)=>{if(newRefs[i]&&row&&row.id)newRefs[i].id=row.id});
+          if(newRefs.some(x=>!x.id)){ /* could not read ids back: find them so the next sync updates instead of inserting again */
+            let f=await supabaseClient.from('loans').select('id,employee_id,remarks').in('employee_id',[...new Set(newRows.map(x=>x.employee_id))]).order('id',{ascending:false});
+            if(!f.error)newRefs.forEach((x,i)=>{if(!x.id){let m=(f.data||[]).find(y=>y.employee_id===newRows[i].employee_id&&y.remarks===newRows[i].remarks);if(m)x.id=m.id}});
+          }
+        }
+      }
       const adjustments=[];for(const type of ['advance','cash','tea'])for(const [k,val] of Object.entries(db.extraCols?.[type]||{})){let [m,eid]=k.split('|');if(Number(val||0)>0&&validEmployeeIds.has(eid))adjustments.push({employee_id:eid,adjustment_date:`${m}-01`,adjustment_type:type==='cash'?'advance_cash':type,amount:Number(val),remarks:'Payroll adjustment'});}let del=await supabaseClient.from('payroll_adjustments').delete().not('id','is',null);if(del.error)throw del.error;if(adjustments.length){let r=await supabaseClient.from('payroll_adjustments').insert(adjustments);if(r.error)throw r.error;}
       const settingsRows=[{setting_key:'departments',setting_value:db.settings.departments||[]},{setting_key:'working_hours',setting_value:{defaultHours:Number(db.settings.defaultHours||10),departmentHours:db.settings.departmentHours||{}}},{setting_key:'header_filters_enabled',setting_value:db.settings.headerFiltersEnabled!==false},{setting_key:'filled_by_users',setting_value:db.settings.filledByUsers||[]},{setting_key:'table_settings',setting_value:db.settings.tableSettings||{}},{setting_key:'statuses',setting_value:db.settings.statuses||['Active','Inactive']}];let sr=await supabaseClient.from('settings').upsert(settingsRows,{onConflict:'setting_key'});if(sr.error)throw sr.error;
     }
