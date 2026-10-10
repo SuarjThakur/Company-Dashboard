@@ -187,24 +187,25 @@
   .kpi-card .value{font-family:'Barlow Condensed',sans-serif;font-size:34px;font-weight:700;color:#161a1f;margin-top:4px;}
   .kpi-card .sub{font-size:11.5px;color:#9aa5b1;margin-top:2px;}
 
-  /* main grid: table + charts */
-  .dash-grid{display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start;}
+  /* main grid: table + charts  (charts column is now narrow: 270px) */
+  .dash-grid{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:16px;align-items:start;}
   @media (max-width:980px){.dash-grid{grid-template-columns:1fr;}}
   .dash-grid.charts-hidden{grid-template-columns:1fr;}
   .dash-grid.charts-hidden .charts-col{display:none;}
-  .chart-toggle-btn{
+  .icon-btn{
     background:#fff;border:1.5px solid #d4dae0;border-radius:6px;
     width:28px;height:28px;font-size:14px;line-height:1;cursor:pointer;
     color:#3a4450;display:flex;align-items:center;justify-content:center;
     transition:background .12s ease, border-color .12s ease;
   }
-  .chart-toggle-btn:hover{background:#f1f6fc;border-color:#a7b0ba;}
-  .chart-toggle-btn.active{background:#1c2229;border-color:#1c2229;color:#f4f6f8;}
+  .icon-btn:hover{background:#f1f6fc;border-color:#a7b0ba;}
+  .icon-btn.active{background:#1c2229;border-color:#1c2229;color:#f4f6f8;}
 
   .table-panel{
     background:var(--paper-2);border:1px solid #e2e7ec;border-radius:var(--radius);
     overflow:hidden;
     display:flex;flex-direction:column;
+    min-width:0;
   }
   .table-panel .panel-head{
     padding:13px 18px;border-bottom:1px solid #e2e7ec;
@@ -213,18 +214,40 @@
   .table-panel .panel-head h3{margin:0;font-size:14.5px;font-weight:700;color:#1c2229;}
   .table-panel .panel-head .count{font-size:12px;color:#8a97a6;font-family:'JetBrains Mono',monospace;}
   .table-scroll{overflow:auto;max-height:640px;}
-  table.data-table{border-collapse:collapse;width:100%;font-size:12.8px;white-space:nowrap;}
+
+  /* active-filter chips */
+  .chips{display:none;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 18px;border-bottom:1px solid #e2e7ec;background:#fafbfc;}
+  .chips.on{display:flex;}
+  .chip{
+    display:inline-flex;align-items:center;gap:6px;background:#fff;border:1.5px solid #d4dae0;
+    border-radius:20px;padding:3px 6px 3px 11px;font-size:12px;font-weight:600;color:#2b333c;
+  }
+  .chip button{
+    border:none;background:#eef1f4;border-radius:50%;width:18px;height:18px;line-height:1;
+    cursor:pointer;color:#5b6672;font-size:12px;padding:0;
+  }
+  .chip button:hover{background:#d84343;color:#fff;}
+  .chip-clear{background:none;border:none;color:#b32d2d;text-decoration:underline;font-size:12px;cursor:pointer;padding:0 4px;}
+
+  table.data-table{border-collapse:collapse;font-size:12.8px;table-layout:fixed;}
   table.data-table thead th{
     position:sticky;top:0;z-index:2;
     background:#1c2229;color:#e7ecf1;
     padding:10px 12px;text-align:left;font-weight:600;
     border-right:1px solid #2e3640;
     white-space:normal;
-    min-width:92px;
+    cursor:pointer;user-select:none;
   }
+  table.data-table thead th:hover{background:#27303a;}
+  table.data-table thead th.filtered{background:#2b2a1c;}
+  .th-ind{margin-left:6px;font-size:10.5px;color:var(--amber);}
+  .th-ind:empty::after{content:"\25BE";opacity:0;color:#8a97a6;}
+  table.data-table thead th:hover .th-ind:empty::after{opacity:.8;}
   table.data-table tbody td{
     padding:8px 12px;border-bottom:1px solid #eef1f4;border-right:1px solid #f2f4f6;color:#2b333c;
   }
+  table.data-table td.nowrap{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  table.data-table td.wrap{white-space:normal;word-break:break-word;}
   table.data-table tbody tr:nth-child(even){background:#fafbfc;}
   table.data-table tbody tr:hover{background:#f1f6fc;}
   .pill{padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;display:inline-block;}
@@ -233,19 +256,61 @@
   .pill.halka{background:#fbeed6;color:#a5730a;}
   .no-rows{padding:40px;text-align:center;color:#9aa5b1;font-size:14px;}
 
-  .charts-col{display:flex;flex-direction:column;gap:16px;}
+  /* column filter menu (appears when a header is clicked) */
+  .col-menu{
+    position:fixed;z-index:1000;width:236px;background:#fff;border:1px solid #d4dae0;border-radius:8px;
+    box-shadow:0 10px 30px rgba(0,0,0,.22);padding:10px;font-size:13px;color:#2b333c;
+  }
+  .col-menu .cm-title{font-weight:700;font-size:12.5px;margin-bottom:8px;color:#1c2229;}
+  .col-menu .cm-sort{display:flex;gap:6px;margin-bottom:8px;}
+  .col-menu .cm-sort button{
+    flex:1;border:1.5px solid #d4dae0;background:#fff;border-radius:6px;padding:5px 4px;font-size:12px;cursor:pointer;font-weight:600;color:#3a4450;
+  }
+  .col-menu .cm-sort button.on{background:#1c2229;color:#fff;border-color:#1c2229;}
+  .col-menu input[type=text]{width:100%;padding:6px 8px;border:1.5px solid #d4dae0;border-radius:6px;font-size:12.5px;margin-bottom:6px;}
+  .col-menu .cm-list{max-height:210px;overflow:auto;border:1px solid #eef1f4;border-radius:6px;padding:4px 6px;}
+  .col-menu label.cm-item{display:flex;align-items:center;gap:7px;padding:3px 0;cursor:pointer;font-size:12.5px;}
+  .col-menu label.cm-item span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .col-menu .cm-foot{display:flex;gap:6px;margin-top:9px;}
+  .col-menu .cm-foot button{flex:1;padding:7px;border-radius:6px;border:1.5px solid #d4dae0;background:#fff;font-weight:600;font-size:12.5px;cursor:pointer;}
+  .col-menu .cm-foot button.primary{background:#1c2229;color:#fff;border-color:#1c2229;}
+
+  /* settings panel */
+  .settings-panel{
+    position:fixed;z-index:999;width:340px;max-height:70vh;overflow:auto;background:#fff;border:1px solid #d4dae0;border-radius:10px;
+    box-shadow:0 10px 30px rgba(0,0,0,.22);padding:14px 16px;font-size:13px;color:#2b333c;display:none;
+  }
+  .settings-panel.open{display:block;}
+  .settings-panel h4{margin:0 0 10px;font-size:14px;color:#1c2229;}
+  .set-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
+  .set-row label{font-weight:600;font-size:12.5px;}
+  .set-row input[type=range]{flex:1;}
+  .set-val{font-family:'JetBrains Mono',monospace;font-size:11.5px;width:42px;text-align:right;color:#5b6672;}
+  .set-sep{border-top:1px solid #eef1f4;margin:10px 0;}
+  .set-cols-head{display:grid;grid-template-columns:96px 1fr 42px 34px;gap:8px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:#8a97a6;font-weight:600;margin-bottom:6px;}
+  .set-col{display:grid;grid-template-columns:96px 1fr 42px 34px;gap:8px;align-items:center;margin-bottom:6px;font-size:12px;}
+  .set-col .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;}
+  .set-col input[type=range]{width:100%;}
+  .set-col input[type=checkbox]{justify-self:center;}
+  .set-reset{margin-top:8px;border:1.5px solid #d4dae0;background:#fff;border-radius:6px;padding:7px 12px;font-weight:600;font-size:12.5px;cursor:pointer;width:100%;}
+
+  /* charts column */
+  .charts-col{display:flex;flex-direction:column;gap:16px;min-width:0;}
   .chart-panel{
     background:var(--paper-2);border:1px solid #e2e7ec;border-radius:var(--radius);
-    padding:16px 18px;
+    padding:14px 14px;
   }
   .chart-panel h3{margin:0 0 4px;font-size:14px;font-weight:700;color:#1c2229;}
   .chart-panel .chart-sub{font-size:11.5px;color:#9aa5b1;margin-bottom:10px;}
-  .chart-wrap{position:relative;height:170px;}
-  .legend{display:flex;flex-direction:column;gap:7px;margin-top:12px;}
-  .legend-row{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;}
+  .chart-wrap{position:relative;height:170px;width:100%;}
+  .legend{display:flex;flex-direction:column;gap:4px;margin-top:10px;}
+  .legend-row{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;cursor:pointer;padding:4px 6px;border-radius:6px;border:1.5px solid transparent;}
+  .legend-row:hover{background:#f1f6fc;}
+  .legend-row.active{border-color:#1c2229;background:#f1f6fc;}
   .legend-row .name{display:flex;align-items:center;gap:8px;color:#3a4450;font-weight:500;}
   .swatch{width:10px;height:10px;border-radius:3px;display:inline-block;}
-  .legend-row .val{font-family:'JetBrains Mono',monospace;font-weight:600;color:#1c2229;}
+  .legend-row .val{font-family:'JetBrains Mono',monospace;font-weight:600;color:#1c2229;font-size:11.5px;}
+  .chart-hint{font-size:11px;color:#9aa5b1;margin-top:6px;text-align:center;}
 
   footer.app-footer{
     text-align:center;padding:18px;color:#a7b0ba;font-size:12px;
@@ -301,11 +366,13 @@
         <div class="table-panel">
           <div class="panel-head">
             <h3 id="tableTitle">Roll Checking Records</h3>
-            <div style="display:flex;align-items:center;gap:12px;">
+            <div style="display:flex;align-items:center;gap:10px;">
               <span class="count" id="tableCount">0 rows</span>
-              <button id="toggleChartsBtn" class="chart-toggle-btn" title="Hide charts (full-width table)">⛶</button>
+              <button id="settingsBtn" class="icon-btn" title="Table settings (column width, wrap text)">⚙</button>
+              <button id="toggleChartsBtn" class="icon-btn" title="Hide charts (full-width table)">⛶</button>
             </div>
           </div>
+          <div class="chips" id="chipsBar"></div>
           <div class="table-scroll" id="tableScroll">
             <div class="no-rows">No records for this Item / Month.</div>
           </div>
@@ -323,6 +390,7 @@
             <div class="chart-sub">Sum of Total Rolls, by Issue category</div>
             <div class="chart-wrap"><canvas id="chartIssue"></canvas></div>
             <div class="legend" id="legendIssue"></div>
+            <div class="chart-hint">Click a slice or legend row to cross-filter everything · click empty space to clear</div>
           </div>
         </div>
       </div>
@@ -335,18 +403,31 @@
   </footer>
 </div>
 
+<!-- Table settings (opens from the ⚙ button) -->
+<div class="settings-panel" id="settingsPanel">
+  <h4>Table settings</h4>
+  <div class="set-row">
+    <label for="setWrapAll">Wrap text in all columns</label>
+    <input type="checkbox" id="setWrapAll">
+  </div>
+  <div class="set-row">
+    <label for="setDefWidth">Default width</label>
+    <input type="range" id="setDefWidth" min="60" max="400" step="5">
+    <span class="set-val" id="setDefWidthVal"></span>
+  </div>
+  <div class="set-sep"></div>
+  <div class="set-cols-head"><span>Column</span><span>Width</span><span></span><span>Wrap</span></div>
+  <div id="setColList"></div>
+  <button class="set-reset" id="setReset">Reset table settings</button>
+</div>
+
 <script>
 (function(){
 "use strict";
 
 /* =====================================================================
    1. CONFIGURATION
-   All Item colors live in ONE place so they can be changed easily.
-   Keys are the canonical display names used everywhere in the app.
    ===================================================================== */
-// Register the on-chart percentage-label plugin if it loaded successfully
-// (it's fetched from a CDN, so guard against it being blocked/offline -
-// the charts still work fine without it, just without on-slice labels).
 if(typeof ChartDataLabels !== "undefined" && typeof Chart !== "undefined"){
   Chart.register(ChartDataLabels);
 }
@@ -369,16 +450,12 @@ const ITEM_CONFIG = {
 };
 const ITEM_ORDER = ["Techno Matty", "Dotknit", "Dryfit"];
 
-// Issue classification categories & colors (Section 13-15 of the spec)
 const ISSUE_CONFIG = {
   "हल्का Round": { color: "#e0a020" },
   "Round":        { color: "#d84343" },
   "Ok":           { color: "#1fa669" }
 };
 
-/* Recognised synonyms for header detection -> canonical field name.
-   Matching is done on a lower-cased, trimmed header string. Order
-   matters: more specific patterns are checked before looser ones. */
 const HEADER_RULES = [
   { field: "checkingDate", test: h => h.includes("checking date") },
   { field: "poNo",         test: h => h.includes("po no") || h === "po" },
@@ -397,31 +474,49 @@ const HEADER_RULES = [
   { field: "problems",     test: h => h === "problems" }
 ];
 
-// NOTE: this dashboard used to "forward-fill" these fields - if a row's
-// own cell was blank, it silently copied the value from the row above
-// (assuming lot-level info was only written once per lot). That meant a
-// blank "Checked Rolls"/"Total Rolls" cell in the sheet could still show
-// a number in the web table, and that phantom number was also being
-// added into the KPI sums. Per instruction, this is now disabled
-// entirely: every cell shows exactly what's in the sheet, and a blank
-// cell stays blank everywhere (table + KPIs + charts).
 const FORWARD_FILL_FIELDS = [];
 
 /* =====================================================================
    2. STATE
    ===================================================================== */
 let state = {
-  records: [],          // normalized records, flat array
-  columns: [],           // ordered list of {key,label} for the table (union of source headers)
+  records: [],
+  columns: [],
   selectedItem: null,
-  selectedMonth: null,   // "YYYY-MM" or "__all__"
+  selectedMonth: null,
   lastUpdated: null,
   chartStatus: null,
   chartIssue: null,
-  diagnostics: null      // { rawDataRows, unrecognizedItem, duplicatesCollapsed, samples: [] }
+  diagnostics: null,
+  // --- interactive filtering ---
+  chartFilter: { status: null, issue: null },  // set by clicking the charts
+  colFilters: {},                               // key -> Set of allowed cell texts (set from header menus)
+  sort: { key: null, dir: "asc" },
+  baseRows: [],                                 // rows after Item + Month filters
+  menuRows: [],                                 // rows after chart filters (source of header-menu options)
+  tableCols: []                                 // columns currently shown in the table
 };
 
 const STORAGE_KEY = "vvkf_records_v1";
+const SETTINGS_KEY = "vvkf_table_settings_v1";
+
+/* ---- table settings (column width + wrap), saved in this browser ---- */
+let settings = { wrapAll: false, defaultWidth: 120, widths: {}, wraps: {} };
+function loadSettings(){
+  try{
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if(raw){
+      const s = JSON.parse(raw);
+      settings = Object.assign({ wrapAll:false, defaultWidth:120, widths:{}, wraps:{} }, s);
+    }
+  }catch(e){}
+}
+function saveSettings(){
+  try{ localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }catch(e){}
+}
+function colWidth(key){ return settings.widths[key] !== undefined ? settings.widths[key] : settings.defaultWidth; }
+function colWrap(key){ return settings.wraps[key] !== undefined ? settings.wraps[key] : settings.wrapAll; }
+loadSettings();
 
 /* =====================================================================
    3. HELPERS
@@ -436,7 +531,6 @@ function normalizeItemName(raw){
 }
 
 function excelSerialToDate(serial){
-  // Excel's day-0 is 1899-12-30 (accounts for the 1900 leap-year bug)
   const utcDays = Math.floor(serial - 25569);
   const utcMs = utcDays * 86400 * 1000;
   const date = new Date(utcMs);
@@ -457,20 +551,16 @@ function parseDateCell(value){
   if(typeof value === "string"){
     const s = value.trim();
     if(!s) return null;
-    // Google Visualization commonly returns dates as Date(YYYY,M,D)
-    // when the sheet column is a true Google Sheets date.
     let m = s.match(/^Date\((\d{4}),(\d{1,2}),(\d{1,2})(?:,(\d+),(\d+),(\d+))?\)$/i);
     if(m){
       const dt = new Date(Number(m[1]), Number(m[2]), Number(m[3]), Number(m[4]||0), Number(m[5]||0), Number(m[6]||0));
       return isNaN(dt) ? null : dt;
     }
-    // ISO date/time returned by some Google Sheets exports
     m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T\s].*)?$/);
     if(m){
       const dt = new Date(Number(m[1]), Number(m[2])-1, Number(m[3]));
       return isNaN(dt) ? null : dt;
     }
-    // dd/mm/yyyy or dd-mm-yyyy
     m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
     if(m){
       let [_, d, mo, y] = m;
@@ -478,7 +568,6 @@ function parseDateCell(value){
       const dt = new Date(Number(y), Number(mo)-1, Number(d));
       return isNaN(dt) ? null : dt;
     }
-    // yyyy-mm-dd
     m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
     if(m){
       const dt = new Date(Number(m[1]), Number(m[2])-1, Number(m[3]));
@@ -509,10 +598,6 @@ function monthLabelOf(monthKey){
   return d.toLocaleString("en-US", { month: "short", year: "numeric" });
 }
 
-/* Issue classification — exact rule from the spec:
-     blank         -> "Ok"
-     "हल्का Round" -> "हल्का Round"   (exact match only)
-     anything else -> "Round"          (e.g. "ROUND DEEPAK JI OK" -> Round) */
 function classifyIssue(raw){
   const s = (raw === null || raw === undefined) ? "" : String(raw).trim();
   if(s === "") return "Ok";
@@ -557,13 +642,13 @@ function sheetTitleGuess(rows, headerIdx){
 }
 
 function parseSheet(sheetName, rows, warnings){
-  if(/format/i.test(sheetName)) return []; // blank templates, not data
+  if(/format/i.test(sheetName)) return [];
 
   const headerIdx = findHeaderRow(rows);
   if(headerIdx === -1) return [];
 
   const headerRow = rows[headerIdx] || [];
-  const cols = []; // {index, field, rawLabel}
+  const cols = [];
   headerRow.forEach((cell, idx)=>{
     if(cell === null || cell === undefined) return;
     const raw = String(cell).trim();
@@ -580,8 +665,8 @@ function parseSheet(sheetName, rows, warnings){
   const sheetItemGuess = normalizeItemName(sheetName) || normalizeItemName(titleGuess);
 
   const out = [];
-  let prev = {}; // last seen values, for forward-fill
-  const diag = parseSheet._diag; // shared counters injected by caller
+  let prev = {};
+  const diag = parseSheet._diag;
 
   for(let r = headerIdx+1; r < rows.length; r++){
     const row = rows[r] || [];
@@ -597,23 +682,10 @@ function parseSheet(sheetName, rows, warnings){
       if(c.field){
         rec[c.field] = has ? val : undefined;
       } else {
-        // Preserve any unmapped source column verbatim so ALL columns show.
         rec._extra[c.rawLabel] = has ? val : "";
       }
     });
 
-    // NOTE: earlier versions of this dashboard dropped any row that had
-    // no Roll No. AND no Issue value, on the assumption it was a blank
-    // "summary" row. That silently deleted real, checked rows whose
-    // Roll No./Issue cells were simply left blank in the sheet - the
-    // #1 cause of "the web dashboard is missing rows that are in the
-    // sheet". We no longer drop rows on that basis. A row that reaches
-    // this point already has *something* filled in (isRowEmpty above
-    // caught truly blank rows), so we keep it and let it flow through
-    // as a real record.
-
-    // Forward-fill lot/header-level fields that some sheets only record
-    // on the first row of a lot (see TECHNO MATTY).
     FORWARD_FILL_FIELDS.forEach(f=>{
       if(rec[f] === undefined && prev[f] !== undefined){
         rec[f] = prev[f];
@@ -621,14 +693,8 @@ function parseSheet(sheetName, rows, warnings){
     });
     FORWARD_FILL_FIELDS.forEach(f=>{ if(rec[f] !== undefined) prev[f] = rec[f]; });
 
-    // Resolve Item
     let itemName = normalizeItemName(rec.item) || sheetItemGuess;
     if(!itemName){
-      // Could not match one of the 3 known items (Techno Matty / Dotknit /
-      // Dryfit). Per the "never skip a sheet row" rule, we keep the row
-      // anyway rather than deleting it - it gets its own label/filter
-      // button using whatever text was actually in the Item cell, so it
-      // stays fully visible and counted instead of vanishing.
       diag.unrecognizedItem++;
       if(diag.samples.length < 12){
         diag.samples.push({
@@ -640,29 +706,19 @@ function parseSheet(sheetName, rows, warnings){
     }
     rec.item = itemName;
 
-    // Resolve date
     const dateObj = parseDateCell(rec.checkingDate);
     rec._date = dateObj;
     rec._monthKey = monthKeyOf(dateObj);
 
-    // Numbers
     rec.totalRolls = toNumber(rec.totalRolls);
     rec.checkedRolls = toNumber(rec.checkedRolls);
 
-    // Issue classification
     rec._issueRaw = rec.issue === undefined ? "" : String(rec.issue).trim();
     rec._category = classifyIssue(rec._issueRaw);
 
-    // Pragmatic roll-quantity fallback (documented):
-    // Some sheets record Checked Rolls / Total Rolls once per LOT, not
-    // per row, and leave later rows blank. Since every row here already
-    // represents one physically-checked roll (it has a Roll No), we
-    // default missing quantities to 1 so KPI sums stay meaningful
-    // instead of collapsing to near-zero.
     rec._checkedQty = rec.checkedRolls !== null ? rec.checkedRolls : 1;
     rec._totalQty = rec.totalRolls !== null ? rec.totalRolls : rec._checkedQty;
 
-    // Source columns actually present, in original order (for the table)
     rec._sourceCols = cols.map(c=> c.field ? { key: c.field, label: c.rawLabel } : { key: "_extra."+c.rawLabel, label: c.rawLabel });
 
     out.push(rec);
@@ -675,33 +731,23 @@ function parseSheet(sheetName, rows, warnings){
 }
 
 function buildUniqueKey(rec){
-  // Composite key for duplicate detection across repeated uploads.
-  // We use the fields that uniquely identify a physical checked roll:
-  // Item + Checking Date + PO No. + Lot No. + Roll No.
   const dateIso = rec._date ? rec._date.toISOString().slice(0,10) : "NA";
   return [rec.item, dateIso, rec.poNo ?? "NA", rec.lotNo ?? "NA", rec.rollNo ?? "NA"].join("|");
 }
 
 function parseWorkbook(wb){
-  // Accepts an already-parsed SheetJS workbook (from a live CSV fetch)
-  // and normalizes every sheet it finds into flat records. Sheets named
-  // "*FORMAT*" (blank templates) are skipped automatically inside
-  // parseSheet.
   const warnings = [];
   let all = [];
-  let allColumns = new Map(); // key -> label, preserves first-seen order
+  let allColumns = new Map();
 
   parseSheet._diag = { rawDataRows: 0, unrecognizedItem: 0, samples: [] };
-  let globalRowCounter = 0; // guarantees every single sheet row gets its own unique record - no merging, ever
+  let globalRowCounter = 0;
 
   wb.SheetNames.forEach(name=>{
     const ws = wb.Sheets[name];
     const rows = XLSX.utils.sheet_to_json(ws, { header:1, raw:true, defval: null });
     const recs = parseSheet(name, rows, warnings);
     recs.forEach(rec=>{
-      // No deduplication: each row becomes its own record, keyed by its
-      // own position in the sheet, so 181 sheet rows always become 181
-      // records - nothing is ever merged, replaced, or skipped here.
       rec._uniqueKey = buildUniqueKey(rec) + "::row" + (globalRowCounter++);
       rec._sourceCols.forEach(c=>{
         if(!allColumns.has(c.key)) allColumns.set(c.key, c.label);
@@ -717,24 +763,12 @@ function parseWorkbook(wb){
 /* =====================================================================
    5. DEDUPE / PERSISTENCE
    ===================================================================== */
-// The Google Sheet is the single live source of truth: every sync
-// re-reads the whole INPUT tab and REPLACES the in-app dataset (rather
-// than appending), so edits or deletions made directly in the sheet
-// are reflected here too. Within one sync we still de-duplicate rows
-// that share the same physical-roll identity (Item + Checking Date +
-// PO No. + Lot No. + Roll No.) in case the sheet itself contains a
-// copy-pasted duplicate row - the later row in sheet order wins.
 function dedupeRecords(records, diag){
-  // Deduplication is intentionally disabled: every row read from the
-  // sheet is kept, one-for-one, with no merging of any kind. _uniqueKey
-  // is already unique per row (see parseWorkbook), so this is a
-  // pass-through kept only so callers don't need to change.
   if(diag) diag.duplicatesCollapsed = 0;
   return records;
 }
 
 function serializeRecords(records){
-  // Dates need to survive JSON round-trips
   return JSON.stringify(records.map(r=> Object.assign({}, r, {
     _date: r._date ? r._date.toISOString() : null
   })));
@@ -761,7 +795,7 @@ async function loadFromStorage(){
       }catch(e){}
       return true;
     }
-  }catch(e){ /* key not found or storage unavailable */ }
+  }catch(e){}
   return false;
 }
 async function clearStorage(){
@@ -793,11 +827,14 @@ const kpiRow = $("#kpiRow");
 const tableScroll = $("#tableScroll");
 const tableTitle = $("#tableTitle");
 const tableCount = $("#tableCount");
+const chipsBar = $("#chipsBar");
 const legendStatus = $("#legendStatus");
 const legendIssue = $("#legendIssue");
 const resetBtn = $("#resetBtn");
 const dashGrid = $("#dashGrid");
 const toggleChartsBtn = $("#toggleChartsBtn");
+const settingsBtn = $("#settingsBtn");
+const settingsPanel = $("#settingsPanel");
 toggleChartsBtn.addEventListener("click", ()=>{
   const hidden = dashGrid.classList.toggle("charts-hidden");
   toggleChartsBtn.classList.toggle("active", hidden);
@@ -806,22 +843,14 @@ toggleChartsBtn.addEventListener("click", ()=>{
 
 /* =====================================================================
    7. LIVE GOOGLE SHEET SYNC
-   The dashboard has no manual entry and no file upload — it reads
-   straight from the "INPUT" tab of the connected Google Sheet using
-   Google's public CSV export endpoint (gviz). This works for any
-   Sheet that is shared as "Anyone with the link – Viewer"; no API
-   key or sign-in is required. We re-fetch on a timer so the
-   dashboard stays live as the sheet is edited.
    ===================================================================== */
 const SHEET_ID = "1QRDlB8tPNEj3j3LOIhL2I57y-_7cYZU666TD9LlE8vQ";
 const SHEET_TAB = "INPUT";
-const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_TAB)}`;
-const REFRESH_INTERVAL_MS = 45000; // poll every 45s for "live" updates
+const REFRESH_INTERVAL_MS = 45000;
 let refreshTimer = null;
 let isSyncing = false;
 
 function setSyncState(kind, label){
-  // kind: "syncing" | "live" | "error"
   syncDot.className = "dot " + kind;
   syncText.textContent = label;
 }
@@ -888,9 +917,6 @@ async function fetchLiveData(isRetry){
   }
 
   try{
-    // Use Google Visualization's JSONP response through a script tag.
-    // This keeps the dashboard working even when the HTML is opened directly
-    // from a local file (file://), where normal fetch() can hit CORS restrictions.
     const jsonUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${encodeURIComponent(SHEET_TAB)}`;
     const data = await fetchGoogleSheetJsonp(jsonUrl);
     if(data && data.errors && data.errors.length){
@@ -916,7 +942,6 @@ async function fetchLiveData(isRetry){
       const months = availableMonths();
       state.selectedMonth = months.length ? months[months.length-1] : "__all__";
     }
-  // Default view is All Items (state.selectedItem stays null) so nothing is ever hidden by an auto-picked item filter.
 
     hideErrorBanner();
     setSyncState("live", "Live · " + formatDateDMY(new Date()) + " " + nowTime());
@@ -962,6 +987,7 @@ function availableMonths(){
   return Array.from(new Set(state.records.map(r=>r._monthKey).filter(Boolean))).sort();
 }
 
+// Item + Month filters only (KPIs and charts always use these rows)
 function filteredRecords(){
   return state.records.filter(r=>{
     if(state.selectedItem && r.item !== state.selectedItem) return false;
@@ -978,8 +1004,6 @@ function renderMeta(){
     if(d.rawDataRows === state.records.length){
       html += ` &middot; matches ${d.rawDataRows} rows in the sheet`;
     } else {
-      // Should not normally happen (no row is ever skipped), but flag it
-      // loudly if the counts ever disagree so it's never silently wrong.
       html += ` &middot; <span style="color:#d84343;">⚠ ${d.rawDataRows} rows read but ${state.records.length} shown — please report this</span>`;
     }
     if(d.unrecognizedItem > 0){
@@ -1052,19 +1076,13 @@ function renderMonthSelect(){
 monthSelect.addEventListener("change", ()=>{ state.selectedMonth = monthSelect.value; renderAll(); });
 
 function rollWiseMetrics(rows){
-  // No "unique roll" or "unique lot" grouping of any kind. Every row in
-  // the filtered set is counted/summed exactly as it appears in the
-  // sheet - nothing is collapsed by Item/Date/PO/Lot/Roll No.
   const totalRolls = rows.reduce((sum,r)=> sum + (Number(r.totalRolls) || 0), 0);
   const checkedRolls = rows.reduce((sum,r)=> sum + (Number(r.checkedRolls) || 0), 0);
-
-  // Issue breakdown is Total-Roll-wise (sum of the Total Rolls column
-  // per category), not a count of rows.
   const sumTotalRollsWhere = (pred) => rows.filter(pred).reduce((sum,r)=> sum + (Number(r.totalRolls) || 0), 0);
   const halka = sumTotalRollsWhere(r=> r._category === "हल्का Round");
   const round = sumTotalRollsWhere(r=> r._category === "Round");
   const okCount = sumTotalRollsWhere(r=> r._category === "Ok");
-  const problemRolls = sumTotalRollsWhere(r=> r._category !== "Ok"); // sum of Total Rolls where category <> Ok
+  const problemRolls = sumTotalRollsWhere(r=> r._category !== "Ok");
   return { totalRolls, checkedRolls, pendingRolls: Math.max(totalRolls-checkedRolls,0), problemRolls, halka, round, okCount };
 }
 
@@ -1089,6 +1107,7 @@ function renderKPIs(rows){
 }
 
 function displayValue(rec, key){
+  if(key === "__category") return rec._category || "";
   if(key.startsWith("_extra.")){
     const label = key.slice(7);
     return rec._extra && rec._extra[label] !== undefined ? rec._extra[label] : "";
@@ -1103,6 +1122,7 @@ function displayValue(rec, key){
     default: return rec[key] !== undefined && rec[key] !== null ? rec[key] : "";
   }
 }
+function cellText(rec, key){ return String(displayValue(rec, key)); }
 
 const COLUMN_LABELS = {
   checkingDate:"Checking Date", poNo:"Po No.", customer:"Customer", item:"Item",
@@ -1128,96 +1148,455 @@ function computeColumnUnion(rows){
     if(bi===-1) return -1;
     return ai-bi;
   });
-  return keys.map(k=> ({ key:k, label: seen.get(k) }));
+  const cols = keys.map(k=> ({ key:k, label: seen.get(k) }));
+  cols.push({ key:"__category", label:"Category" });
+  return cols;
 }
 
-function renderTable(rows){
-  tableCount.textContent = rows.length + " row" + (rows.length===1?"":"s");
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+}
+
+/* ---------- chart-click filters ---------- */
+function statusMatch(r, which){
+  const checked = Number(r.checkedRolls) || 0;
+  const total = Number(r.totalRolls) || 0;
+  if(which === "Checked") return checked > 0;
+  if(which === "Pending") return (total - checked) > 0;
+  return true;
+}
+function applyChartFilters(rows, f){
+  f = f || state.chartFilter;
+  return rows.filter(r=>{
+    if(f.status && !statusMatch(r, f.status)) return false;
+    if(f.issue && r._category !== f.issue) return false;
+    return true;
+  });
+}
+function applyColFilters(rows){
+  const keys = Object.keys(state.colFilters);
+  if(!keys.length) return rows;
+  return rows.filter(r=> keys.every(k=> state.colFilters[k].has(cellText(r,k))));
+}
+
+function compareValues(a, b, key){
+  if(key === "checkingDate"){
+    const ad = a._date ? a._date.getTime() : 0, bd = b._date ? b._date.getTime() : 0;
+    return ad - bd;
+  }
+  const av = cellText(a,key), bv = cellText(b,key);
+  return av.localeCompare(bv, undefined, { numeric:true, sensitivity:"base" });
+}
+
+function renderChips(){
+  const chips = [];
+  if(state.chartFilter.status) chips.push({ label:"Status: " + state.chartFilter.status, clear:()=>{ state.chartFilter.status = null; } });
+  if(state.chartFilter.issue)  chips.push({ label:"Issue: " + state.chartFilter.issue,  clear:()=>{ state.chartFilter.issue = null; } });
+  Object.keys(state.colFilters).forEach(k=>{
+    const col = state.tableCols.find(c=>c.key===k);
+    const n = state.colFilters[k].size;
+    chips.push({ label:(col ? col.label : k) + ": " + n + " selected", clear:()=>{ delete state.colFilters[k]; } });
+  });
+  chipsBar.innerHTML = "";
+  chipsBar.classList.toggle("on", chips.length > 0);
+  if(!chips.length) return;
+  chips.forEach(c=>{
+    const el = document.createElement("span");
+    el.className = "chip";
+    el.appendChild(document.createTextNode(c.label));
+    const x = document.createElement("button");
+    x.textContent = "×"; x.title = "Remove this filter";
+    x.addEventListener("click", ()=>{ c.clear(); renderAll(); });
+    el.appendChild(x);
+    chipsBar.appendChild(el);
+  });
+  const clr = document.createElement("button");
+  clr.className = "chip-clear"; clr.textContent = "Clear all";
+  clr.addEventListener("click", ()=>{
+    state.chartFilter = { status:null, issue:null };
+    state.colFilters = {};
+    renderAll();
+  });
+  chipsBar.appendChild(clr);
+}
+
+function renderTable(baseRows){
+  state.baseRows = baseRows;
   tableTitle.textContent = (state.selectedItem || "All Items") + (state.selectedMonth && state.selectedMonth!=="__all__" ? " — " + monthLabelOf(state.selectedMonth) : "");
 
-  if(!rows.length){
+  // columns come from all rows of this Item/Month so the headers never vanish when filtering
+  state.tableCols = computeColumnUnion(baseRows);
+  const cols = state.tableCols;
+
+  // 1) chart filters   2) column (header) filters   3) sort
+  const afterChart = applyChartFilters(baseRows);
+  state.menuRows = afterChart;
+  let rows = applyColFilters(afterChart);
+
+  if(state.sort.key){
+    const k = state.sort.key, dir = state.sort.dir === "desc" ? -1 : 1;
+    rows = rows.slice().sort((a,b)=> dir * compareValues(a,b,k));
+  } else {
+    rows = rows.slice().sort((a,b)=>{
+      const ad = a._date ? a._date.getTime() : 0, bd = b._date ? b._date.getTime() : 0;
+      return bd - ad;
+    });
+  }
+
+  tableCount.textContent = (rows.length === baseRows.length)
+    ? rows.length + " row" + (rows.length===1?"":"s")
+    : rows.length + " of " + baseRows.length + " rows";
+
+  renderChips();
+
+  const prevTop = tableScroll.scrollTop, prevLeft = tableScroll.scrollLeft;
+
+  if(!baseRows.length){
     tableScroll.innerHTML = `<div class="no-rows">No records for this Item / Month.</div>`;
+    renderSettingsCols();
     return;
   }
 
-  const cols = computeColumnUnion(rows);
-  // Add a computed "Category" column at the end for clarity
-  const sorted = rows.slice().sort((a,b)=>{
-    const ad = a._date ? a._date.getTime() : 0, bd = b._date ? b._date.getTime() : 0;
-    return bd - ad;
+  const totalWidth = cols.reduce((s,c)=> s + colWidth(c.key), 0);
+  let html = `<table class='data-table' style='width:${totalWidth}px;min-width:100%'><colgroup>`;
+  cols.forEach(c=> html += `<col style="width:${colWidth(c.key)}px">`);
+  html += "</colgroup><thead><tr>";
+  cols.forEach(c=>{
+    const filtered = !!state.colFilters[c.key];
+    const sorted = state.sort.key === c.key;
+    const ind = (filtered ? "●" : "") + (sorted ? (state.sort.dir==="desc" ? "▼" : "▲") : "");
+    html += `<th data-key="${escapeHtml(c.key)}" class="${filtered?"filtered":""}" title="Click for filter / sort">${escapeHtml(c.label)}<span class="th-ind">${ind}</span></th>`;
   });
-
-  let html = "<table class='data-table'><thead><tr>";
-  cols.forEach(c=> html += `<th>${escapeHtml(c.label)}</th>`);
-  html += "<th>Category</th></tr></thead><tbody>";
-  sorted.forEach(r=>{
+  html += "</tr></thead><tbody>";
+  if(!rows.length){
+    html += `<tr><td colspan="${cols.length}" class="no-rows">No rows match the current filters.</td></tr>`;
+  }
+  rows.forEach(r=>{
     html += "<tr>";
-    cols.forEach(c=> html += `<td>${escapeHtml(String(displayValue(r,c.key)))}</td>`);
-    const cat = r._category;
-    const pillClass = cat === "Ok" ? "ok" : (cat === "Round" ? "round" : "halka");
-    html += `<td><span class="pill ${pillClass}">${escapeHtml(cat)}</span></td>`;
+    cols.forEach(c=>{
+      const cls = colWrap(c.key) ? "wrap" : "nowrap";
+      if(c.key === "__category"){
+        const cat = r._category;
+        const pillClass = cat === "Ok" ? "ok" : (cat === "Round" ? "round" : "halka");
+        html += `<td class="${cls}"><span class="pill ${pillClass}">${escapeHtml(cat)}</span></td>`;
+      } else {
+        const t = cellText(r, c.key);
+        html += `<td class="${cls}" title="${escapeHtml(t)}">${escapeHtml(t)}</td>`;
+      }
+    });
     html += "</tr>";
   });
   html += "</tbody></table>";
   tableScroll.innerHTML = html;
+  tableScroll.scrollTop = prevTop;
+  tableScroll.scrollLeft = prevLeft;
+
+  tableScroll.querySelectorAll("th[data-key]").forEach(th=>{
+    th.addEventListener("click", (e)=>{ e.stopPropagation(); openColMenu(th.getAttribute("data-key"), th); });
+  });
+  renderSettingsCols();
 }
 
-function escapeHtml(s){
-  return s.replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+/* ---------- header filter menu ---------- */
+let openMenuEl = null;
+function closeColMenu(){
+  if(openMenuEl){ openMenuEl.remove(); openMenuEl = null; }
+}
+function openColMenu(key, th){
+  const same = openMenuEl && openMenuEl.dataset.key === key;
+  closeColMenu();
+  if(same) return;
+  const col = state.tableCols.find(c=>c.key===key);
+  const label = col ? col.label : key;
+  const vals = Array.from(new Set(state.menuRows.map(r=> cellText(r,key))))
+    .sort((a,b)=> a.localeCompare(b, undefined, { numeric:true, sensitivity:"base" }));
+  const selected = new Set(state.colFilters[key] ? Array.from(state.colFilters[key]) : vals);
+
+  const menu = document.createElement("div");
+  menu.className = "col-menu";
+  menu.dataset.key = key;
+  menu.addEventListener("click", e=> e.stopPropagation());
+
+  const title = document.createElement("div");
+  title.className = "cm-title"; title.textContent = label;
+  menu.appendChild(title);
+
+  const sortRow = document.createElement("div");
+  sortRow.className = "cm-sort";
+  [["asc","▲ Sort A→Z"],["desc","▼ Sort Z→A"]].forEach(([dir,txt])=>{
+    const b = document.createElement("button");
+    b.textContent = txt;
+    if(state.sort.key === key && state.sort.dir === dir) b.classList.add("on");
+    b.addEventListener("click", ()=>{
+      if(state.sort.key === key && state.sort.dir === dir){ state.sort = { key:null, dir:"asc" }; }
+      else state.sort = { key, dir };
+      closeColMenu(); renderTable(state.baseRows);
+    });
+    sortRow.appendChild(b);
+  });
+  menu.appendChild(sortRow);
+
+  const search = document.createElement("input");
+  search.type = "text"; search.placeholder = "Search values…";
+  menu.appendChild(search);
+
+  const list = document.createElement("div");
+  list.className = "cm-list";
+  menu.appendChild(list);
+
+  const itemEls = [];
+  function addItem(text, isAll){
+    const lab = document.createElement("label");
+    lab.className = "cm-item";
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    const sp = document.createElement("span");
+    sp.textContent = isAll ? "(Select all)" : (text === "" ? "(Blanks)" : text);
+    if(isAll) sp.style.fontWeight = "700";
+    lab.appendChild(cb); lab.appendChild(sp);
+    list.appendChild(lab);
+    return { lab, cb, text, isAll };
+  }
+  const allItem = addItem("", true);
+  vals.forEach(v=> itemEls.push(addItem(v,false)));
+
+  function visibleItems(){ return itemEls.filter(i=> i.lab.style.display !== "none"); }
+  function syncChecks(){
+    itemEls.forEach(i=> i.cb.checked = selected.has(i.text));
+    const vis = visibleItems();
+    allItem.cb.checked = vis.length > 0 && vis.every(i=> selected.has(i.text));
+  }
+  itemEls.forEach(i=>{
+    i.cb.addEventListener("change", ()=>{
+      if(i.cb.checked) selected.add(i.text); else selected.delete(i.text);
+      syncChecks();
+    });
+  });
+  allItem.cb.addEventListener("change", ()=>{
+    visibleItems().forEach(i=>{ if(allItem.cb.checked) selected.add(i.text); else selected.delete(i.text); });
+    syncChecks();
+  });
+  search.addEventListener("input", ()=>{
+    const q = search.value.trim().toLowerCase();
+    itemEls.forEach(i=>{
+      const shown = (i.text === "" ? "(blanks)" : i.text.toLowerCase()).includes(q);
+      i.lab.style.display = shown ? "" : "none";
+    });
+    syncChecks();
+  });
+  syncChecks();
+
+  const foot = document.createElement("div");
+  foot.className = "cm-foot";
+  const clearBtn = document.createElement("button");
+  clearBtn.textContent = "Clear";
+  clearBtn.addEventListener("click", ()=>{ delete state.colFilters[key]; closeColMenu(); renderTable(state.baseRows); });
+  const applyBtn = document.createElement("button");
+  applyBtn.className = "primary"; applyBtn.textContent = "Apply";
+  applyBtn.addEventListener("click", ()=>{
+    const allSelected = vals.every(v=> selected.has(v));
+    if(allSelected) delete state.colFilters[key];
+    else state.colFilters[key] = new Set(Array.from(selected));
+    closeColMenu(); renderTable(state.baseRows);
+  });
+  foot.appendChild(clearBtn); foot.appendChild(applyBtn);
+  menu.appendChild(foot);
+
+  document.body.appendChild(menu);
+  openMenuEl = menu;
+
+  const r = th.getBoundingClientRect();
+  const mw = 236;
+  let left = Math.min(r.left, window.innerWidth - mw - 10);
+  left = Math.max(8, left);
+  let top = r.bottom + 4;
+  const mh = menu.offsetHeight;
+  if(top + mh > window.innerHeight - 8) top = Math.max(8, window.innerHeight - mh - 8);
+  menu.style.left = left + "px";
+  menu.style.top = top + "px";
+  search.focus();
+}
+document.addEventListener("click", closeColMenu);
+document.addEventListener("keydown", e=>{ if(e.key === "Escape"){ closeColMenu(); closeSettings(); } });
+tableScroll.addEventListener("scroll", closeColMenu);
+
+/* ---------- table settings panel ---------- */
+const setWrapAll = $("#setWrapAll");
+const setDefWidth = $("#setDefWidth");
+const setDefWidthVal = $("#setDefWidthVal");
+const setColList = $("#setColList");
+const setReset = $("#setReset");
+
+function closeSettings(){ settingsPanel.classList.remove("open"); settingsBtn.classList.remove("active"); }
+function openSettings(){
+  settingsPanel.classList.add("open");
+  settingsBtn.classList.add("active");
+  const r = settingsBtn.getBoundingClientRect();
+  const w = 340;
+  settingsPanel.style.left = Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8)) + "px";
+  settingsPanel.style.top = (r.bottom + 6) + "px";
+  syncSettingsUI();
+}
+settingsBtn.addEventListener("click", e=>{
+  e.stopPropagation();
+  if(settingsPanel.classList.contains("open")) closeSettings(); else openSettings();
+});
+settingsPanel.addEventListener("click", e=> e.stopPropagation());
+document.addEventListener("click", closeSettings);
+
+function syncSettingsUI(){
+  setWrapAll.checked = settings.wrapAll;
+  setDefWidth.value = settings.defaultWidth;
+  setDefWidthVal.textContent = settings.defaultWidth + "px";
+  renderSettingsCols();
+}
+function renderSettingsCols(){
+  if(!settingsPanel.classList.contains("open")) return;
+  setColList.innerHTML = "";
+  state.tableCols.forEach(c=>{
+    const row = document.createElement("div");
+    row.className = "set-col";
+    const nm = document.createElement("span");
+    nm.className = "nm"; nm.textContent = c.label; nm.title = c.label;
+    const rng = document.createElement("input");
+    rng.type = "range"; rng.min = 50; rng.max = 400; rng.step = 5; rng.value = colWidth(c.key);
+    const val = document.createElement("span");
+    val.className = "set-val"; val.textContent = colWidth(c.key);
+    const wr = document.createElement("input");
+    wr.type = "checkbox"; wr.checked = colWrap(c.key);
+    rng.addEventListener("input", ()=>{
+      settings.widths[c.key] = Number(rng.value);
+      val.textContent = rng.value;
+      saveSettings(); applySettingsToTable();
+    });
+    wr.addEventListener("change", ()=>{
+      settings.wraps[c.key] = wr.checked;
+      saveSettings(); renderTable(state.baseRows);
+    });
+    row.appendChild(nm); row.appendChild(rng); row.appendChild(val); row.appendChild(wr);
+    setColList.appendChild(row);
+  });
+}
+// Live width update without rebuilding the table
+function applySettingsToTable(){
+  const table = tableScroll.querySelector("table.data-table");
+  if(!table) return;
+  const cols = state.tableCols;
+  const colEls = table.querySelectorAll("col");
+  let total = 0;
+  cols.forEach((c,i)=>{
+    const w = colWidth(c.key);
+    total += w;
+    if(colEls[i]) colEls[i].style.width = w + "px";
+  });
+  table.style.width = total + "px";
+}
+setWrapAll.addEventListener("change", ()=>{
+  settings.wrapAll = setWrapAll.checked;
+  settings.wraps = {};            // global switch overrides per-column choices
+  saveSettings(); renderTable(state.baseRows); renderSettingsCols();
+});
+setDefWidth.addEventListener("input", ()=>{
+  settings.defaultWidth = Number(setDefWidth.value);
+  setDefWidthVal.textContent = settings.defaultWidth + "px";
+  saveSettings(); applySettingsToTable();
+  // refresh per-column sliders that follow the default
+  Array.from(setColList.children).forEach((row,i)=>{
+    const c = state.tableCols[i];
+    if(c && settings.widths[c.key] === undefined){
+      row.querySelector("input[type=range]").value = settings.defaultWidth;
+      row.querySelector(".set-val").textContent = settings.defaultWidth;
+    }
+  });
+});
+setReset.addEventListener("click", ()=>{
+  settings = { wrapAll:false, defaultWidth:120, widths:{}, wraps:{} };
+  saveSettings(); renderTable(state.baseRows); syncSettingsUI();
+});
+
+/* ---------- charts (interactive) ---------- */
+function dimIfNeeded(color, activeLabel, label){
+  return (activeLabel && activeLabel !== label) ? color + "44" : color;
+}
+function chartOptions(onSliceClick, onClear){
+  return {
+    maintainAspectRatio: false,
+    animation: false,
+    cutout: "62%",
+    layout: { padding: 4 },
+    plugins: { legend:{ display:false }, datalabels: PCT_DATALABEL_OPTIONS },
+    onClick: (evt, els, chart)=>{
+      if(els.length) onSliceClick(chart.data.labels[els[0].index]);
+      else if(onClear) onClear();
+    },
+    onHover: (evt, els)=>{
+      if(evt.native && evt.native.target) evt.native.target.style.cursor = els.length ? "pointer" : "default";
+    }
+  };
+}
+function toggleStatus(label){ state.chartFilter.status = (state.chartFilter.status === label) ? null : label; renderAll(); }
+function clearStatus(){ if(state.chartFilter.status){ state.chartFilter.status = null; renderAll(); } }
+function clearIssue(){ if(state.chartFilter.issue){ state.chartFilter.issue = null; renderAll(); } }
+function toggleIssue(label){ state.chartFilter.issue = (state.chartFilter.issue === label) ? null : label; renderAll(); }
+
+function buildLegend(el, labels, data, colors, activeLabel, onClick){
+  const total = data.reduce((a,b)=>a+b,0) || 1;
+  el.innerHTML = labels.map((l,i)=>{
+    const pct = Math.round((data[i]/total)*1000)/10;
+    return `<div class="legend-row${activeLabel===l?" active":""}" data-label="${escapeHtml(l)}"><span class="name"><span class="swatch" style="background:${colors[i]}"></span>${escapeHtml(l)}</span><span class="val">${data[i]} &middot; ${pct}%</span></div>`;
+  }).join("");
+  el.querySelectorAll(".legend-row").forEach(row=>{
+    row.addEventListener("click", ()=> onClick(row.getAttribute("data-label")));
+  });
 }
 
 function renderCharts(rows){
-  const m = rollWiseMetrics(rows);
-  const total = m.totalRolls;
-  const checked = m.checkedRolls;
-  const pending = m.pendingRolls;
+  // Power BI-style cross-filtering: each chart is filtered by the OTHER chart's selection
+  // and keeps showing its own full breakdown, with its own selected slice highlighted.
+  const mStatus = rollWiseMetrics(applyChartFilters(rows, { status:null, issue:state.chartFilter.issue }));
+  const mIssue  = rollWiseMetrics(applyChartFilters(rows, { status:state.chartFilter.status, issue:null }));
+  const checked = mStatus.checkedRolls;
+  const pending = mStatus.pendingRolls;
 
   const statusData = [checked, pending];
   const statusLabels = ["Checked", "Pending"];
   const statusColors = ["#1fa669", "#d4dae0"];
+  const activeStatus = state.chartFilter.status;
 
   const ctx1 = document.getElementById("chartStatus").getContext("2d");
   if(state.chartStatus) state.chartStatus.destroy();
   state.chartStatus = new Chart(ctx1, {
     type: "doughnut",
-    data: { labels: statusLabels, datasets:[{ data: statusData, backgroundColor: statusColors, borderWidth:0 }] },
-    options: { plugins:{ legend:{ display:false }, datalabels: PCT_DATALABEL_OPTIONS }, cutout:"62%" }
+    data: { labels: statusLabels, datasets:[{ data: statusData,
+      backgroundColor: statusColors.map((c,i)=> dimIfNeeded(c, activeStatus, statusLabels[i])), borderWidth:0 }] },
+    options: chartOptions(toggleStatus, clearStatus)
   });
-  const totalStatus = statusData.reduce((a,b)=>a+b,0) || 1;
-  legendStatus.innerHTML = statusLabels.map((l,i)=>{
-    const pct = Math.round((statusData[i]/totalStatus)*1000)/10;
-    return `<div class="legend-row"><span class="name"><span class="swatch" style="background:${statusColors[i]}"></span>${l}</span><span class="val">${statusData[i]} &middot; ${pct}%</span></div>`;
-  }).join("");
+  buildLegend(legendStatus, statusLabels, statusData, statusColors, activeStatus, toggleStatus);
 
-  const halka = m.halka;
-  const round = m.round;
-  const ok = m.okCount;
   const issueLabels = ["हल्का Round","Round","Ok"];
-  const issueData = [halka, round, ok];
+  const issueData = [mIssue.halka, mIssue.round, mIssue.okCount];
   const issueColors = issueLabels.map(l=>ISSUE_CONFIG[l].color);
+  const activeIssue = state.chartFilter.issue;
 
   const ctx2 = document.getElementById("chartIssue").getContext("2d");
   if(state.chartIssue) state.chartIssue.destroy();
   state.chartIssue = new Chart(ctx2, {
     type: "doughnut",
-    data: { labels: issueLabels, datasets:[{ data: issueData, backgroundColor: issueColors, borderWidth:0 }] },
-    options: { plugins:{ legend:{ display:false }, datalabels: PCT_DATALABEL_OPTIONS }, cutout:"62%" }
+    data: { labels: issueLabels, datasets:[{ data: issueData,
+      backgroundColor: issueColors.map((c,i)=> dimIfNeeded(c, activeIssue, issueLabels[i])), borderWidth:0 }] },
+    options: chartOptions(toggleIssue, clearIssue)
   });
-  const totalIssue = issueData.reduce((a,b)=>a+b,0) || 1;
-  legendIssue.innerHTML = issueLabels.map((l,i)=>{
-    const pct = Math.round((issueData[i]/totalIssue)*1000)/10;
-    return `<div class="legend-row"><span class="name"><span class="swatch" style="background:${issueColors[i]}"></span>${l}</span><span class="val">${issueData[i]} &middot; ${pct}%</span></div>`;
-  }).join("");
+  buildLegend(legendIssue, issueLabels, issueData, issueColors, activeIssue, toggleIssue);
 }
 
 function renderAll(){
+  closeColMenu();
   renderMeta();
   const hasData = state.records.length > 0;
   emptyState.style.display = hasData ? "none" : "flex";
   dashboard.style.display = hasData ? "block" : "none";
   if(!hasData) return;
 
-  // Default view is All Items (state.selectedItem stays null) so nothing is ever hidden by an auto-picked item filter.
   const months = availableMonths();
   if(!state.selectedMonth || (state.selectedMonth!=="__all__" && !months.includes(state.selectedMonth))){
     state.selectedMonth = months.length ? months[months.length-1] : "__all__";
@@ -1226,9 +1605,9 @@ function renderAll(){
   renderItemButtons();
   renderMonthSelect();
   const rows = filteredRecords();
-  renderKPIs(rows);
-  renderTable(rows);
-  renderCharts(rows);
+  renderKPIs(applyChartFilters(rows));   // KPIs follow chart selections
+  renderCharts(rows);   // charts always show the full Item/Month picture; the clicked slice is highlighted
+  renderTable(rows);    // table also applies chart-click + header filters
 }
 
 /* =====================================================================
@@ -1240,22 +1619,21 @@ resetBtn.addEventListener("click", async ()=>{
   state.lastUpdated = null;
   state.selectedItem = null;
   state.selectedMonth = null;
+  state.chartFilter = { status:null, issue:null };
+  state.colFilters = {};
+  state.sort = { key:null, dir:"asc" };
   await clearStorage();
   renderAll();
   fetchLiveData(true);
 });
 
 (async function boot(){
-  // Paint instantly from the last cached sync (if any), then fetch the
-  // live sheet in the background so the dashboard never sits fully
-  // blank while the network request is in flight.
   const restored = await loadFromStorage();
   if(restored && state.records.length){
     if(state.selectedMonth === null){
       const months = availableMonths();
       state.selectedMonth = months.length ? months[months.length-1] : "__all__";
     }
-  // Default view is All Items (state.selectedItem stays null) so nothing is ever hidden by an auto-picked item filter.
     renderAll();
     setSyncState("syncing", "Refreshing\u2026");
   }
