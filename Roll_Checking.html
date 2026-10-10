@@ -254,6 +254,7 @@
   .pill.ok{background:#e3f7ec;color:#0f8a53;}
   .pill.round{background:#fbe6e6;color:#b32d2d;}
   .pill.halka{background:#fbeed6;color:#a5730a;}
+  .pill.shade-pill{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:inherit;vertical-align:middle;font-size:12px;}
   .no-rows{padding:40px;text-align:center;color:#9aa5b1;font-size:14px;}
 
   /* column filter menu (appears when a header is clicked) */
@@ -1279,6 +1280,12 @@ function renderTable(baseRows){
         const cat = r._category;
         const pillClass = cat === "Ok" ? "ok" : (cat === "Round" ? "round" : "halka");
         html += `<td class="${cls}"><span class="pill ${pillClass}">${escapeHtml(cat)}</span></td>`;
+      } else if(c.key === "shade" && cellText(r, c.key).trim() !== ""){
+        // Shade text is highlighted with the same colour as the row's Category pill
+        const t = cellText(r, c.key);
+        const cat = r._category;
+        const pillClass = cat === "Ok" ? "ok" : (cat === "Round" ? "round" : "halka");
+        html += `<td class="${cls}" title="${escapeHtml(t)}"><span class="pill shade-pill ${pillClass}">${escapeHtml(t)}</span></td>`;
       } else {
         const t = cellText(r, c.key);
         html += `<td class="${cls}" title="${escapeHtml(t)}">${escapeHtml(t)}</td>`;
