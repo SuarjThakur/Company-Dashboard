@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VVKF Roll Checking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<style>
+  :root{
+    --ink:#161a1f;
+    --panel:#1e242b;
+    --panel-2:#232a32;
+    --line:#2e3640;
+    --line-soft:#3a4450;
+    --paper:#f4f6f8;
+    --paper-2:#ffffff;
+    --text-lo:#8a97a6;
+    --text-hi:#eef2f6;
+    --steel:#c8d0d9;
+    --amber:#e0a020;
+    --techno:#3b6fe0;
+    --dot:#8b5cf6;
+    --dry:#0fa968;
+    --halka:#e0a020;
+    --round:#d84343;
+    --ok:#1fa669;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{min-height:100vh;display:flex;flex-direction:column;}
+
+  /* ---------- HEADER ---------- */
+  header.top{
+    background:linear-gradient(180deg,#1c2229,#161a1f);
+    border-bottom:3px solid var(--amber);
+    padding:18px 28px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .brand{display:flex;align-items:baseline;gap:14px;}
+  .brand h1{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:700;
+    font-size:34px;
+    letter-spacing:0.5px;
+    color:var(--text-hi);
+    margin:0;
+  }
+  .brand .sub{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    color:var(--text-lo);
+    letter-spacing:0.4px;
+  }
+  .header-right{display:flex;align-items:center;gap:14px;}
+  .meta-line{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    color:var(--text-lo);
+    text-align:right;
+    line-height:1.5;
+  }
+  .meta-line strong{color:var(--steel);}
+  .btn-upload{
+    background:var(--amber);
+    color:#1c1500;
+    border:none;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    padding:11px 18px;
+    border-radius:8px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    transition:filter .15s ease, transform .1s ease;
+  }
+  .btn-upload:hover{filter:brightness(1.08);}
+  .btn-upload:active{transform:translateY(1px);}
+
+  /* ---------- LIVE SYNC INDICATOR ---------- */
+  .sync-pill{
+    display:flex;align-items:center;gap:8px;
+    font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--text-lo);
+    background:var(--panel-2);border:1px solid var(--line);border-radius:20px;
+    padding:6px 12px;
+  }
+  .sync-pill .dot{
+    width:8px;height:8px;border-radius:50%;background:#8a97a6;flex:none;
+    transition:background .2s ease;
+  }
+  .sync-pill .dot.live{background:#1fa669;box-shadow:0 0 0 3px rgba(31,166,105,0.18);}
+  .sync-pill .dot.syncing{background:var(--amber);animation:pulse 1s infinite ease-in-out;}
+  .sync-pill .dot.error{background:#d84343;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+
+  .error-banner{
+    background:#fbeaea;border-bottom:1px solid #f0c6c6;color:#8a2222;
+    padding:10px 28px;font-size:13.5px;
+    display:flex;align-items:center;justify-content:center;gap:16px;
+  }
+  .error-banner button{
+    background:#8a2222;color:#fff;border:none;border-radius:6px;
+    padding:6px 14px;font-size:12.5px;font-weight:600;cursor:pointer;
+  }
+
+  /* ---------- MAIN ---------- */
+  main{flex:1;padding:22px 28px 40px;max-width:1440px;width:100%;margin:0 auto;}
+
+  .empty-state{
+    margin-top:60px;
+    text-align:center;
+    color:var(--text-lo);
+    display:flex;flex-direction:column;align-items:center;gap:14px;
+  }
+  .empty-state .glyph{
+    font-size:44px;
+    width:88px;height:88px;border-radius:50%;
+    background:var(--paper-2);border:1px solid #dfe4e9;
+    display:flex;align-items:center;justify-content:center;
+    color:#a7b0ba;
+  }
+  .empty-state h2{font-family:'Barlow Condensed',sans-serif;font-size:26px;color:#3a4450;margin:6px 0 0;font-weight:600;}
+  .empty-state p{max-width:420px;font-size:14px;line-height:1.6;margin:0;}
+  .empty-state .cta{
+    margin-top:8px;background:#1c2229;color:#f4f6f8;border:none;
+    padding:12px 22px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;
+  }
+
+  /* filter bar */
+  .filter-bar{
+    background:var(--paper-2);
+    border:1px solid #e2e7ec;
+    border-radius:var(--radius);
+    padding:16px 20px;
+    display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;
+    margin-bottom:18px;
+  }
+  .filter-group label{
+    display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+    color:#8a97a6;font-weight:600;margin-bottom:9px;
+  }
+  .item-buttons{display:flex;gap:10px;flex-wrap:wrap;}
+  .item-btn{
+    border:2px solid var(--btn-color, #ccc);
+    background:#fff;
+    color:var(--btn-color,#333);
+    font-weight:700;
+    font-size:13.5px;
+    letter-spacing:.03em;
+    padding:10px 20px;
+    border-radius:8px;
+    cursor:pointer;
+    transition:all .12s ease;
+  }
+  .item-btn:hover{background:color-mix(in srgb, var(--btn-color) 8%, white);}
+  .item-btn.active{background:var(--btn-color,#333);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.15);}
+  .month-select{
+    padding:10px 14px;border-radius:8px;border:1.5px solid #d4dae0;
+    font-size:14px;font-weight:600;color:#1c2229;background:#fff;
+    min-width:170px;cursor:pointer;
+  }
+
+  /* KPI cards */
+  .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px;}
+  .kpi-card{
+    background:var(--paper-2);border:1px solid #e2e7ec;border-radius:var(--radius);
+    padding:16px 18px;
+    border-top:3px solid var(--kpi-color,#333);
+  }
+  .kpi-card .label{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:#8a97a6;font-weight:600;}
+  .kpi-card .value{font-family:'Barlow Condensed',sans-serif;font-size:34px;font-weight:700;color:#161a1f;margin-top:4px;}
+  .kpi-card .sub{font-size:11.5px;color:#9aa5b1;margin-top:2px;}
+
+  /* main grid: table + charts */
+  .dash-grid{display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start;}
+  @media (max-width:980px){.dash-grid{grid-template-columns:1fr;}}
+  .dash-grid.charts-hidden{grid-template-columns:1fr;}
+  .dash-grid.charts-hidden .charts-col{display:none;}
+  .chart-toggle-btn{
+    background:#fff;border:1.5px solid #d4dae0;border-radius:6px;
+    width:28px;height:28px;font-size:14px;line-height:1;cursor:pointer;
+    color:#3a4450;display:flex;align-items:center;justify-content:center;
+    transition:background .12s ease, border-color .12s ease;
+  }
+  .chart-toggle-btn:hover{background:#f1f6fc;border-color:#a7b0ba;}
+  .chart-toggle-btn.active{background:#1c2229;border-color:#1c2229;color:#f4f6f8;}
+
+  .table-panel{
+    background:var(--paper-2);border:1px solid #e2e7ec;border-radius:var(--radius);
+    overflow:hidden;
+    display:flex;flex-direction:column;
+  }
+  .table-panel .panel-head{
+    padding:13px 18px;border-bottom:1px solid #e2e7ec;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .table-panel .panel-head h3{margin:0;font-size:14.5px;font-weight:700;color:#1c2229;}
+  .table-panel .panel-head .count{font-size:12px;color:#8a97a6;font-family:'JetBrains Mono',monospace;}
+  .table-scroll{overflow:auto;max-height:640px;}
+  table.data-table{border-collapse:collapse;width:100%;font-size:12.8px;white-space:nowrap;}
+  table.data-table thead th{
+    position:sticky;top:0;z-index:2;
+    background:#1c2229;color:#e7ecf1;
+    padding:10px 12px;text-align:left;font-weight:600;
+    border-right:1px solid #2e3640;
+    white-space:normal;
+    min-width:92px;
+  }
+  table.data-table tbody td{
+    padding:8px 12px;border-bottom:1px solid #eef1f4;border-right:1px solid #f2f4f6;color:#2b333c;
+  }
+  table.data-table tbody tr:nth-child(even){background:#fafbfc;}
+  table.data-table tbody tr:hover{background:#f1f6fc;}
+  .pill{padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;display:inline-block;}
+  .pill.ok{background:#e3f7ec;color:#0f8a53;}
+  .pill.round{background:#fbe6e6;color:#b32d2d;}
+  .pill.halka{background:#fbeed6;color:#a5730a;}
+  .no-rows{padding:40px;text-align:center;color:#9aa5b1;font-size:14px;}
+
+  .charts-col{display:flex;flex-direction:column;gap:16px;}
+  .chart-panel{
+    background:var(--paper-2);border:1px solid #e2e7ec;border-radius:var(--radius);
+    padding:16px 18px;
+  }
+  .chart-panel h3{margin:0 0 4px;font-size:14px;font-weight:700;color:#1c2229;}
+  .chart-panel .chart-sub{font-size:11.5px;color:#9aa5b1;margin-bottom:10px;}
+  .chart-wrap{position:relative;height:170px;}
+  .legend{display:flex;flex-direction:column;gap:7px;margin-top:12px;}
+  .legend-row{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;}
+  .legend-row .name{display:flex;align-items:center;gap:8px;color:#3a4450;font-weight:500;}
+  .swatch{width:10px;height:10px;border-radius:3px;display:inline-block;}
+  .legend-row .val{font-family:'JetBrains Mono',monospace;font-weight:600;color:#1c2229;}
+
+  footer.app-footer{
+    text-align:center;padding:18px;color:#a7b0ba;font-size:12px;
+  }
+  footer.app-footer button{
+    background:none;border:none;color:#b32d2d;text-decoration:underline;cursor:pointer;font-size:12px;padding:0;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <div class="brand">
+      <h1>VVKF ROLL CHECKING</h1>
+      <span class="sub">QUALITY DASHBOARD</span>
+    </div>
+    <div class="header-right">
+      <div class="sync-pill" id="syncPill"><span class="dot" id="syncDot"></span><span id="syncText">Connecting to Google Sheet&hellip;</span></div>
+      <div class="meta-line" id="metaLine">No data loaded yet</div>
+      <button class="btn-upload" id="syncNowBtn">🔄 Sync Now</button>
+    </div>
+  </header>
+
+  <div class="error-banner" id="errorBanner" style="display:none;">
+    <span id="errorBannerText"></span>
+    <button id="errorBannerRetry">Try again</button>
+  </div>
+
+  <main id="mainArea">
+    <div class="empty-state" id="emptyState">
+      <div class="glyph" id="emptyGlyph">📋</div>
+      <h2 id="emptyTitle">Connecting to the Google Sheet&hellip;</h2>
+      <p id="emptyBody">The dashboard reads live from the <strong>INPUT</strong> tab of your Google Sheet &mdash; no manual entry, no file uploads. This only takes a moment.</p>
+      <button class="cta" id="emptyRetryBtn" style="display:none;">🔄 Try Again</button>
+    </div>
+
+    <div id="dashboard" style="display:none;">
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label>Select Item</label>
+          <div class="item-buttons" id="itemButtons"></div>
+        </div>
+        <div class="filter-group">
+          <label>Month</label>
+          <select class="month-select" id="monthSelect"></select>
+        </div>
+      </div>
+
+      <div class="kpi-row" id="kpiRow"></div>
+
+      <div class="dash-grid" id="dashGrid">
+        <div class="table-panel">
+          <div class="panel-head">
+            <h3 id="tableTitle">Roll Checking Records</h3>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span class="count" id="tableCount">0 rows</span>
+              <button id="toggleChartsBtn" class="chart-toggle-btn" title="Hide charts (full-width table)">⛶</button>
+            </div>
+          </div>
+          <div class="table-scroll" id="tableScroll">
+            <div class="no-rows">No records for this Item / Month.</div>
+          </div>
+        </div>
+
+        <div class="charts-col">
+          <div class="chart-panel">
+            <h3>Checking Status</h3>
+            <div class="chart-sub">Checked vs. Pending rolls</div>
+            <div class="chart-wrap"><canvas id="chartStatus"></canvas></div>
+            <div class="legend" id="legendStatus"></div>
+          </div>
+          <div class="chart-panel">
+            <h3>Issue Status</h3>
+            <div class="chart-sub">Sum of Total Rolls, by Issue category</div>
+            <div class="chart-wrap"><canvas id="chartIssue"></canvas></div>
+            <div class="legend" id="legendIssue"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    VVKF Roll Checking &middot; live from the <strong>INPUT</strong> tab, refreshed automatically &middot;
+    <button id="resetBtn">re-sync from scratch</button>
+  </footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* =====================================================================
+   1. CONFIGURATION
+   All Item colors live in ONE place so they can be changed easily.
+   Keys are the canonical display names used everywhere in the app.
+   ===================================================================== */
+// Register the on-chart percentage-label plugin if it loaded successfully
+// (it's fetched from a CDN, so guard against it being blocked/offline -
+// the charts still work fine without it, just without on-slice labels).
+if(typeof ChartDataLabels !== "undefined" && typeof Chart !== "undefined"){
+  Chart.register(ChartDataLabels);
+}
+const PCT_DATALABEL_OPTIONS = {
+  display: (ctx)=> ctx.dataset.data[ctx.dataIndex] > 0,
+  color: "#fff",
+  font: { weight: "700", size: 11, family: "'Inter',sans-serif" },
+  formatter: (value, ctx)=>{
+    const arr = ctx.chart.data.datasets[0].data;
+    const total = arr.reduce((a,b)=>a+b,0) || 1;
+    const pct = Math.round((value/total)*1000)/10;
+    return pct + "%";
+  }
+};
+
+const ITEM_CONFIG = {
+  "Techno Matty": { color: "#3b6fe0" },
+  "Dotknit":      { color: "#8b5cf6" },
+  "Dryfit":       { color: "#0fa968" }
+};
+const ITEM_ORDER = ["Techno Matty", "Dotknit", "Dryfit"];
+
+// Issue classification categories & colors (Section 13-15 of the spec)
+const ISSUE_CONFIG = {
+  "हल्का Round": { color: "#e0a020" },
+  "Round":        { color: "#d84343" },
+  "Ok":           { color: "#1fa669" }
+};
+
+/* Recognised synonyms for header detection -> canonical field name.
+   Matching is done on a lower-cased, trimmed header string. Order
+   matters: more specific patterns are checked before looser ones. */
+const HEADER_RULES = [
+  { field: "checkingDate", test: h => h.includes("checking date") },
+  { field: "poNo",         test: h => h.includes("po no") || h === "po" },
+  { field: "customer",     test: h => h.includes("customer") },
+  { field: "item",         test: h => h === "item" },
+  { field: "lotNo",        test: h => h.includes("lot no") },
+  { field: "shade",        test: h => h === "shade" },
+  { field: "machineNo",    test: h => h.includes("m/c no") || h.includes("machine no") },
+  { field: "knittingDate", test: h => h.includes("knitting date") },
+  { field: "totalRolls",   test: h => h.includes("total rolls") },
+  { field: "checkedRolls", test: h => h.includes("checked rolls") },
+  { field: "problemRolls", test: h => h.includes("problem rolls") },
+  { field: "issue",        test: h => h === "issue" },
+  { field: "rollNo",       test: h => h.includes("rolls no") || h.includes("roll no") },
+  { field: "remarks",      test: h => h.includes("remarks") },
+  { field: "problems",     test: h => h === "problems" }
+];
+
+// NOTE: this dashboard used to "forward-fill" these fields - if a row's
+// own cell was blank, it silently copied the value from the row above
+// (assuming lot-level info was only written once per lot). That meant a
+// blank "Checked Rolls"/"Total Rolls" cell in the sheet could still show
+// a number in the web table, and that phantom number was also being
+// added into the KPI sums. Per instruction, this is now disabled
+// entirely: every cell shows exactly what's in the sheet, and a blank
+// cell stays blank everywhere (table + KPIs + charts).
+const FORWARD_FILL_FIELDS = [];
+
+/* =====================================================================
+   2. STATE
+   ===================================================================== */
+let state = {
+  records: [],          // normalized records, flat array
+  columns: [],           // ordered list of {key,label} for the table (union of source headers)
+  selectedItem: null,
+  selectedMonth: null,   // "YYYY-MM" or "__all__"
+  lastUpdated: null,
+  chartStatus: null,
+  chartIssue: null,
+  diagnostics: null      // { rawDataRows, unrecognizedItem, duplicatesCollapsed, samples: [] }
+};
+
+const STORAGE_KEY = "vvkf_records_v1";
+
+/* =====================================================================
+   3. HELPERS
+   ===================================================================== */
+function normalizeItemName(raw){
+  if(!raw) return null;
+  const s = String(raw).toLowerCase();
+  if(s.includes("techno") || s.includes("tecno") || s.includes("matty")) return "Techno Matty";
+  if(s.includes("dotknit") || s.includes("dot knit")) return "Dotknit";
+  if(s.includes("dryfit") || s.includes("dry fit")) return "Dryfit";
+  return null;
+}
+
+function excelSerialToDate(serial){
+  // Excel's day-0 is 1899-12-30 (accounts for the 1900 leap-year bug)
+  const utcDays = Math.floor(serial - 25569);
+  const utcMs = utcDays * 86400 * 1000;
+  const date = new Date(utcMs);
+  const fraction = serial - Math.floor(serial);
+  if(fraction > 0){
+    date.setUTCSeconds(Math.round(fraction * 86400));
+  }
+  return date;
+}
+
+function parseDateCell(value){
+  if(value === null || value === undefined || value === "") return null;
+  if(value instanceof Date && !isNaN(value)) return value;
+  if(typeof value === "number") {
+    const d = excelSerialToDate(value);
+    return isNaN(d) ? null : d;
+  }
+  if(typeof value === "string"){
+    const s = value.trim();
+    if(!s) return null;
+    // Google Visualization commonly returns dates as Date(YYYY,M,D)
+    // when the sheet column is a true Google Sheets date.
+    let m = s.match(/^Date\((\d{4}),(\d{1,2}),(\d{1,2})(?:,(\d+),(\d+),(\d+))?\)$/i);
+    if(m){
+      const dt = new Date(Number(m[1]), Number(m[2]), Number(m[3]), Number(m[4]||0), Number(m[5]||0), Number(m[6]||0));
+      return isNaN(dt) ? null : dt;
+    }
+    // ISO date/time returned by some Google Sheets exports
+    m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T\s].*)?$/);
+    if(m){
+      const dt = new Date(Number(m[1]), Number(m[2])-1, Number(m[3]));
+      return isNaN(dt) ? null : dt;
+    }
+    // dd/mm/yyyy or dd-mm-yyyy
+    m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+    if(m){
+      let [_, d, mo, y] = m;
+      if(y.length === 2) y = "20" + y;
+      const dt = new Date(Number(y), Number(mo)-1, Number(d));
+      return isNaN(dt) ? null : dt;
+    }
+    // yyyy-mm-dd
+    m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if(m){
+      const dt = new Date(Number(m[1]), Number(m[2])-1, Number(m[3]));
+      return isNaN(dt) ? null : dt;
+    }
+    const dt = new Date(s);
+    return isNaN(dt) ? null : dt;
+  }
+  return null;
+}
+
+function pad2(n){ return String(n).padStart(2,"0"); }
+
+function formatDateDMY(date){
+  if(!date) return "";
+  return `${pad2(date.getDate())}/${pad2(date.getMonth()+1)}/${pad2(date.getFullYear()%100)}`;
+}
+
+function monthKeyOf(date){
+  if(!date) return null;
+  return `${date.getFullYear()}-${pad2(date.getMonth()+1)}`;
+}
+
+function monthLabelOf(monthKey){
+  if(!monthKey) return "";
+  const [y,m] = monthKey.split("-").map(Number);
+  const d = new Date(y, m-1, 1);
+  return d.toLocaleString("en-US", { month: "short", year: "numeric" });
+}
+
+/* Issue classification — exact rule from the spec:
+     blank         -> "Ok"
+     "हल्का Round" -> "हल्का Round"   (exact match only)
+     anything else -> "Round"          (e.g. "ROUND DEEPAK JI OK" -> Round) */
+function classifyIssue(raw){
+  const s = (raw === null || raw === undefined) ? "" : String(raw).trim();
+  if(s === "") return "Ok";
+  if(s === "हल्का Round") return "हल्का Round";
+  return "Round";
+}
+
+function toNumber(v){
+  if(v === null || v === undefined || v === "") return null;
+  const n = Number(v);
+  return isNaN(n) ? null : n;
+}
+
+/* =====================================================================
+   4. WORKBOOK PARSING
+   ===================================================================== */
+function findHeaderRow(rows){
+  const KEYWORDS = ["checking date","po no","customer","item","lot no","shade",
+    "m/c no","knitting date","total rolls","checked rolls","problem rolls","issue","rolls no","remarks"];
+  let bestIdx = -1, bestScore = 0;
+  for(let i=0; i<Math.min(rows.length, 12); i++){
+    const row = rows[i] || [];
+    let score = 0;
+    row.forEach(cell=>{
+      if(typeof cell === "string"){
+        const c = cell.trim().toLowerCase();
+        if(KEYWORDS.some(k=>c.includes(k))) score++;
+      }
+    });
+    if(score > bestScore){ bestScore = score; bestIdx = i; }
+  }
+  return bestScore >= 3 ? bestIdx : -1;
+}
+
+function sheetTitleGuess(rows, headerIdx){
+  for(let i=0; i<headerIdx; i++){
+    const row = rows[i] || [];
+    const nonEmpty = row.filter(c=>c!==null && c!==undefined && String(c).trim()!=="");
+    if(nonEmpty.length === 1) return String(nonEmpty[0]);
+  }
+  return "";
+}
+
+function parseSheet(sheetName, rows, warnings){
+  if(/format/i.test(sheetName)) return []; // blank templates, not data
+
+  const headerIdx = findHeaderRow(rows);
+  if(headerIdx === -1) return [];
+
+  const headerRow = rows[headerIdx] || [];
+  const cols = []; // {index, field, rawLabel}
+  headerRow.forEach((cell, idx)=>{
+    if(cell === null || cell === undefined) return;
+    const raw = String(cell).trim();
+    if(!raw) return;
+    const lower = raw.toLowerCase();
+    let field = null;
+    for(const rule of HEADER_RULES){
+      if(rule.test(lower)){ field = rule.field; break; }
+    }
+    cols.push({ index: idx, field, rawLabel: raw });
+  });
+
+  const titleGuess = sheetTitleGuess(rows, headerIdx);
+  const sheetItemGuess = normalizeItemName(sheetName) || normalizeItemName(titleGuess);
+
+  const out = [];
+  let prev = {}; // last seen values, for forward-fill
+  const diag = parseSheet._diag; // shared counters injected by caller
+
+  for(let r = headerIdx+1; r < rows.length; r++){
+    const row = rows[r] || [];
+    const isRowEmpty = row.every(c=> c===null || c===undefined || String(c).trim()==="");
+    if(isRowEmpty) continue;
+
+    diag.rawDataRows++;
+
+    const rec = { _extra: {} };
+    cols.forEach(c=>{
+      const val = row[c.index];
+      const has = !(val === null || val === undefined || String(val).trim() === "");
+      if(c.field){
+        rec[c.field] = has ? val : undefined;
+      } else {
+        // Preserve any unmapped source column verbatim so ALL columns show.
+        rec._extra[c.rawLabel] = has ? val : "";
+      }
+    });
+
+    // NOTE: earlier versions of this dashboard dropped any row that had
+    // no Roll No. AND no Issue value, on the assumption it was a blank
+    // "summary" row. That silently deleted real, checked rows whose
+    // Roll No./Issue cells were simply left blank in the sheet - the
+    // #1 cause of "the web dashboard is missing rows that are in the
+    // sheet". We no longer drop rows on that basis. A row that reaches
+    // this point already has *something* filled in (isRowEmpty above
+    // caught truly blank rows), so we keep it and let it flow through
+    // as a real record.
+
+    // Forward-fill lot/header-level fields that some sheets only record
+    // on the first row of a lot (see TECHNO MATTY).
+    FORWARD_FILL_FIELDS.forEach(f=>{
+      if(rec[f] === undefined && prev[f] !== undefined){
+        rec[f] = prev[f];
+      }
+    });
+    FORWARD_FILL_FIELDS.forEach(f=>{ if(rec[f] !== undefined) prev[f] = rec[f]; });
+
+    // Resolve Item
+    let itemName = normalizeItemName(rec.item) || sheetItemGuess;
+    if(!itemName){
+      // Could not match one of the 3 known items (Techno Matty / Dotknit /
+      // Dryfit). Per the "never skip a sheet row" rule, we keep the row
+      // anyway rather than deleting it - it gets its own label/filter
+      // button using whatever text was actually in the Item cell, so it
+      // stays fully visible and counted instead of vanishing.
+      diag.unrecognizedItem++;
+      if(diag.samples.length < 12){
+        diag.samples.push({
+          sheet: sheetName, row: r+1, reason: "Item column not one of the 3 known items",
+          detail: "Item cell: " + JSON.stringify(rec.item === undefined ? "(blank)" : rec.item)
+        });
+      }
+      itemName = (rec.item !== undefined && String(rec.item).trim() !== "") ? String(rec.item).trim() : "Unspecified Item";
+    }
+    rec.item = itemName;
+
+    // Resolve date
+    const dateObj = parseDateCell(rec.checkingDate);
+    rec._date = dateObj;
+    rec._monthKey = monthKeyOf(dateObj);
+
+    // Numbers
+    rec.totalRolls = toNumber(rec.totalRolls);
+    rec.checkedRolls = toNumber(rec.checkedRolls);
+
+    // Issue classification
+    rec._issueRaw = rec.issue === undefined ? "" : String(rec.issue).trim();
+    rec._category = classifyIssue(rec._issueRaw);
+
+    // Pragmatic roll-quantity fallback (documented):
+    // Some sheets record Checked Rolls / Total Rolls once per LOT, not
+    // per row, and leave later rows blank. Since every row here already
+    // represents one physically-checked roll (it has a Roll No), we
+    // default missing quantities to 1 so KPI sums stay meaningful
+    // instead of collapsing to near-zero.
+    rec._checkedQty = rec.checkedRolls !== null ? rec.checkedRolls : 1;
+    rec._totalQty = rec.totalRolls !== null ? rec.totalRolls : rec._checkedQty;
+
+    // Source columns actually present, in original order (for the table)
+    rec._sourceCols = cols.map(c=> c.field ? { key: c.field, label: c.rawLabel } : { key: "_extra."+c.rawLabel, label: c.rawLabel });
+
+    out.push(rec);
+  }
+
+  if(out.length === 0){
+    warnings.push(`No data rows detected in sheet "${sheetName}".`);
+  }
+  return out;
+}
+
+function buildUniqueKey(rec){
+  // Composite key for duplicate detection across repeated uploads.
+  // We use the fields that uniquely identify a physical checked roll:
+  // Item + Checking Date + PO No. + Lot No. + Roll No.
+  const dateIso = rec._date ? rec._date.toISOString().slice(0,10) : "NA";
+  return [rec.item, dateIso, rec.poNo ?? "NA", rec.lotNo ?? "NA", rec.rollNo ?? "NA"].join("|");
+}
+
+function parseWorkbook(wb){
+  // Accepts an already-parsed SheetJS workbook (from a live CSV fetch)
+  // and normalizes every sheet it finds into flat records. Sheets named
+  // "*FORMAT*" (blank templates) are skipped automatically inside
+  // parseSheet.
+  const warnings = [];
+  let all = [];
+  let allColumns = new Map(); // key -> label, preserves first-seen order
+
+  parseSheet._diag = { rawDataRows: 0, unrecognizedItem: 0, samples: [] };
+  let globalRowCounter = 0; // guarantees every single sheet row gets its own unique record - no merging, ever
+
+  wb.SheetNames.forEach(name=>{
+    const ws = wb.Sheets[name];
+    const rows = XLSX.utils.sheet_to_json(ws, { header:1, raw:true, defval: null });
+    const recs = parseSheet(name, rows, warnings);
+    recs.forEach(rec=>{
+      // No deduplication: each row becomes its own record, keyed by its
+      // own position in the sheet, so 181 sheet rows always become 181
+      // records - nothing is ever merged, replaced, or skipped here.
+      rec._uniqueKey = buildUniqueKey(rec) + "::row" + (globalRowCounter++);
+      rec._sourceCols.forEach(c=>{
+        if(!allColumns.has(c.key)) allColumns.set(c.key, c.label);
+      });
+    });
+    all = all.concat(recs);
+  });
+
+  const diag = parseSheet._diag;
+  return { records: all, columns: allColumns, warnings, diag };
+}
+
+/* =====================================================================
+   5. DEDUPE / PERSISTENCE
+   ===================================================================== */
+// The Google Sheet is the single live source of truth: every sync
+// re-reads the whole INPUT tab and REPLACES the in-app dataset (rather
+// than appending), so edits or deletions made directly in the sheet
+// are reflected here too. Within one sync we still de-duplicate rows
+// that share the same physical-roll identity (Item + Checking Date +
+// PO No. + Lot No. + Roll No.) in case the sheet itself contains a
+// copy-pasted duplicate row - the later row in sheet order wins.
+function dedupeRecords(records, diag){
+  // Deduplication is intentionally disabled: every row read from the
+  // sheet is kept, one-for-one, with no merging of any kind. _uniqueKey
+  // is already unique per row (see parseWorkbook), so this is a
+  // pass-through kept only so callers don't need to change.
+  if(diag) diag.duplicatesCollapsed = 0;
+  return records;
+}
+
+function serializeRecords(records){
+  // Dates need to survive JSON round-trips
+  return JSON.stringify(records.map(r=> Object.assign({}, r, {
+    _date: r._date ? r._date.toISOString() : null
+  })));
+}
+function deserializeRecords(json){
+  const arr = JSON.parse(json);
+  return arr.map(r=> Object.assign({}, r, { _date: r._date ? new Date(r._date) : null }));
+}
+
+async function saveToStorage(){
+  try{
+    await window.storage.set(STORAGE_KEY, serializeRecords(state.records), false);
+    await window.storage.set(STORAGE_KEY + "_meta", JSON.stringify({ lastUpdated: state.lastUpdated }), false);
+  }catch(e){ console.warn("Storage save failed", e); }
+}
+async function loadFromStorage(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY);
+    if(res && res.value){
+      state.records = deserializeRecords(res.value);
+      try{
+        const meta = await window.storage.get(STORAGE_KEY + "_meta");
+        if(meta && meta.value) state.lastUpdated = JSON.parse(meta.value).lastUpdated;
+      }catch(e){}
+      return true;
+    }
+  }catch(e){ /* key not found or storage unavailable */ }
+  return false;
+}
+async function clearStorage(){
+  try{ await window.storage.delete(STORAGE_KEY, false); }catch(e){}
+  try{ await window.storage.delete(STORAGE_KEY + "_meta", false); }catch(e){}
+}
+
+/* =====================================================================
+   6. DOM REFS
+   ===================================================================== */
+const $ = sel => document.querySelector(sel);
+const syncNowBtn = $("#syncNowBtn");
+const syncPill = $("#syncPill");
+const syncDot = $("#syncDot");
+const syncText = $("#syncText");
+const errorBanner = $("#errorBanner");
+const errorBannerText = $("#errorBannerText");
+const errorBannerRetry = $("#errorBannerRetry");
+const metaLine = $("#metaLine");
+const emptyState = $("#emptyState");
+const emptyGlyph = $("#emptyGlyph");
+const emptyTitle = $("#emptyTitle");
+const emptyBody = $("#emptyBody");
+const emptyRetryBtn = $("#emptyRetryBtn");
+const dashboard = $("#dashboard");
+const itemButtons = $("#itemButtons");
+const monthSelect = $("#monthSelect");
+const kpiRow = $("#kpiRow");
+const tableScroll = $("#tableScroll");
+const tableTitle = $("#tableTitle");
+const tableCount = $("#tableCount");
+const legendStatus = $("#legendStatus");
+const legendIssue = $("#legendIssue");
+const resetBtn = $("#resetBtn");
+const dashGrid = $("#dashGrid");
+const toggleChartsBtn = $("#toggleChartsBtn");
+toggleChartsBtn.addEventListener("click", ()=>{
+  const hidden = dashGrid.classList.toggle("charts-hidden");
+  toggleChartsBtn.classList.toggle("active", hidden);
+  toggleChartsBtn.title = hidden ? "Show charts" : "Hide charts (full-width table)";
+});
+
+/* =====================================================================
+   7. LIVE GOOGLE SHEET SYNC
+   The dashboard has no manual entry and no file upload — it reads
+   straight from the "INPUT" tab of the connected Google Sheet using
+   Google's public CSV export endpoint (gviz). This works for any
+   Sheet that is shared as "Anyone with the link – Viewer"; no API
+   key or sign-in is required. We re-fetch on a timer so the
+   dashboard stays live as the sheet is edited.
+   ===================================================================== */
+const SHEET_ID = "1QRDlB8tPNEj3j3LOIhL2I57y-_7cYZU666TD9LlE8vQ";
+const SHEET_TAB = "INPUT";
+const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_TAB)}`;
+const REFRESH_INTERVAL_MS = 45000; // poll every 45s for "live" updates
+let refreshTimer = null;
+let isSyncing = false;
+
+function setSyncState(kind, label){
+  // kind: "syncing" | "live" | "error"
+  syncDot.className = "dot " + kind;
+  syncText.textContent = label;
+}
+function showErrorBanner(msg){
+  errorBannerText.textContent = msg;
+  errorBanner.style.display = "flex";
+}
+function hideErrorBanner(){ errorBanner.style.display = "none"; }
+
+function fetchGoogleSheetJsonp(url){
+  return new Promise((resolve,reject)=>{
+    const callback = "__gviz_cb_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+    const script = document.createElement("script");
+    let finished = false;
+    const cleanup = ()=>{
+      finished = true;
+      try { delete window[callback]; } catch(e) { window[callback] = undefined; }
+      script.remove();
+    };
+    const timer = setTimeout(()=>{
+      if(finished) return;
+      cleanup();
+      reject(new Error("Google Sheet response timed out. Check that the sheet is public (Anyone with the link → Viewer)."));
+    }, 15000);
+    window[callback] = data => {
+      if(finished) return;
+      clearTimeout(timer);
+      cleanup();
+      resolve(data);
+    };
+    script.onerror = ()=>{
+      if(finished) return;
+      clearTimeout(timer);
+      cleanup();
+      reject(new Error("Could not load the public Google Sheet. Verify the Sheet ID, INPUT tab, and public Viewer access."));
+    };
+    script.src = url + "&tqx=" + encodeURIComponent("out:json;responseHandler:" + callback) + "&_=" + Date.now();
+    document.head.appendChild(script);
+  });
+}
+
+function gvizToCsv(data){
+  if(!data || !data.table || !Array.isArray(data.table.cols)) throw new Error("Google Sheet returned an invalid response.");
+  const cols = data.table.cols.map((c,i)=> (c && c.label) ? c.label : "Column " + (i+1));
+  const esc = v => { const x = v == null ? "" : String(v); return /[",\n]/.test(x) ? '"' + x.replace(/"/g,'""') + '"' : x; };
+  const rows = (data.table.rows || []).map(r => {
+    const cells = (r && r.c) || [];
+    return cols.map((_,i)=> {
+      const cell = cells[i];
+      return esc(cell && cell.v != null ? cell.v : "");
+    }).join(",");
+  });
+  return [cols.map(esc).join(","), ...rows].join("\n");
+}
+
+async function fetchLiveData(isRetry){
+  if(isSyncing) return;
+  isSyncing = true;
+  setSyncState("syncing", "Syncing…");
+  if(!state.records.length){
+    emptyTitle.textContent = "Connecting to the Google Sheet…";
+    emptyBody.innerHTML = `Reading the <strong>${SHEET_TAB}</strong> tab live — no manual entry, no file uploads.`;
+    emptyRetryBtn.style.display = "none";
+  }
+
+  try{
+    // Use Google Visualization's JSONP response through a script tag.
+    // This keeps the dashboard working even when the HTML is opened directly
+    // from a local file (file://), where normal fetch() can hit CORS restrictions.
+    const jsonUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${encodeURIComponent(SHEET_TAB)}`;
+    const data = await fetchGoogleSheetJsonp(jsonUrl);
+    if(data && data.errors && data.errors.length){
+      throw new Error(data.errors.map(e=>e.detailed_message || e.message || "Google Sheet error").join("; "));
+    }
+    const csvText = gvizToCsv(data);
+    if(!csvText || csvText.trim().split(/\r?\n/).length < 2){
+      throw new Error(`No data rows were returned from the "${SHEET_TAB}" tab.`);
+    }
+
+    const wb = XLSX.read(csvText, { type: "string", raw: true });
+    const { records, warnings, diag } = parseWorkbook(wb);
+    if(records.length === 0){
+      throw new Error(`No recognizable Roll Checking rows were found on the "${SHEET_TAB}" tab.`);
+    }
+
+    state.records = dedupeRecords(records, diag);
+    state.diagnostics = diag;
+    state.lastUpdated = new Date().toISOString();
+    saveToStorage();
+
+    if(state.selectedMonth === null){
+      const months = availableMonths();
+      state.selectedMonth = months.length ? months[months.length-1] : "__all__";
+    }
+  // Default view is All Items (state.selectedItem stays null) so nothing is ever hidden by an auto-picked item filter.
+
+    hideErrorBanner();
+    setSyncState("live", "Live · " + formatDateDMY(new Date()) + " " + nowTime());
+    if(warnings.length) console.warn("Sync warnings:", warnings);
+    renderAll();
+  }catch(err){
+    console.error("Live Google Sheet sync failed:", err);
+    setSyncState("error", "Sync failed");
+    showErrorBanner("⚠ " + (err.message || "Could not reach the Google Sheet."));
+    if(!state.records.length){
+      emptyGlyph.textContent = "⚠️";
+      emptyTitle.textContent = "Can’t reach the Google Sheet";
+      emptyBody.innerHTML = (err.message || "Could not reach the Google Sheet.") +
+        `<br><br>Make sure the sheet is shared as <strong>“Anyone with the link – Viewer”</strong> and has a tab named <strong>${SHEET_TAB}</strong>.`;
+      emptyRetryBtn.style.display = "inline-block";
+      emptyState.style.display = "flex";
+      dashboard.style.display = "none";
+    }
+  }
+  isSyncing = false;
+}
+
+function nowTime(){
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+}
+
+function startAutoRefresh(){
+  if(refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(()=> fetchLiveData(false), REFRESH_INTERVAL_MS);
+}
+document.addEventListener("visibilitychange", ()=>{
+  if(document.visibilityState === "visible") fetchLiveData(false);
+});
+syncNowBtn.addEventListener("click", ()=> fetchLiveData(true));
+errorBannerRetry.addEventListener("click", ()=> fetchLiveData(true));
+emptyRetryBtn.addEventListener("click", ()=> fetchLiveData(true));
+
+/* =====================================================================
+   8. RENDERING
+   ===================================================================== */
+function availableMonths(){
+  return Array.from(new Set(state.records.map(r=>r._monthKey).filter(Boolean))).sort();
+}
+
+function filteredRecords(){
+  return state.records.filter(r=>{
+    if(state.selectedItem && r.item !== state.selectedItem) return false;
+    if(state.selectedMonth && state.selectedMonth !== "__all__" && r._monthKey !== state.selectedMonth) return false;
+    return true;
+  });
+}
+
+function renderMeta(){
+  if(!state.records.length){ metaLine.textContent = "No data loaded yet"; return; }
+  let html = `<strong>${state.records.length}</strong> records loaded &middot; last updated <strong>${state.lastUpdated ? formatDateDMY(new Date(state.lastUpdated)) : "—"}</strong>`;
+  const d = state.diagnostics;
+  if(d){
+    if(d.rawDataRows === state.records.length){
+      html += ` &middot; matches ${d.rawDataRows} rows in the sheet`;
+    } else {
+      // Should not normally happen (no row is ever skipped), but flag it
+      // loudly if the counts ever disagree so it's never silently wrong.
+      html += ` &middot; <span style="color:#d84343;">⚠ ${d.rawDataRows} rows read but ${state.records.length} shown — please report this</span>`;
+    }
+    if(d.unrecognizedItem > 0){
+      html += ` &middot; <span id="diagFlag" style="color:#e0a020;cursor:pointer;text-decoration:underline;">${d.unrecognizedItem} row(s) with a non-standard Item label (still shown — why?)</span>`;
+    }
+  }
+  metaLine.innerHTML = html;
+  const flag = document.getElementById("diagFlag");
+  if(flag) flag.addEventListener("click", showDiagnostics);
+}
+
+function showDiagnostics(){
+  const d = state.diagnostics;
+  if(!d) return;
+  let msg = `Rows read from sheet: ${d.rawDataRows}\n`;
+  msg += `Records shown on dashboard: ${state.records.length}\n`;
+  msg += `Rows with an Item that isn't Techno Matty / Dotknit / Dryfit: ${d.unrecognizedItem||0} (these are NOT hidden — they show up under their own Item label/button, using whatever text was in the Item cell)\n`;
+  if(d.samples && d.samples.length){
+    msg += `\nSample rows with a non-standard Item label:\n`;
+    d.samples.forEach(s=>{
+      msg += `  Row ${s.row}: ${s.detail}\n`;
+    });
+  }
+  alert(msg);
+}
+
+function renderItemButtons(){
+  const presentItems = Array.from(new Set(state.records.map(r=>r.item))).filter(Boolean);
+  const known = ITEM_ORDER.filter(it => presentItems.includes(it));
+  const others = presentItems.filter(it => !ITEM_ORDER.includes(it)).sort();
+  const orderedItems = [...known, ...others];
+  const otherColors = ["#7a8794", "#c2733a", "#4a90a4", "#9a6bc2"];
+
+  itemButtons.innerHTML = "";
+
+  const allBtn = document.createElement("button");
+  allBtn.className = "item-btn" + (state.selectedItem === null ? " active" : "");
+  allBtn.style.setProperty("--btn-color", "#1c2229");
+  allBtn.textContent = "ALL ITEMS";
+  allBtn.addEventListener("click", ()=>{ state.selectedItem = null; renderAll(); });
+  itemButtons.appendChild(allBtn);
+
+  orderedItems.forEach((it, i)=>{
+    const color = ITEM_CONFIG[it] ? ITEM_CONFIG[it].color : otherColors[i % otherColors.length];
+    const btn = document.createElement("button");
+    btn.className = "item-btn" + (state.selectedItem===it ? " active" : "");
+    btn.style.setProperty("--btn-color", color);
+    btn.textContent = String(it).toUpperCase();
+    btn.addEventListener("click", ()=>{ state.selectedItem = it; renderAll(); });
+    itemButtons.appendChild(btn);
+  });
+}
+
+function renderMonthSelect(){
+  const months = availableMonths();
+  monthSelect.innerHTML = "";
+  months.forEach(mk=>{
+    const opt = document.createElement("option");
+    opt.value = mk;
+    opt.textContent = monthLabelOf(mk);
+    if(mk === state.selectedMonth) opt.selected = true;
+    monthSelect.appendChild(opt);
+  });
+  const allOpt = document.createElement("option");
+  allOpt.value = "__all__";
+  allOpt.textContent = "All months";
+  if(state.selectedMonth === "__all__") allOpt.selected = true;
+  monthSelect.appendChild(allOpt);
+}
+monthSelect.addEventListener("change", ()=>{ state.selectedMonth = monthSelect.value; renderAll(); });
+
+function rollWiseMetrics(rows){
+  // No "unique roll" or "unique lot" grouping of any kind. Every row in
+  // the filtered set is counted/summed exactly as it appears in the
+  // sheet - nothing is collapsed by Item/Date/PO/Lot/Roll No.
+  const totalRolls = rows.reduce((sum,r)=> sum + (Number(r.totalRolls) || 0), 0);
+  const checkedRolls = rows.reduce((sum,r)=> sum + (Number(r.checkedRolls) || 0), 0);
+
+  // Issue breakdown is Total-Roll-wise (sum of the Total Rolls column
+  // per category), not a count of rows.
+  const sumTotalRollsWhere = (pred) => rows.filter(pred).reduce((sum,r)=> sum + (Number(r.totalRolls) || 0), 0);
+  const halka = sumTotalRollsWhere(r=> r._category === "हल्का Round");
+  const round = sumTotalRollsWhere(r=> r._category === "Round");
+  const okCount = sumTotalRollsWhere(r=> r._category === "Ok");
+  const problemRolls = sumTotalRollsWhere(r=> r._category !== "Ok"); // sum of Total Rolls where category <> Ok
+  return { totalRolls, checkedRolls, pendingRolls: Math.max(totalRolls-checkedRolls,0), problemRolls, halka, round, okCount };
+}
+
+function renderKPIs(rows){
+  const m = rollWiseMetrics(rows);
+  const qualityPct = m.totalRolls ? Math.round((m.okCount/m.totalRolls)*1000)/10 : 0;
+  const accent = (state.selectedItem && ITEM_CONFIG[state.selectedItem]) ? ITEM_CONFIG[state.selectedItem].color : "#333";
+  const cards = [
+    { label: "Total Rolls", value: m.totalRolls, sub: "Sum of Total Rolls column", color: accent },
+    { label: "Checked Rolls", value: m.checkedRolls, sub: "Sum of Checked Rolls column", color: "#3b6fe0" },
+    { label: "Problem Rolls", value: m.problemRolls, sub: "Sum of Total Rolls where category ≠ Ok", color: "#d84343" },
+    { label: "Quality / OK", value: qualityPct + "%", sub: m.okCount + " of " + m.totalRolls + " total rolls", color: "#1fa669" }
+  ];
+  kpiRow.innerHTML = "";
+  cards.forEach(c=>{
+    const div = document.createElement("div");
+    div.className = "kpi-card";
+    div.style.setProperty("--kpi-color", c.color);
+    div.innerHTML = `<div class="label">${c.label}</div><div class="value">${c.value}</div><div class="sub">${c.sub}</div>`;
+    kpiRow.appendChild(div);
+  });
+}
+
+function displayValue(rec, key){
+  if(key.startsWith("_extra.")){
+    const label = key.slice(7);
+    return rec._extra && rec._extra[label] !== undefined ? rec._extra[label] : "";
+  }
+  switch(key){
+    case "checkingDate": return rec._date ? formatDateDMY(rec._date) : (rec.checkingDate || "");
+    case "knittingDate": return rec.knittingDate || "";
+    case "item": return rec.item || "";
+    case "totalRolls": return rec.totalRolls !== null && rec.totalRolls !== undefined ? rec.totalRolls : "";
+    case "checkedRolls": return rec.checkedRolls !== null && rec.checkedRolls !== undefined ? rec.checkedRolls : "";
+    case "issue": return rec._issueRaw || "";
+    default: return rec[key] !== undefined && rec[key] !== null ? rec[key] : "";
+  }
+}
+
+const COLUMN_LABELS = {
+  checkingDate:"Checking Date", poNo:"Po No.", customer:"Customer", item:"Item",
+  lotNo:"Lot No.", shade:"Shade", machineNo:"M/C No.", knittingDate:"Knitting Date",
+  totalRolls:"Total Rolls", checkedRolls:"Checked Rolls", problemRolls:"Problem Rolls",
+  issue:"Issue", rollNo:"Rolls No.", remarks:"Remarks", problems:"PROBLEMS"
+};
+const PREFERRED_ORDER = ["checkingDate","item","poNo","customer","lotNo","shade","machineNo",
+  "knittingDate","totalRolls","checkedRolls","problemRolls","issue","rollNo","remarks","problems"];
+
+function computeColumnUnion(rows){
+  const seen = new Map();
+  rows.forEach(r=>{
+    (r._sourceCols||[]).forEach(c=>{
+      if(!seen.has(c.key)) seen.set(c.key, c.label || COLUMN_LABELS[c.key] || c.key);
+    });
+  });
+  const keys = Array.from(seen.keys());
+  keys.sort((a,b)=>{
+    const ai = PREFERRED_ORDER.indexOf(a), bi = PREFERRED_ORDER.indexOf(b);
+    if(ai===-1 && bi===-1) return 0;
+    if(ai===-1) return 1;
+    if(bi===-1) return -1;
+    return ai-bi;
+  });
+  return keys.map(k=> ({ key:k, label: seen.get(k) }));
+}
+
+function renderTable(rows){
+  tableCount.textContent = rows.length + " row" + (rows.length===1?"":"s");
+  tableTitle.textContent = (state.selectedItem || "All Items") + (state.selectedMonth && state.selectedMonth!=="__all__" ? " — " + monthLabelOf(state.selectedMonth) : "");
+
+  if(!rows.length){
+    tableScroll.innerHTML = `<div class="no-rows">No records for this Item / Month.</div>`;
+    return;
+  }
+
+  const cols = computeColumnUnion(rows);
+  // Add a computed "Category" column at the end for clarity
+  const sorted = rows.slice().sort((a,b)=>{
+    const ad = a._date ? a._date.getTime() : 0, bd = b._date ? b._date.getTime() : 0;
+    return bd - ad;
+  });
+
+  let html = "<table class='data-table'><thead><tr>";
+  cols.forEach(c=> html += `<th>${escapeHtml(c.label)}</th>`);
+  html += "<th>Category</th></tr></thead><tbody>";
+  sorted.forEach(r=>{
+    html += "<tr>";
+    cols.forEach(c=> html += `<td>${escapeHtml(String(displayValue(r,c.key)))}</td>`);
+    const cat = r._category;
+    const pillClass = cat === "Ok" ? "ok" : (cat === "Round" ? "round" : "halka");
+    html += `<td><span class="pill ${pillClass}">${escapeHtml(cat)}</span></td>`;
+    html += "</tr>";
+  });
+  html += "</tbody></table>";
+  tableScroll.innerHTML = html;
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+}
+
+function renderCharts(rows){
+  const m = rollWiseMetrics(rows);
+  const total = m.totalRolls;
+  const checked = m.checkedRolls;
+  const pending = m.pendingRolls;
+
+  const statusData = [checked, pending];
+  const statusLabels = ["Checked", "Pending"];
+  const statusColors = ["#1fa669", "#d4dae0"];
+
+  const ctx1 = document.getElementById("chartStatus").getContext("2d");
+  if(state.chartStatus) state.chartStatus.destroy();
+  state.chartStatus = new Chart(ctx1, {
+    type: "doughnut",
+    data: { labels: statusLabels, datasets:[{ data: statusData, backgroundColor: statusColors, borderWidth:0 }] },
+    options: { plugins:{ legend:{ display:false }, datalabels: PCT_DATALABEL_OPTIONS }, cutout:"62%" }
+  });
+  const totalStatus = statusData.reduce((a,b)=>a+b,0) || 1;
+  legendStatus.innerHTML = statusLabels.map((l,i)=>{
+    const pct = Math.round((statusData[i]/totalStatus)*1000)/10;
+    return `<div class="legend-row"><span class="name"><span class="swatch" style="background:${statusColors[i]}"></span>${l}</span><span class="val">${statusData[i]} &middot; ${pct}%</span></div>`;
+  }).join("");
+
+  const halka = m.halka;
+  const round = m.round;
+  const ok = m.okCount;
+  const issueLabels = ["हल्का Round","Round","Ok"];
+  const issueData = [halka, round, ok];
+  const issueColors = issueLabels.map(l=>ISSUE_CONFIG[l].color);
+
+  const ctx2 = document.getElementById("chartIssue").getContext("2d");
+  if(state.chartIssue) state.chartIssue.destroy();
+  state.chartIssue = new Chart(ctx2, {
+    type: "doughnut",
+    data: { labels: issueLabels, datasets:[{ data: issueData, backgroundColor: issueColors, borderWidth:0 }] },
+    options: { plugins:{ legend:{ display:false }, datalabels: PCT_DATALABEL_OPTIONS }, cutout:"62%" }
+  });
+  const totalIssue = issueData.reduce((a,b)=>a+b,0) || 1;
+  legendIssue.innerHTML = issueLabels.map((l,i)=>{
+    const pct = Math.round((issueData[i]/totalIssue)*1000)/10;
+    return `<div class="legend-row"><span class="name"><span class="swatch" style="background:${issueColors[i]}"></span>${l}</span><span class="val">${issueData[i]} &middot; ${pct}%</span></div>`;
+  }).join("");
+}
+
+function renderAll(){
+  renderMeta();
+  const hasData = state.records.length > 0;
+  emptyState.style.display = hasData ? "none" : "flex";
+  dashboard.style.display = hasData ? "block" : "none";
+  if(!hasData) return;
+
+  // Default view is All Items (state.selectedItem stays null) so nothing is ever hidden by an auto-picked item filter.
+  const months = availableMonths();
+  if(!state.selectedMonth || (state.selectedMonth!=="__all__" && !months.includes(state.selectedMonth))){
+    state.selectedMonth = months.length ? months[months.length-1] : "__all__";
+  }
+
+  renderItemButtons();
+  renderMonthSelect();
+  const rows = filteredRecords();
+  renderKPIs(rows);
+  renderTable(rows);
+  renderCharts(rows);
+}
+
+/* =====================================================================
+   9. RESET / BOOT
+   ===================================================================== */
+resetBtn.addEventListener("click", async ()=>{
+  if(!confirm("Clear the cached copy of the Roll Checking data and re-sync fresh from the Google Sheet?")) return;
+  state.records = [];
+  state.lastUpdated = null;
+  state.selectedItem = null;
+  state.selectedMonth = null;
+  await clearStorage();
+  renderAll();
+  fetchLiveData(true);
+});
+
+(async function boot(){
+  // Paint instantly from the last cached sync (if any), then fetch the
+  // live sheet in the background so the dashboard never sits fully
+  // blank while the network request is in flight.
+  const restored = await loadFromStorage();
+  if(restored && state.records.length){
+    if(state.selectedMonth === null){
+      const months = availableMonths();
+      state.selectedMonth = months.length ? months[months.length-1] : "__all__";
+    }
+  // Default view is All Items (state.selectedItem stays null) so nothing is ever hidden by an auto-picked item filter.
+    renderAll();
+    setSyncState("syncing", "Refreshing\u2026");
+  }
+  await fetchLiveData(false);
+  startAutoRefresh();
+})();
+
+})();
+</script>
+</body>
+</html>
