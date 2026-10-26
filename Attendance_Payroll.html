@@ -372,6 +372,8 @@ flex-wrap:wrap;background:#fbfbfd}
 .month-chip.off{background:var(--amber-bg)!important;color:var(--amber)!important;border-color:var(--amber-line)!important}
 .login-logo{width:140px;height:auto;display:block}
 .brand-logo{width:42px;height:32px;object-fit:contain;flex-shrink:0}
+.hist-btn{margin-right:8px;min-height:32px;padding:5px 11px;font-size:12px;font-weight:700}
+.hist-btn:disabled{opacity:.4}
 .sync-pill{margin-right:14px;font-size:12px;font-weight:700;padding:6px 12px;border-radius:20px;border:1px solid var(--border);white-space:nowrap}
 .sync-pill.ok{background:var(--success-bg);color:var(--success);border-color:var(--success-line)}
 .sync-pill.busy{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-line)}
@@ -414,7 +416,7 @@ td.prev-cell-hot{color:#c2410c;font-weight:800}
 <button data-p="loans" onclick="page('loans')"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2.5-6 5 12L17 12h4"/></svg></span><span>Loans</span></button>
 <button data-p="settings" onclick="page('settings')"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V19.5a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H4.5a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.56-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H10a1.7 1.7 0 0 0 1-1.55V4.5a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V10a1.7 1.7 0 0 0 1.55 1H19.5a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.56 1z"/></svg></span><span>Settings</span></button>
 </div><div class="logout"><button onclick="logout()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg><span>Logout</span></button></div></aside>
-<main class="main"><header class="top"><div style="display:flex;align-items:center;gap:14px"><button class="btn sidebar-toggle" onclick="toggleSidebar()" title="Show/hide the side panel"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><span id="top">Dashboard</span></div><button id="monthChip" class="btn month-chip hidden" onclick="changeWorkingMonth()" title="Click to change the working month"></button><span id="syncStatus" class="sync-pill hidden"></span><span class="top-user"><span class="av">A</span><span>Admin</span></span></header><section id="content" class="content"></section></main></div>
+<main class="main"><header class="top"><div style="display:flex;align-items:center;gap:14px"><button class="btn sidebar-toggle" onclick="toggleSidebar()" title="Show/hide the side panel"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><span id="top">Dashboard</span></div><button id="monthChip" class="btn month-chip hidden" onclick="changeWorkingMonth()" title="Click to change the working month"></button><span id="syncStatus" class="sync-pill hidden"></span><button id="undoBtn" class="btn hist-btn hidden" onclick="histApply('undo')" disabled>↶ Undo</button><button id="redoBtn" class="btn hist-btn hidden" onclick="histApply('redo')" disabled>↷ Redo</button><span class="top-user"><span class="av">A</span><span>Admin</span></span></header><section id="content" class="content"></section></main></div>
 <div id="modal" class="modal hidden"></div>
 <script>
 /* ============================================================
@@ -446,6 +448,7 @@ let googleBackupTimer=null;
 let googleBackupBusy=false;
 const GOOGLE_BACKUP_WEB_APP_URL='https://script.google.com/macros/s/AKfycbxk8oBxRZKFzSqL8Z94yuEkkJYM13YPJQAtW_EqGz99xRo_FRqcwPYMs93LaGtE6Nvd/exec'; // Set this to your deployed Google Apps Script Web App URL. Google is write-only backup; the app never reads from Sheets.
 function save(){
+  try{histCapture()}catch(e){}
   dirty=true;
   if(supabaseClient && authUser){
     clearTimeout(supabaseSyncTimer);
@@ -507,6 +510,7 @@ function setAuthUser(user){
 
 function showLogin(){
   if(typeof stopRealtime==='function')stopRealtime();
+  try{HIST.undo=[];HIST.redo=[];HIST.last=null;updateUndoButtons()}catch(e){}
   $('app').classList.add('hidden');
   $('login').classList.remove('hidden');
   if($('err'))$('err').textContent='';
@@ -865,6 +869,7 @@ async function loadAllDataFromSupabase(){
   db.settings.departments.forEach(d=>{if(db.settings.departmentHours[d]==null)db.settings.departmentHours[d]=Number(db.settings.defaultHours)||10;});
   initRuntimeState();
   rebuildSnapshot();
+  histBaseline();
 }
 
 function scheduleGoogleBackup(){
@@ -1978,6 +1983,7 @@ function hasUnsynced(){
   }catch(e){return dirty}
 }
 function setSyncState(){
+  if(typeof updateUndoButtons==='function')updateUndoButtons();
   const el=$('syncStatus');if(!el)return;
   if(!authUser){el.classList.add('hidden');return}
   let cls,txt;
@@ -2085,6 +2091,72 @@ async function syncDbToSupabase(){
   }
 }
 
+/* ============================================================
+   UNDO / REDO  (attendance, Advance/Cash/Tea, payroll cell edits)
+   Works on top of the normal save: undo just restores the old values,
+   then the usual save + live update send it to the database and other users.
+   ============================================================ */
+const HIST={undo:[],redo:[],last:null,applying:false};
+function histSnap(){
+  const pay={};
+  Object.entries(db.payroll||{}).forEach(([k,p])=>{pay[k]={pfesi:Number(p.pfesi||0),late:Number(p.late||0),paid:Number(p.paid||0),approved:!!p.approved}});
+  const ex=db.extraCols||{};
+  return {att:{...(db.attendance||{})},ex:{advance:{...(ex.advance||{})},cash:{...(ex.cash||{})},tea:{...(ex.tea||{})}},pay};
+}
+function histBaseline(){try{HIST.last=histSnap()}catch(e){HIST.last=null}}
+function histLabel(e){
+  const p=[];
+  if(e.att.length)p.push('Attendance ('+e.att.length+' cell'+(e.att.length>1?'s':'')+')');
+  if(e.ex.length)p.push('Advance/Cash/Tea ('+e.ex.length+')');
+  if(e.pay.length)p.push('Payroll ('+e.pay.length+')');
+  return p.join(' + ');
+}
+function histCapture(){
+  if(!HIST.last){histBaseline();return}
+  const cur=histSnap(),L=HIST.last,e={att:[],ex:[],pay:[]};
+  new Set([...Object.keys(L.att),...Object.keys(cur.att)]).forEach(k=>{const o=L.att[k]??'',n=cur.att[k]??'';if(String(o)!==String(n))e.att.push([k,o,n])});
+  ['advance','cash','tea'].forEach(t=>{new Set([...Object.keys(L.ex[t]),...Object.keys(cur.ex[t])]).forEach(k=>{const o=Number(L.ex[t][k]||0),n=Number(cur.ex[t][k]||0);if(o!==n)e.ex.push([t,k,o,n])})});
+  Object.keys(cur.pay).forEach(k=>{const o=L.pay[k]||{pfesi:0,late:0,paid:0,approved:false},n=cur.pay[k];['pfesi','late','paid','approved'].forEach(f=>{if(o[f]!==n[f])e.pay.push([k,f,o[f],n[f]])})});
+  HIST.last=cur;
+  if(HIST.applying||(!e.att.length&&!e.ex.length&&!e.pay.length))return;
+  e.label=histLabel(e);HIST.undo.push(e);if(HIST.undo.length>100)HIST.undo.shift();HIST.redo=[];updateUndoButtons();
+}
+function histToast(text){
+  let old=document.getElementById('histToast');if(old)old.remove();
+  const t=document.createElement('div');t.id='histToast';
+  t.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:26px;z-index:450;background:var(--navy);color:#fff;padding:10px 18px;border-radius:30px;box-shadow:var(--shadow-lg);font-size:13px';
+  t.textContent=text;document.body.appendChild(t);setTimeout(()=>t.remove(),2600);
+}
+function updateUndoButtons(){
+  const u=$('undoBtn'),r=$('redoBtn');if(!u||!r)return;
+  const show=!!authUser;u.classList.toggle('hidden',!show);r.classList.toggle('hidden',!show);
+  u.disabled=!HIST.undo.length;r.disabled=!HIST.redo.length;
+  u.title=HIST.undo.length?'Undo: '+HIST.undo[HIST.undo.length-1].label+' (Ctrl+Z)':'Nothing to undo';
+  r.title=HIST.redo.length?'Redo: '+HIST.redo[HIST.redo.length-1].label+' (Ctrl+Y)':'Nothing to redo';
+}
+function histApply(dir){
+  const from=dir==='undo'?HIST.undo:HIST.redo,to=dir==='undo'?HIST.redo:HIST.undo,e=from.pop();
+  if(!e){updateUndoButtons();return}
+  let done=0,skipped=0;
+  e.att.forEach(([k,o,n])=>{const [exp,set]=dir==='undo'?[n,o]:[o,n];if(String(db.attendance[k]??'')!==String(exp)){skipped++;return}if(set==='')delete db.attendance[k];else db.attendance[k]=set;done++});
+  e.ex.forEach(([t,k,o,n])=>{const [exp,set]=dir==='undo'?[n,o]:[o,n];db.extraCols[t]=db.extraCols[t]||{};if(Number(db.extraCols[t][k]||0)!==exp){skipped++;return}if(set>0)db.extraCols[t][k]=set;else delete db.extraCols[t][k];done++});
+  e.pay.forEach(([k,f,o,n])=>{const [exp,set]=dir==='undo'?[n,o]:[o,n],p=db.payroll[k];if(!p){skipped++;return}const cur=f==='approved'?!!p.approved:Number(p[f]||0);if(cur!==exp){skipped++;return}p[f]=set;done++});
+  if(!done){updateUndoButtons();histToast('Cannot '+dir+': these values were changed by someone else since.');return}
+  to.push(e);
+  HIST.applying=true;try{save()}finally{HIST.applying=false}
+  rtFull=false;try{liveRefreshView()}catch(err){console.error(err)}
+  updateUndoButtons();
+  histToast((dir==='undo'?'Undone: ':'Redone: ')+e.label+(skipped?' — '+skipped+' skipped (changed by someone else)':''));
+}
+document.addEventListener('keydown',ev=>{
+  if(!(ev.ctrlKey||ev.metaKey)||!authUser)return;
+  const t=ev.target;if(t&&(['INPUT','TEXTAREA','SELECT'].includes(t.tagName)||t.isContentEditable))return;
+  if(!$('modal').classList.contains('hidden'))return;
+  const k=ev.key.toLowerCase();
+  if(k==='z'&&!ev.shiftKey){ev.preventDefault();histApply('undo')}
+  else if(k==='y'||(k==='z'&&ev.shiftKey)){ev.preventDefault();histApply('redo')}
+});
+
 /* ---------- LIVE UPDATES (Supabase Realtime) ---------- */
 let rtChannel=null,rtEverLive=false,rtRefreshTimer=null,rtHiddenAt=0,rtFull=false,reloadBusy=false;
 function mapEmpRow(x){return {id:x.id,name:x.name,dept:x.department,salary:Number(x.salary||0),sundayType:x.sunday_type||'',sundayPay:Number(x.sunday_pay||0),hours:Number(x.hours||0),status:String(x.status||'Active').trim().toLowerCase()==='inactive'?'Inactive':'Active',accountType:x.account_type||'',filledBy:x.filled_by||'',increments:Array.isArray(x.increments)?x.increments:[]}}
@@ -2178,6 +2250,7 @@ function rtApply(t,p){
       const {rows,refs}=loanRowsCurrent(valid),i=refs.indexOf(ref);if(i>=0&&rows[i].id)SNAP.loan.set(rows[i].id,jj(rows[i]));
     }
   }
+  histBaseline();
   scheduleLiveRefresh();
 }
 function scheduleLiveRefresh(){clearTimeout(rtRefreshTimer);rtRefreshTimer=setTimeout(liveRefreshView,250)}
