@@ -36,6 +36,11 @@ main{padding:14px 18px;max-width:1800px;margin:auto}
 .sl .chip{padding:2px 9px}
 body.full .cards,body.full .sl,body.nopipe .cards{display:none}
 body{--off:310px}body.nopipe{--off:215px}body.full{--off:82px}
+td.fz{position:sticky;left:0;z-index:1;background:var(--card)}
+td.fz2{left:46px;box-shadow:1px 0 0 var(--line)}
+thead th.fz{left:0;z-index:4}
+thead th.fz2{left:46px;z-index:4;box-shadow:1px 0 0 var(--line)}
+tbody tr.po:hover td.fz{background:var(--card)}
 .rz{position:absolute;right:0;top:0;bottom:0;width:7px;cursor:col-resize}
 .rz:hover{background:var(--acc);opacity:.5}
 select{border:1px solid var(--line);background:var(--card);border-radius:6px;padding:5px 6px;font:inherit;color:inherit}
@@ -74,7 +79,6 @@ tr.sub>td{overflow-x:auto;background:var(--bg);padding:8px 8px 12px 40px}
   <span class="sp"></span>
   <select id="qs" title="Search in"><option value="all">All fields</option><option value="cust">Customer</option><option value="order">Order no.</option><option value="item">Item name / code</option><option value="acc">Account To</option><option value="batch">Batch (record, lot, shade, dyer, finisher)</option></select>
   <input type="search" id="q" placeholder="Search (words are combined)">
-  <button class="btn" id="rw" title="Reset column widths">Reset widths</button>
   <button class="btn" id="rf">Refresh data</button>
 </header>
 <main>
@@ -162,7 +166,9 @@ function buildSlicers(){
   C.innerHTML=Object.keys(cs).sort().map(function(c){return '<button class="chip" data-k="cust" data-v="'+esc(c)+'">'+esc(c)+'</button>'}).join("");
   syncChips();
 }
-function filterChips(){var t=S.cq.toLowerCase();document.querySelectorAll('.chip[data-k="cust"]').forEach(function(b){b.style.display=b.dataset.v.toLowerCase().indexOf(t)<0?"none":""})}
+function allowed(){var m={};D.po.forEach(function(r){if(!sel(S.acc)||S.acc[g(r,"Account To").toUpperCase()]){var c=g(r,"Customer Name");if(c)m[c]=1}});return m}
+function filterChips(){var t=S.cq.toLowerCase(),m=allowed();document.querySelectorAll('.chip[data-k="cust"]').forEach(function(b){b.style.display=(m[b.dataset.v]&&b.dataset.v.toLowerCase().indexOf(t)>=0)?"":"none"})}
+function pruneCust(){var m=allowed();Object.keys(S.cust).forEach(function(c){if(!m[c])delete S.cust[c]})}
 function syncChips(){document.querySelectorAll(".chip").forEach(function(b){b.classList.toggle("on",!!S[b.dataset.k][b.dataset.v])})}
 function sel(o){return Object.keys(o).length}
 
@@ -195,14 +201,14 @@ function render(){
    {k:"dy",l:"Dyeing",w:170},{k:"fi",l:"Finishing",w:150},{k:"q",l:"Total qty",w:80},{k:"ok",l:"Order Ok",w:100},{k:"yr",l:"YARN Remarks",w:170},
    {k:"rm",l:"RAW MAT(AcT)",w:140},{k:"ot",l:"Order To",w:130,y:1},{k:"pr",l:"Production",w:100,y:1}].filter(Boolean);
   var G=cg("po",C);
-  var th=C.map(function(c,i){return '<th'+(c.y?' class="y"':'')+'>'+(i==0?FSB:esc(c.l))+(i?'<i class="rz" data-t="po" data-k="'+c.k+'"></i>':'')+'</th>'}).join("");
+  var th=C.map(function(c,i){return '<th'+(c.y?' class="y"':c.k=="ex"?' class="fz"':c.k=="o"?' class="fz fz2"':'')+'>'+(i==0?FSB:esc(c.l))+(i?'<i class="rz" data-t="po" data-k="'+c.k+'"></i>':'')+'</th>'}).join("");
   var T={it:"item",ot:"knit",pr:"prod"};
   var body=rows.map(function(r){
     var o=r[0].trim(),open=S.open[o],bs=D.byOrder[o]||[],rolls=0;(D.prod[o]||[]).forEach(function(p){rolls+=num(p[4])});
     var V={ex:'<button class="ex" data-o="'+esc(o)+'" title="Batch details">'+(open?"\u2212":"+")+'</button>',o:'<b>'+esc(o)+'</b>',acc:esc(g(r,"Account To")),cu:esc(g(r,"Customer Name")),
      od:esc(g(r,"Order Date")),dd:esc(g(r,"Delivery Date")),it:esc(g(r,"Item Name")),sp:yn(g(r,"Sample Palla")),ld:yn(g(r,"Labdip")),dy:esc(g(r,"Dyeing")),fi:esc(g(r,"Finishing")),
      q:fmt(num(g(r,"Total Qty"))),ok:esc(g(r,"Order Ok")),yr:esc(g(r,"YARN Remarks")),rm:esc(g(r,"RAW MAT(AcT)")),ot:esc(g(r,"Order To")||"\u2013"),pr:D.prod[o]?fmt(rolls)+' rolls':"\u2013"};
-    var t='<tr class="po">'+C.map(function(c){var a=c.y?' class="y" data-t="'+T[c.k]+'" data-o="'+esc(o)+'"':(c.k=="q"?' class="n"':'');return '<td'+a+'>'+V[c.k]+'</td>'}).join("")+'</tr>';
+    var t='<tr class="po">'+C.map(function(c){var a=c.y?' class="y" data-t="'+T[c.k]+'" data-o="'+esc(o)+'"':(c.k=="q"?' class="n"':c.k=="ex"?' class="fz"':c.k=="o"?' class="fz fz2"':'');return '<td'+a+'>'+V[c.k]+'</td>'}).join("")+'</tr>';
     if(open)t+='<tr class="sub"><td colspan="'+C.length+'">'+batches(bs)+'</td></tr>';
     return t}).join("");
   var tb=document.getElementById("tb");tb.dataset.t="po";tb.style.width=G.w+"px";
@@ -237,7 +243,7 @@ function tipHTML(t,o){
 // ---- Events ----
 document.addEventListener("click",function(e){
   var c=e.target.closest(".chip");
-  if(c){var k=c.dataset.k,v=c.dataset.v;if(S[k][v])delete S[k][v];else S[k][v]=1;syncChips();render();return}
+  if(c){var k=c.dataset.k,v=c.dataset.v;if(S[k][v])delete S[k][v];else S[k][v]=1;if(k=="acc")pruneCust();syncChips();filterChips();render();return}
   if(e.target.closest("#fs")){document.body.classList.toggle("full");return}
   if(e.target.closest("#tp")){var on=document.body.classList.toggle("nopipe");e.target.closest("#tp").textContent=on?"Show pipeline":"Hide pipeline";return}
   var x=e.target.closest(".ex");
@@ -255,7 +261,8 @@ document.getElementById("q").addEventListener("input",function(e){S.q=e.target.v
 document.getElementById("rf").addEventListener("click",refresh);
 document.getElementById("qs").addEventListener("change",function(e){S.qs=e.target.value;render()});
 document.getElementById("cq").addEventListener("input",function(e){S.cq=e.target.value;filterChips()});
-document.getElementById("rw").addEventListener("click",function(){S.w={po:{},bt:{}};saveW();render()});
+// Hidden reset (no button): press Ctrl+Alt+R and confirm
+document.addEventListener("keydown",function(e){if(e.ctrlKey&&e.altKey&&(e.key=="r"||e.key=="R")&&confirm("Reset all column widths to default?")){S.w={po:{},bt:{}};saveW();render()}});
 document.addEventListener("keydown",function(e){if(e.key=="Escape")document.body.classList.remove("full")});
 var drag=null;
 function setW(t,k,w){S.w[t][k]=w;document.querySelectorAll('col[data-t="'+t+'"][data-k="'+k+'"]').forEach(function(c){c.style.width=w+"px"});
