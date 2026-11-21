@@ -160,9 +160,42 @@ tbody tr.po:hover td.fz{background:var(--hov)}
  .nw{white-space:normal!important;overflow:visible}
  td.fz{box-shadow:none}
 }
+
+/* ---- Branded Google Sheets loading screen ---- */
+#loadingScreen{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(900px 500px at 50% 35%,#183a68 0%,#0b1424 68%,#070d18 100%);color:#fff;opacity:1;visibility:visible;transition:opacity .45s ease,visibility .45s ease}
+#loadingScreen.is-hidden{opacity:0;visibility:hidden;pointer-events:none}
+.loader-card{width:min(430px,100%);text-align:center;padding:38px 30px 28px;border:1px solid rgba(148,190,255,.2);border-radius:24px;background:rgba(15,31,54,.62);box-shadow:0 24px 80px rgba(0,0,0,.35);backdrop-filter:blur(14px)}
+.loader-mark{width:76px;height:76px;margin:0 auto 22px;border-radius:22px;display:grid;place-items:center;background:linear-gradient(145deg,#214d83,#142b4b);box-shadow:0 0 0 8px rgba(96,165,250,.08),0 12px 35px rgba(37,99,235,.25);position:relative}
+.loader-mark svg{width:37px;height:37px;stroke:#8fc5ff;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.loader-mark:after{content:"";position:absolute;inset:-7px;border:2px solid transparent;border-top-color:#60a5fa;border-right-color:rgba(96,165,250,.25);border-radius:27px;animation:loaderSpin 2s linear infinite}
+.loader-title{font-size:clamp(20px,4vw,25px);font-weight:800;letter-spacing:-.5px;margin:0 0 8px;color:#fff}
+.loader-subtitle{margin:0;color:#a9bdd8;font-size:13px}
+.loader-dots{display:flex;justify-content:center;gap:7px;margin:24px 0 18px}
+.loader-dots i{width:7px;height:7px;border-radius:50%;background:#65b8ff;animation:loaderPulse 1.1s ease-in-out infinite}
+.loader-dots i:nth-child(2){animation-delay:.15s}.loader-dots i:nth-child(3){animation-delay:.3s}
+.loader-track{height:4px;width:100%;overflow:hidden;border-radius:99px;background:rgba(148,163,184,.2)}
+.loader-track:after{content:"";display:block;width:38%;height:100%;border-radius:99px;background:linear-gradient(90deg,#3988e8,#8bd0ff);animation:loaderProgress 1.6s ease-in-out infinite}
+.loader-connection{margin:13px 0 0;color:#8fa8c8;font-size:11px;letter-spacing:.2px}
+.loader-credit{margin:26px 0 0;padding-top:17px;border-top:1px solid rgba(148,163,184,.17);color:#d2deed;font-size:10px;font-weight:700;letter-spacing:1.2px}
+@keyframes loaderSpin{to{transform:rotate(360deg)}}
+@keyframes loaderPulse{0%,80%,100%{transform:scale(.65);opacity:.45}40%{transform:scale(1.2);opacity:1}}
+@keyframes loaderProgress{0%{transform:translateX(-110%)}100%{transform:translateX(290%)}}
+@media(prefers-reduced-motion:reduce){.loader-mark:after,.loader-dots i,.loader-track:after{animation:none}}
+
 </style>
 </head>
 <body>
+<div id="loadingScreen" role="status" aria-live="polite">
+  <div class="loader-card">
+    <div class="loader-mark" aria-hidden="true"><svg viewBox="0 0 40 40"><ellipse cx="20" cy="9" rx="12" ry="5"/><path d="M8 9v9c0 2.8 5.4 5 12 5s12-2.2 12-5V9M8 18v9c0 2.8 5.4 5 12 5s12-2.2 12-5v-9"/><path d="M8 18c0 2.8 5.4 5 12 5s12-2.2 12-5"/></svg></div>
+    <h2 class="loader-title">Sales and Operation Dashboard</h2>
+    <p class="loader-subtitle">Preparing your live business insights</p>
+    <div class="loader-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="loader-track" aria-hidden="true"></div>
+    <p class="loader-connection">Connecting to Google Sheets · Syncing data</p>
+    <p class="loader-credit">DESIGNED &amp; DEVELOPED BY SURAJ THAKUR</p>
+  </div>
+</div>
 <header>
   <h1>Order Pipeline</h1>
   <span id="st">Loading…</span>
@@ -321,10 +354,12 @@ function loadGroup(names){
     if(r.cfg!==undefined){CFGRAW=r.cfg||"";try{SHARED=CFGRAW?JSON.parse(CFGRAW):{}}catch(e){SHARED={}}applyCfg()}
     var T={};names.forEach(function(n){T[n]=(r.tabs&&r.tabs[n])||[]});return T});
 }
+function showLoading(){var el=document.getElementById("loadingScreen");if(el)el.classList.remove("is-hidden")}
+function hideLoading(){var el=document.getElementById("loadingScreen");if(el)el.classList.add("is-hidden")}
 function refresh(){
   var id=++gen,all={},fresh=false,GR=API_URL?[["PO WISE","DB"],["KNIT","Production","DYE"]]:[["PO WISE"],["DB"],["KNIT"],["Production"],["DYE"]],left=GR.length,errs=[];
   status("Loading\u2026");
-  if(!D.po.length)document.getElementById("tb").innerHTML='<tbody><tr><td>'+[92,80,86,70,88,64,78,60].map(function(w){return '<div class="sk" style="width:'+w+'%"></div>'}).join("")+'</td></tr></tbody>';
+  if(!D.po.length){showLoading();document.getElementById("tb").innerHTML='<tbody><tr><td>'+[92,80,86,70,88,64,78,60].map(function(w){return '<div class="sk" style="width:'+w+'%"></div>'}).join("")+'</td></tr></tbody>'}
   try{idbGet(CK).then(function(c){
     if(id!==gen||fresh||!c||!c.tabs)return;
     if(c.cfg){CFGRAW=c.cfg;try{SHARED=JSON.parse(c.cfg);applyCfg()}catch(e){}}
@@ -334,6 +369,7 @@ function refresh(){
      .catch(function(e){errs.push(e)})
      .then(function(){
        if(id!==gen||--left)return;
+       hideLoading();
        if(errs.length){
          if(D.po.length)status("Could not refresh \u00b7 showing saved data ("+errs[0].message+")");
          else{status("Could not load");document.getElementById("tb").innerHTML='<tbody><tr><td><div class="err">Could not read the Google Sheet.\n'+esc(errs[0].message)+'\n\nCheck the Apps Script URL and key at the top of this file (or the sheet sharing if no URL is set), and that you are online.</div></td></tr></tbody>'}
