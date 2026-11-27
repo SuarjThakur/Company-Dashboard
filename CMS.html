@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#173b63">
+<title>Challan Management System</title>
+<style>
+:root{--navy:#173b63;--blue:#2563eb;--bg:#f3f6fa;--line:#dce3ec;--text:#172334;--muted:#65758b;--green:#16834b;--red:#c0392b}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+header{background:var(--navy);color:#fff;padding:15px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+header h1{font-size:20px;margin:0}header small{opacity:.8}
+nav{display:flex;gap:8px;flex-wrap:wrap;background:#fff;padding:10px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+nav button{border:0;background:#edf2f8;color:#24415f;padding:10px 14px;border-radius:8px;font-weight:700;cursor:pointer}
+nav button.active{background:var(--navy);color:white}
+main{max-width:1200px;margin:20px auto;padding:0 16px 40px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px;box-shadow:0 2px 8px #102b4610}
+h2{font-size:19px;margin:0 0 15px}h3{font-size:15px;margin:0 0 12px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.field{display:flex;flex-direction:column;gap:6px}.field label{font-size:12px;font-weight:700;color:var(--muted)}
+input,select{width:100%;min-width:0;border:1px solid #cbd5e1;border-radius:8px;padding:11px 10px;font-size:14px;background:#fff;color:var(--text)}
+input:focus,select:focus{outline:2px solid #bfdbfe;border-color:var(--blue)}
+input[readonly]{background:#f1f5f9}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button{cursor:pointer} .btn{border:0;border-radius:8px;padding:10px 14px;font-weight:700;background:var(--blue);color:white}
+.btn.secondary{background:#e8eef5;color:#24415f}.btn.green{background:var(--green)}.btn.red{background:var(--red)}.btn.small{padding:7px 10px;font-size:12px}
+.item-wrap{overflow-x:auto}.items{width:100%;border-collapse:collapse;min-width:680px}
+.items th,.items td{border-bottom:1px solid var(--line);padding:8px;text-align:left;font-size:13px}
+.items th{background:#f5f8fb;color:#52647a}.items input,.items select{padding:9px 7px}
+.totalbar{display:flex;justify-content:flex-end;gap:24px;flex-wrap:wrap;padding:14px 0 0;font-weight:700}
+.totalbar strong{color:var(--green);font-size:18px}
+.table-wrap{overflow:auto}.data-table{width:100%;border-collapse:collapse;min-width:760px}
+.data-table th,.data-table td{padding:11px 9px;border-bottom:1px solid var(--line);text-align:left;font-size:13px}
+.data-table th{background:#f5f8fb;color:#52647a;position:sticky;top:0}
+.muted{color:var(--muted);font-size:13px}.hidden{display:none!important}
+.notice{padding:11px 13px;border-radius:8px;margin-bottom:12px;background:#eaf3ff;color:#174477;font-size:13px}
+.notice.error{background:#fff0ee;color:#9e2e23}.notice.success{background:#eaf8ef;color:#17663a}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.stat{background:#f5f8fb;padding:14px;border-radius:10px}.stat span{display:block;color:var(--muted);font-size:12px}.stat b{font-size:21px}
+.master-row{display:grid;grid-template-columns:1.2fr auto;gap:8px;align-items:center;margin:8px 0}
+.rate-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;margin:8px 0}
+.empty{text-align:center;padding:28px;color:var(--muted)}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:15px}
+@media(max-width:800px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.cards{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){header{padding:13px}header h1{font-size:17px}nav{padding:8px;gap:6px}nav button{padding:9px 10px;font-size:12px}main{margin:12px auto;padding:0 10px 28px}.panel{padding:13px}.grid{grid-template-columns:1fr 1fr;gap:9px}.cards{grid-template-columns:1fr 1fr}.rate-row{grid-template-columns:1fr 1fr}.rate-row .rate-action{grid-column:1/-1}.totalbar{justify-content:space-between;gap:10px}}
+@media print{header,nav,.no-print,footer{display:none!important}body{background:#fff}main{max-width:none;margin:0;padding:0}.panel{box-shadow:none;border:0;padding:0}.print-only{display:block!important}}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>Challan Management System</h1><small>Offline-first · IndexedDB storage</small></div>
+  <div id="dbStatus">Checking local database…</div>
+</header>
+<nav>
+  <button class="active" data-page="entry">New Challan</button>
+  <button data-page="records">Challan Records</button>
+  <button data-page="masters">Design / Size / Rates</button>
+  <button data-page="backup">Backup & Sync</button>
+</nav>
+<main>
+  <div id="message" class="hidden"></div>
+
+  <section id="page-entry">
+    <div class="panel">
+      <div class="actions" style="justify-content:space-between">
+        <h2 id="entryTitle">New Challan</h2>
+        <span class="muted" id="editHint"></span>
+      </div>
+      <div class="grid">
+        <div class="field"><label>Record No.</label><input id="recordNo" readonly placeholder="Generated on save"></div>
+        <div class="field"><label>Date *</label><input id="challanDate" type="date"></div>
+        <div class="field"><label>Challan No.</label><input id="challanNo" readonly placeholder="Generated on save"></div>
+        <div class="field"><label>Design No. *</label><select id="designSelect"><option value="">Select design</option></select></div>
+      </div>
+      <div class="muted" style="margin-top:8px">Record and challan numbers are assigned when you save, so two users/devices do not rely on a preview number.</div>
+    </div>
+
+    <div class="panel">
+      <div class="actions" style="justify-content:space-between;margin-bottom:12px">
+        <h2 style="margin:0">Item Details</h2>
+        <button class="btn secondary" id="addItemBtn" type="button">＋ Add Item</button>
+      </div>
+      <div class="item-wrap">
+        <table class="items">
+          <thead><tr><th style="width:22%">Size *</th><th>Piece *</th><th>Weight</th><th>Rate</th><th>Amount</th><th></th></tr></thead>
+          <tbody id="itemBody"></tbody>
+        </table>
+      </div>
+      <div class="totalbar">
+        <span>Total Pieces: <b id="totalPieces">0</b></span>
+        <span>Total Weight: <b id="totalWeight">0</b></span>
+        <span>Total Amount: <strong id="totalAmount">0.00</strong></span>
+      </div>
+      <div class="actions no-print" style="justify-content:flex-end;margin-top:18px">
+        <button class="btn secondary" id="resetBtn" type="button">Clear Form</button>
+        <button class="btn green" id="saveBtn" type="button">Save Challan</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="page-records" class="hidden">
+    <div class="panel">
+      <h2>Challan Records</h2>
+      <div class="grid">
+        <div class="field"><label>Search</label><input id="searchText" placeholder="Record / Challan / Design"></div>
+        <div class="field"><label>From Date</label><input id="fromDate" type="date"></div>
+        <div class="field"><label>To Date</label><input id="toDate" type="date"></div>
+        <div class="field"><label>Design</label><select id="filterDesign"><option value="">All designs</option></select></div>
+        <div class="field"><label>Size</label><select id="filterSize"><option value="">All sizes</option></select></div>
+        <div class="field"><label>Minimum Piece</label><input id="minPiece" type="number" min="0" placeholder="Min"></div>
+        <div class="field"><label>Maximum Piece</label><input id="maxPiece" type="number" min="0" placeholder="Max"></div>
+        <div class="field" style="justify-content:end"><button class="btn secondary" id="clearFilters">Clear Filters</button></div>
+      </div>
+      <div class="actions no-print" style="margin:14px 0">
+        <button class="btn" id="exportCsv">Export Excel (CSV)</button>
+        <button class="btn secondary" id="refreshRecords">Refresh</button>
+      </div>
+      <div class="cards" style="margin-bottom:14px">
+        <div class="stat"><span>Matching Challans</span><b id="recordCount">0</b></div>
+        <div class="stat"><span>Total Pieces</span><b id="recordsPieces">0</b></div>
+        <div class="stat"><span>Total Amount</span><b id="recordsAmount">0.00</b></div>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Record No.</th><th>Date</th><th>Challan No.</th><th>Design</th><th>Items</th><th>Pieces</th><th>Weight</th><th>Amount</th><th>Actions</th></tr></thead>
+          <tbody id="recordsBody"></tbody>
+        </table>
+      </div>
+      <div id="noRecords" class="empty hidden">No challans found.</div>
+    </div>
+  </section>
+
+  <section id="page-masters" class="hidden">
+    <div class="panel">
+      <h2>Design Master</h2>
+      <div class="master-row"><input id="newDesign" placeholder="Enter Design No."><button class="btn" id="addDesignBtn">Add Design</button></div>
+      <div id="designList"></div>
+    </div>
+    <div class="panel">
+      <h2>Size Master</h2>
+      <div class="master-row"><input id="newSize" placeholder="Enter Size (e.g. L, XL, XXL)"><button class="btn" id="addSizeBtn">Add Size</button></div>
+      <div id="sizeList"></div>
+    </div>
+    <div class="panel">
+      <h2>Fixed Rate Master</h2>
+      <p class="muted">Set a fixed rate for each Design + Size combination. Existing saved challans keep their original saved rate.</p>
+      <div class="rate-row">
+        <select id="rateDesign"><option value="">Design</option></select>
+        <select id="rateSize"><option value="">Size</option></select>
+        <input id="rateValue" type="number" min="0.01" step="0.01" placeholder="Rate">
+        <button class="btn rate-action" id="saveRateBtn">Save Rate</button>
+      </div>
+      <div id="rateList"></div>
+      <p class="muted">This first offline version has no separate user login. Anyone who can use this browser profile can manage rates. Admin-only access will be added with the later sync/login phase.</p>
+    </div>
+  </section>
+
+  <section id="page-backup" class="hidden">
+    <div class="panel">
+      <h2>Backup & Future Google Sheets Sync</h2>
+      <div class="notice">Your data is stored in this browser on this device. It is not automatically shared with another phone or computer. Clearing browser data can erase it.</div>
+      <h3>Backup your data</h3>
+      <p class="muted">Download a JSON backup regularly. You can restore it on another device using this page.</p>
+      <div class="actions">
+        <button class="btn" id="downloadBackup">Download Full Backup</button>
+        <label class="btn secondary" for="restoreFile">Restore Backup</label>
+        <input class="hidden" id="restoreFile" type="file" accept="application/json">
+      </div>
+      <hr style="border:0;border-top:1px solid var(--line);margin:20px 0">
+      <h3>Google Sheets sync later</h3>
+      <p class="muted">The app is structured so cloud sync can be added later. For now, no Google account or internet connection is needed for local data entry after the app file is saved on your device.</p>
+      <div class="actions"><button class="btn red" id="deleteAllData">Delete All Local Data</button></div>
+    </div>
+  </section>
+</main>
+<footer>Challan Management System · Local browser database · Keep regular backups</footer>
+
+<script>
+"use strict";
+const DB_NAME = "ChallanManagementLocal";
+const DB_VERSION = 1;
+let db;
+let editingRecordId = null;
+let currentFilteredRecords = [];
+
+function openDB(){
+  return new Promise((resolve,reject)=>{
+    const req=indexedDB.open(DB_NAME,DB_VERSION);
+    req.onupgradeneeded=()=>{
+      const d=req.result;
+      if(!d.objectStoreNames.contains("challans")){
+        const s=d.createObjectStore("challans",{keyPath:"recordId"});
+        s.createIndex("challanNo","challanNo",{unique:true});
+      }
+      if(!d.objectStoreNames.contains("designs")) d.createObjectStore("designs",{keyPath:"id"});
+      if(!d.objectStoreNames.contains("sizes")) d.createObjectStore("sizes",{keyPath:"id"});
+      if(!d.objectStoreNames.contains("rates")){
+        const s=d.createObjectStore("rates",{keyPath:"id"});
+        s.createIndex("designSize","designSize",{unique:true});
+      }
+      if(!d.objectStoreNames.contains("meta")) d.createObjectStore("meta",{keyPath:"key"});
+    };
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>reject(req.error);
+  });
+}
+function store(name,mode="readonly"){return db.transaction(name,mode).objectStore(name)}
+function reqPromise(req){return new Promise((res,rej)=>{req.onsuccess=()=>res(req.result);req.onerror=()=>rej(req.error)})}
+async function all(name){return reqPromise(store(name).getAll())}
+async function put(name,value){return reqPromise(store(name,"readwrite").put(value))}
+async function remove(name,key){return reqPromise(store(name,"readwrite").delete(key))}
+function transaction(names,mode="readwrite"){return db.transaction(names,mode)}
+function showMessage(text,type="success"){
+  const el=document.getElementById("message");el.className="notice "+(type==="error"?"error":"success");el.textContent=text;
+  window.scrollTo({top:0,behavior:"smooth"});setTimeout(()=>el.classList.add("hidden"),4500);
+}
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function fmt(n){return Number(n||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2})}
+function today(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
+async function nextIds(){
+  const records=await all("challans");
+  let maxR=1000,maxC=0;
+  records.forEach(r=>{maxR=Math.max(maxR,Number(r.recordId)||0);const m=String(r.challanNo).match(/^CH-(\d+)$/);if(m)maxC=Math.max(maxC,Number(m[1]))});
+  return {recordId:maxR+1,challanNo:"CH-"+String(maxC+1).padStart(4,"0")};
+}
+async function getRate(design,size){
+  // Rates are stored with Design + Size as their primary ID.
+  // Read by that ID so rates saved in the current app version are found reliably.
+  const key=design+"||"+size;
+  const r=await reqPromise(store("rates").get(key));
+  if(!r||!r.active) throw new Error(`No active rate set for Design ${design}, Size ${size}. Add it in Design / Size / Rates.`);
+  return Number(r.rate);
+}
+async function refreshMasters(){
+  const [designs,sizes,rates]=await Promise.all([all("designs"),all("sizes"),all("rates")]);
+  const activeD=designs.filter(x=>x.active),activeS=sizes.filter(x=>x.active);
+  setOptions("designSelect",activeD.map(x=>x.value),"Select design");
+  setOptions("filterDesign",activeD.map(x=>x.value),"All designs");
+  setOptions("rateDesign",activeD.map(x=>x.value),"Design");
+  setOptions("filterSize",activeS.map(x=>x.value),"All sizes");
+  setOptions("rateSize",activeS.map(x=>x.value),"Size");
+  document.getElementById("designList").innerHTML=designs.map(x=>`<div class="master-row"><span>${esc(x.value)} ${x.active?"":"(Inactive)"}</span><button class="btn small secondary" data-toggle-design="${esc(x.id)}">${x.active?"Deactivate":"Activate"}</button></div>`).join("")||'<p class="muted">No designs added yet.</p>';
+  document.getElementById("sizeList").innerHTML=sizes.map(x=>`<div class="master-row"><span>${esc(x.value)} ${x.active?"":"(Inactive)"}</span><button class="btn small secondary" data-toggle-size="${esc(x.id)}">${x.active?"Deactivate":"Activate"}</button></div>`).join("")||'<p class="muted">No sizes added yet.</p>';
+  document.getElementById("rateList").innerHTML=rates.map(x=>`<div class="master-row"><span>Design ${esc(x.design)} · ${esc(x.size)} — ${fmt(x.rate)} ${x.active?"":"(Inactive)"}</span><button class="btn small secondary" data-edit-rate="${esc(x.id)}">Edit</button></div>`).join("")||'<p class="muted">No rates configured yet.</p>';
+  document.getElementById("dbStatus").textContent=`Local database ready · ${designs.length} designs · ${sizes.length} sizes`;
+  refreshItemSelects();
+}
+function setOptions(id,values,placeholder){
+  const el=document.getElementById(id),old=el.value;
+  el.innerHTML=`<option value="">${esc(placeholder)}</option>`+values.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("");
+  if(values.includes(old))el.value=old;
+}
+function addItemRow(item={}){
+  const tr=document.createElement("tr");
+  tr.innerHTML=`<td><select class="item-size"><option value="">Select size</option></select></td>
+  <td><input class="item-piece" type="number" min="1" step="1" value="${esc(item.piece??"")}" placeholder="Piece"></td>
+  <td><input class="item-weight" type="number" min="0" step="0.01" value="${esc(item.weight??"")}" placeholder="Weight"></td>
+  <td><input class="item-rate" readonly value="${item.rate!=null?esc(item.rate):""}" placeholder="Auto"></td>
+  <td><input class="item-amount" readonly value="${item.amount!=null?fmt(item.amount):""}" placeholder="Auto"></td>
+  <td><button class="btn small red remove-item" type="button">×</button></td>`;
+  document.getElementById("itemBody").appendChild(tr);
+  refreshItemSelects();
+  if(item.size)tr.querySelector(".item-size").value=item.size;
+  if(item.size&&item.rate!=null){tr.dataset.rate=String(item.rate)}
+  return tr;
+}
+async function refreshItemSelects(){
+  if(!db)return;const sizes=(await all("sizes")).filter(x=>x.active).map(x=>x.value);
+  document.querySelectorAll(".item-size").forEach(sel=>{
+    const old=sel.value;sel.innerHTML='<option value="">Select size</option>'+sizes.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join("");if(sizes.includes(old))sel.value=old;
+  });
+}
+function recalc(){
+  let pieces=0,weight=0,amount=0;
+  document.querySelectorAll("#itemBody tr").forEach(tr=>{
+    const p=Number(tr.querySelector(".item-piece").value)||0,w=Number(tr.querySelector(".item-weight").value)||0,r=Number(tr.dataset.rate)||0;
+    const a=p*r;tr.querySelector(".item-amount").value=r?fmt(a):"";
+    pieces+=p;weight+=w;amount+=a;
+  });
+  document.getElementById("totalPieces").textContent=pieces;
+  document.getElementById("totalWeight").textContent=fmt(weight);
+  document.getElementById("totalAmount").textContent=fmt(amount);
+}
+async function updateRowRate(tr){
+  const design=document.getElementById("designSelect").value,size=tr.querySelector(".item-size").value;
+  tr.dataset.rate="";
+  tr.querySelector(".item-rate").value="";tr.querySelector(".item-amount").value="";
+  if(!design||!size){recalc();return}
+  try{const rate=await getRate(design,size);tr.dataset.rate=rate;tr.querySelector(".item-rate").value=fmt(rate);recalc()}
+  catch(e){recalc();showMessage(e.message,"error")}
+}
+function resetForm(){
+  editingRecordId=null;document.getElementById("entryTitle").textContent="New Challan";
+  document.getElementById("editHint").textContent="";
+  document.getElementById("recordNo").value="";document.getElementById("challanNo").value="";
+  document.getElementById("challanDate").value=today();document.getElementById("designSelect").value="";
+  document.getElementById("itemBody").innerHTML="";addItemRow();recalc();
+  document.getElementById("saveBtn").textContent="Save Challan";
+}
+async function saveForm(){
+  const btn=document.getElementById("saveBtn");btn.disabled=true;
+  try{
+    const date=document.getElementById("challanDate").value,design=document.getElementById("designSelect").value;
+    if(!date||!design)throw new Error("Please select Date and Design No.");
+    const trs=[...document.querySelectorAll("#itemBody tr")];
+    if(!trs.length)throw new Error("Add at least one item row.");
+    const items=[];
+    for(const tr of trs){
+      const size=tr.querySelector(".item-size").value,piece=Number(tr.querySelector(".item-piece").value),weight=Number(tr.querySelector(".item-weight").value);
+      if(!size)throw new Error("Select Size in every item row.");
+      if(!Number.isInteger(piece)||piece<=0)throw new Error("Piece must be a positive whole number.");
+      if(!Number.isFinite(weight)||weight<0)throw new Error("Weight must be zero or greater.");
+      const rate=await getRate(design,size);
+      items.push({size,piece,weight,rate,amount:piece*rate});
+    }
+    const now=new Date().toISOString();
+    if(editingRecordId!==null){
+      const old=await reqPromise(store("challans").get(editingRecordId));
+      const record={...old,date,design,items,updatedAt:now,totalPieces:items.reduce((s,x)=>s+x.piece,0),totalWeight:items.reduce((s,x)=>s+x.weight,0),totalAmount:items.reduce((s,x)=>s+x.amount,0)};
+      await put("challans",record);showMessage(`Challan ${old.challanNo} updated successfully.`);
+    }else{
+      const ids=await nextIds();
+      const record={recordId:ids.recordId,challanNo:ids.challanNo,date,design,items,createdAt:now,updatedAt:now,deleted:false,totalPieces:items.reduce((s,x)=>s+x.piece,0),totalWeight:items.reduce((s,x)=>s+x.weight,0),totalAmount:items.reduce((s,x)=>s+x.amount,0)};
+      await put("challans",record);showMessage(`Saved successfully. Record ${ids.recordId} · ${ids.challanNo}`);
+    }
+    resetForm();await renderRecords();
+  }catch(e){showMessage(e.message||"Unable to save challan.","error")}
+  finally{btn.disabled=false}
+}
+async function editRecord(id){
+  const r=await reqPromise(store("challans").get(Number(id)));if(!r||r.deleted)return;
+  editingRecordId=r.recordId;showPage("entry");await refreshMasters();
+  document.getElementById("entryTitle").textContent="Edit Challan";
+  document.getElementById("editHint").textContent=`Editing ${r.challanNo}`;
+  document.getElementById("recordNo").value=r.recordId;document.getElementById("challanNo").value=r.challanNo;
+  document.getElementById("challanDate").value=r.date;document.getElementById("designSelect").value=r.design;
+  document.getElementById("itemBody").innerHTML="";
+  for(const item of r.items){const tr=addItemRow(item);await updateRowRate(tr)}
+  recalc();document.getElementById("saveBtn").textContent="Update Challan";
+}
+async function viewRecord(id){
+  const r=await reqPromise(store("challans").get(Number(id)));if(!r)return;
+  const rows=r.items.map(x=>`<tr><td>${esc(x.size)}</td><td>${x.piece}</td><td>${fmt(x.weight)}</td><td>${fmt(x.rate)}</td><td>${fmt(x.amount)}</td></tr>`).join("");
+  const w=window.open("","_blank");if(!w){showMessage("Allow pop-ups to view or print challan.","error");return}
+  w.document.write(`<!doctype html><html><head><title>${esc(r.challanNo)}</title><style>body{font-family:Arial;padding:25px;color:#172334}h2{text-align:center}table{width:100%;border-collapse:collapse;margin-top:20px}td,th{border:1px solid #bbb;padding:9px;text-align:left}.sum{text-align:right;margin-top:20px;font-weight:bold}@media print{button{display:none}}</style></head><body><h2>CHALLAN</h2><p><b>Record No:</b> ${r.recordId} &nbsp; <b>Date:</b> ${esc(r.date)}</p><p><b>Challan No:</b> ${esc(r.challanNo)} &nbsp; <b>Design No:</b> ${esc(r.design)}</p><table><thead><tr><th>Size</th><th>Piece</th><th>Weight</th><th>Rate</th><th>Amount</th></tr></thead><tbody>${rows}</tbody></table><div class="sum">Total Pieces: ${r.totalPieces}<br>Total Weight: ${fmt(r.totalWeight)}<br>Total Amount: ${fmt(r.totalAmount)}</div><p style="margin-top:45px">Prepared By: ____________ &nbsp;&nbsp; Checked By: ____________</p><button onclick="window.print()">Print / Save PDF</button></body></html>`);
+  w.document.close();
+}
+async function deleteRecord(id){
+  if(!confirm("Delete this entire challan? It will be moved to deleted records in this browser."))return;
+  const r=await reqPromise(store("challans").get(Number(id)));if(!r)return;r.deleted=true;r.deletedAt=new Date().toISOString();await put("challans",r);showMessage("Challan deleted.");await renderRecords();
+}
+async function renderRecords(){
+  const records=(await all("challans")).filter(r=>!r.deleted);
+  const q=document.getElementById("searchText").value.trim().toLowerCase(),from=document.getElementById("fromDate").value,to=document.getElementById("toDate").value,design=document.getElementById("filterDesign").value,size=document.getElementById("filterSize").value,min=document.getElementById("minPiece").value,max=document.getElementById("maxPiece").value;
+  const filtered=records.filter(r=>{
+    const matchQ=!q||[r.recordId,r.challanNo,r.design].some(v=>String(v).toLowerCase().includes(q));
+    const matchDate=(!from||r.date>=from)&&(!to||r.date<=to);
+    const matchDesign=!design||r.design===design;
+    const matchingItems=size?r.items.filter(x=>x.size===size):r.items;
+    const hasSize=!size||matchingItems.length>0;
+    const pieces=matchingItems.reduce((s,x)=>s+x.piece,0);
+    return matchQ&&matchDate&&matchDesign&&hasSize&&(!min||pieces>=Number(min))&&(!max||pieces<=Number(max));
+  }).sort((a,b)=>b.recordId-a.recordId);
+  currentFilteredRecords=filtered;
+  document.getElementById("recordCount").textContent=filtered.length;
+  document.getElementById("recordsPieces").textContent=filtered.reduce((s,r)=>s+r.totalPieces,0);
+  document.getElementById("recordsAmount").textContent=fmt(filtered.reduce((s,r)=>s+r.totalAmount,0));
+  document.getElementById("recordsBody").innerHTML=filtered.map(r=>`<tr><td>${r.recordId}</td><td>${esc(r.date)}</td><td>${esc(r.challanNo)}</td><td>${esc(r.design)}</td><td>${r.items.length}</td><td>${r.totalPieces}</td><td>${fmt(r.totalWeight)}</td><td>${fmt(r.totalAmount)}</td><td><div class="actions"><button class="btn small secondary" data-view="${r.recordId}">View</button><button class="btn small" data-edit="${r.recordId}">Edit</button><button class="btn small red" data-delete="${r.recordId}">Delete</button></div></td></tr>`).join("");
+  document.getElementById("noRecords").classList.toggle("hidden",filtered.length!==0);
+}
+function showPage(page){
+  document.querySelectorAll("main section").forEach(s=>s.classList.add("hidden"));
+  document.getElementById("page-"+page).classList.remove("hidden");
+  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===page));
+  if(page==="records")renderRecords();if(page==="masters")refreshMasters();
+}
+function csvCell(v){return '"'+String(v??"").replace(/"/g,'""')+'"'}
+function exportCsv(){
+  const rows=[["Record No","Date","Challan No","Design No","Size","Piece","Weight","Rate","Amount"]];
+  currentFilteredRecords.forEach(r=>r.items.forEach(x=>rows.push([r.recordId,r.date,r.challanNo,r.design,x.size,x.piece,x.weight,x.rate,x.amount])));
+  const csv="\uFEFF"+rows.map(row=>row.map(csvCell).join(",")).join("\r\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download="challan_records.csv";a.click();URL.revokeObjectURL(url);
+}
+async function downloadBackup(){
+  const data={app:"ChallanManagementLocal",version:1,exportedAt:new Date().toISOString(),challans:await all("challans"),designs:await all("designs"),sizes:await all("sizes"),rates:await all("rates")};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download="challan-backup-"+today()+".json";a.click();URL.revokeObjectURL(url);
+}
+async function restoreBackup(file){
+  const data=JSON.parse(await file.text());
+  if(data.app!=="ChallanManagementLocal"||!Array.isArray(data.challans)||!Array.isArray(data.designs)||!Array.isArray(data.sizes)||!Array.isArray(data.rates))throw new Error("This is not a valid Challan Management backup.");
+  if(!confirm("Restore this backup? Existing records with matching IDs will be replaced."))return;
+  for(const [name,arr] of [["challans",data.challans],["designs",data.designs],["sizes",data.sizes],["rates",data.rates]])for(const item of arr)await put(name,item);
+  await refreshMasters();await renderRecords();showMessage("Backup restored successfully.");
+}
+async function addDesignAction(){
+  const value=document.getElementById("newDesign").value.trim();if(!value)return showMessage("Enter Design No.","error");
+  const ds=await all("designs");if(ds.some(x=>x.value.toLowerCase()===value.toLowerCase()))return showMessage("Design already exists.","error");
+  await put("designs",{id:crypto.randomUUID(),value,active:true,createdAt:new Date().toISOString()});
+  document.getElementById("newDesign").value="";await refreshMasters();showMessage("Design added.");
+}
+async function addSizeAction(){
+  const value=document.getElementById("newSize").value.trim();if(!value)return showMessage("Enter Size.","error");
+  const ss=await all("sizes");if(ss.some(x=>x.value.toLowerCase()===value.toLowerCase()))return showMessage("Size already exists.","error");
+  await put("sizes",{id:crypto.randomUUID(),value,active:true,createdAt:new Date().toISOString()});
+  document.getElementById("newSize").value="";await refreshMasters();showMessage("Size added.");
+}
+async function saveRateAction(){
+  const design=document.getElementById("rateDesign").value,size=document.getElementById("rateSize").value,rate=Number(document.getElementById("rateValue").value);
+  if(!design||!size||!Number.isFinite(rate)||rate<=0)return showMessage("Select Design, Size and enter a rate greater than zero.","error");
+  const id=design+"||"+size;await put("rates",{id,design,size,rate,active:true,updatedAt:new Date().toISOString()});
+  document.getElementById("rateValue").value="";await refreshMasters();showMessage("Rate saved.");
+}
+document.addEventListener("click",async e=>{
+  const t=e.target;
+  if(t.matches("[data-page]"))showPage(t.dataset.page);
+  if(t.matches("[data-view]"))viewRecord(t.dataset.view);
+  if(t.matches("[data-edit]"))editRecord(t.dataset.edit);
+  if(t.matches("[data-delete]"))deleteRecord(t.dataset.delete);
+  if(t.matches("[data-toggle-design]")){const x=(await all("designs")).find(x=>x.id===t.dataset.toggleDesign);x.active=!x.active;await put("designs",x);refreshMasters()}
+  if(t.matches("[data-toggle-size]")){const x=(await all("sizes")).find(x=>x.id===t.dataset.toggleSize);x.active=!x.active;await put("sizes",x);refreshMasters()}
+  if(t.matches("[data-edit-rate]")){const x=(await all("rates")).find(x=>x.id===t.dataset.editRate);document.getElementById("rateDesign").value=x.design;document.getElementById("rateSize").value=x.size;document.getElementById("rateValue").value=x.rate;showMessage("Change the rate and click Save Rate.")}
+  if(t.matches(".remove-item")){t.closest("tr").remove();if(!document.querySelector("#itemBody tr"))addItemRow();recalc()}
+});
+document.getElementById("addItemBtn").onclick=()=>addItemRow();
+document.getElementById("resetBtn").onclick=()=>resetForm();
+document.getElementById("saveBtn").onclick=saveForm;
+document.getElementById("addDesignBtn").onclick=addDesignAction;
+document.getElementById("addSizeBtn").onclick=addSizeAction;
+document.getElementById("saveRateBtn").onclick=saveRateAction;
+document.getElementById("exportCsv").onclick=exportCsv;
+document.getElementById("downloadBackup").onclick=downloadBackup;
+document.getElementById("restoreFile").onchange=async e=>{try{if(e.target.files[0])await restoreBackup(e.target.files[0])}catch(err){showMessage(err.message,"error")}e.target.value=""};
+document.getElementById("refreshRecords").onclick=renderRecords;
+document.getElementById("clearFilters").onclick=()=>{["searchText","fromDate","toDate","minPiece","maxPiece"].forEach(id=>document.getElementById(id).value="");document.getElementById("filterDesign").value="";document.getElementById("filterSize").value="";renderRecords()};
+["searchText","fromDate","toDate","filterDesign","filterSize","minPiece","maxPiece"].forEach(id=>document.getElementById(id).addEventListener("input",renderRecords));
+document.getElementById("designSelect").addEventListener("change",async()=>{
+  for(const tr of document.querySelectorAll("#itemBody tr"))await updateRowRate(tr);
+});
+document.getElementById("itemBody").addEventListener("change",async e=>{
+  const tr=e.target.closest("tr");if(!tr)return;
+  if(e.target.matches(".item-size"))await updateRowRate(tr);
+  else recalc();
+});
+document.getElementById("itemBody").addEventListener("input",recalc);
+document.getElementById("deleteAllData").onclick=async()=>{
+  if(!confirm("Permanently delete ALL local challans, designs, sizes and rates? Download a backup first if needed."))return;
+  for(const name of ["challans","designs","sizes","rates"])await reqPromise(store(name,"readwrite").clear());
+  resetForm();await refreshMasters();await renderRecords();showMessage("All local data deleted.");
+};
+(async function init(){
+  try{
+    db=await openDB();document.getElementById("dbStatus").textContent="Local database ready";
+    document.getElementById("challanDate").value=today();
+    await refreshMasters();resetForm();await renderRecords();
+  }catch(e){document.getElementById("dbStatus").textContent="Database error";showMessage("Could not open local database: "+e.message,"error")}
+})();
+</script>
+</body>
+</html>
